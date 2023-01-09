@@ -10,9 +10,7 @@ DATA_PATH = Path(__file__).parent / "data"
 def test_normal_ab():
     with open(DATA_PATH / "Normal_AB.rm", "rb") as f:
         lines = list(parse_text(f))
-    assert lines == [
-        (TextFormat.PLAIN, "AB")
-    ]
+    assert lines == [(TextFormat.PLAIN, "AB")]
 
 
 def test_list():

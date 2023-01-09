@@ -1,11 +1,11 @@
 import pytest
 from io import BytesIO
-from rmscene import TaggedBlockStream, UnexpectedBlockError, BlockOverflowError, CrdtId
+from rmscene import TaggedBlockReader, UnexpectedBlockError, BlockOverflowError, CrdtId
 
 
-def stream(hex_string: str) -> TaggedBlockStream:
+def stream(hex_string: str) -> TaggedBlockReader:
     data = bytes.fromhex(hex_string)
-    return TaggedBlockStream(BytesIO(data))
+    return TaggedBlockReader(BytesIO(data))
 
 
 class TestBlock:

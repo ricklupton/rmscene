@@ -15,7 +15,7 @@ from .scene_stream import (
     TextItem,
     RootTextBlock,
 )
-from .tagged_block_stream import CrdtId
+from .tagged_block_common import CrdtId
 
 _logger = logging.getLogger(__name__)
 

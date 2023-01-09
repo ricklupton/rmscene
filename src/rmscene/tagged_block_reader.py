@@ -10,193 +10,30 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-import enum
 import logging
-import struct
 import typing as tp
+
+from .tagged_block_common import DataStream, TagType, CrdtId, UnexpectedBlockError
 
 
 _logger = logging.getLogger(__name__)
 
 
-HEADER_V6 = b"reMarkable .lines file, version=6          "
-
-
-class TagType(enum.IntEnum):
-    "Tag type representing the type of following data."
-    ID = 0xF
-    Length4 = 0xC
-    Byte8 = 0x8
-    Byte4 = 0x4
-    Byte1 = 0x1
-
-
-class DataStream:
-    """Read basic values from a remarkable v6 file stream."""
-
-    def __init__(self, data: tp.BinaryIO):
-        self.data = data
-
-    def tell(self) -> int:
-        return self.data.tell()
-
-    def read_header(self) -> None:
-        """Read the file header.
-
-        This should be the first call when starting to read a new file.
-
-        """
-        header = self.read_bytes(len(HEADER_V6))
-        if header != HEADER_V6:
-            raise ValueError("Wrong header: %r" % header)
-
-    def check_tag(self, expected_index: int, expected_type: TagType) -> bool:
-        """Check that INDEX and TAG_TYPE are next.
-
-        Returns True if the expected index and tag type are found. Does not
-        advance the stream.
-
-        """
-        pos = self.data.tell()
-        try:
-            index, tag_type = self._read_tag_values()
-            return (index == expected_index) and (tag_type == expected_type)
-        except (ValueError, EOFError):
-            return False
-        finally:
-            self.data.seek(pos)  # Go back
-
-    def read_tag(
-        self, expected_index: int, expected_type: TagType
-    ) -> tuple[int, TagType]:
-        """Read a tag from the stream.
-
-        Raise an error if the expected index and tag type are not found, and
-        rewind the stream.
-
-        """
-        pos = self.data.tell()
-        index, tag_type = self._read_tag_values()
-
-        if index != expected_index:
-            self.data.seek(pos)  # Go back
-            raise UnexpectedBlockError(
-                "Expected index %d, got %d, at position %d"
-                % (expected_index, index, self.data.tell())
-            )
-
-        if tag_type != expected_type:
-            self.data.seek(pos)  # Go back
-            raise UnexpectedBlockError(
-                "Expected tag type %s (0x%X), got 0x%X at position %d"
-                % (
-                    expected_type.name,
-                    expected_type.value,
-                    tag_type,
-                    self.data.tell(),
-                )
-            )
-
-        return index, tag_type
-
-    def _read_tag_values(self) -> tuple[int, TagType]:
-        """Read tag values from the stream."""
-
-        x = self.read_varuint()
-
-        # First part is an index number that identifies if this is the right
-        # data we're expecting
-        index = x >> 4
-
-        # Second part is a tag type that identifies what kind of data it is
-        tag_type = x & 0xF
-        try:
-            tag_type = TagType(tag_type)
-        except ValueError as e:
-            raise ValueError(
-                "Bad tag type 0x%X at position %d" % (tag_type, self.data.tell())
-            )
-
-        return index, tag_type
-
-    def read_bytes(self, n: int) -> bytes:
-        "Read `n` bytes, raising `EOFError` if there are not enough."
-        result = self.data.read(n)
-        if len(result) != n:
-            raise EOFError()
-        return result
-
-    def _read_struct(self, pattern: str):
-        pattern = "<" + pattern
-        n = struct.calcsize(pattern)
-        return struct.unpack(pattern, self.read_bytes(n))[0]
-
-    def read_bool(self) -> bool:
-        """Read a bool from the data stream."""
-        return self._read_struct("?")
-
-    def read_varuint(self) -> int:
-        """Read a varuint from the data stream."""
-        shift = 0
-        result = 0
-        while True:
-            i = ord(self.read_bytes(1))
-            result |= (i & 0x7F) << shift
-            shift += 7
-            if not (i & 0x80):
-                break
-        return result
-
-    def read_uint8(self) -> int:
-        """Read a uint8 from the data stream."""
-        return self._read_struct("B")
-
-    def read_uint16(self) -> int:
-        """Read a uint16 from the data stream."""
-        return self._read_struct("H")
-
-    def read_uint32(self) -> int:
-        """Read a uint32 from the data stream."""
-        return self._read_struct("I")
-
-    def read_float32(self) -> float:
-        """Read a float32 from the data stream."""
-        return self._read_struct("f")
-
-    def read_float64(self) -> float:
-        """Read a float64 (double) from the data stream."""
-        return self._read_struct("d")
-
-
 @dataclass
 class BlockHeader:
     "Top-level block header information."
-    block_size: int
     block_type: int
     min_version: int
     current_version: int
+    block_size: tp.Optional[int] = None
     offset: tp.Optional[int] = None
-
-
-@dataclass(eq=True, order=True, frozen=True)
-class CrdtId:
-    "An identifier or timestamp."
-    part1: int
-    part2: int
-
-    def __repr__(self) -> str:
-        return f"CrdtId({self.part1}, {self.part2})"
-
-
-class UnexpectedBlockError(Exception):
-    """Unexpected tag or index in block stream."""
 
 
 class BlockOverflowError(Exception):
     """Read past end of block."""
 
 
-class TaggedBlockStream:
+class TaggedBlockReader:
     """Read blocks and values from a remarkable v6 file stream."""
 
     def __init__(self, data: tp.BinaryIO):
@@ -212,12 +49,7 @@ class TaggedBlockStream:
         """
         self.data.read_header()
 
-    def bytes_remaining_in_block(self) -> int:
-        """Return the number of bytes remaining in the current block."""
-        header = self.current_block
-        if header is None or header.offset is None:
-            raise ValueError("Not in a block")
-        return header.offset + header.block_size - self.data.tell()
+    ## Read simple values
 
     def read_id(self, index: int) -> CrdtId:
         """Read a tagged CRDT ID."""
@@ -295,10 +127,10 @@ class TaggedBlockStream:
 
         i0 = self.data.tell()
         self.current_block = BlockHeader(
-            block_size=block_length,
             block_type=block_type,
             min_version=min_version,
             current_version=current_version,
+            block_size=block_length,
             offset=i0,
         )
 
@@ -307,6 +139,13 @@ class TaggedBlockStream:
         assert self.current_block is not None
         self._check_position("Block", i0, block_length)
         self.current_block = None
+
+    def bytes_remaining_in_block(self) -> int:
+        """Return the number of bytes remaining in the current block."""
+        header = self.current_block
+        if header is None or header.offset is None:
+            raise ValueError("Not in a block")
+        return header.offset + header.block_size - self.data.tell()
 
     @contextmanager
     def read_subblock(self, index: int) -> Iterator[int]:

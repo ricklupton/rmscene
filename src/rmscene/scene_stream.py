@@ -15,7 +15,8 @@ import enum
 import logging
 import typing as tp
 
-from .tagged_block_stream import CrdtId, TaggedBlockStream
+from .tagged_block_common import CrdtId
+from .tagged_block_reader import TaggedBlockReader
 
 _logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ _logger = logging.getLogger(__name__)
 
 class Block(ABC):
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> Block:
+    def from_stream(cls, stream: TaggedBlockReader) -> Block:
         raise NotImplementedError()
 
 
@@ -36,7 +37,7 @@ class AuthorIdsBlock(Block):
     author_uuids: dict[int, UUID]
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> AuthorIdsBlock:
+    def from_stream(cls, stream: TaggedBlockReader) -> AuthorIdsBlock:
         num_subblocks = stream.data.read_varuint()
         author_ids = {}
         for _ in range(num_subblocks):
@@ -56,7 +57,7 @@ class MigrationInfoBlock(Block):
     is_device: bool
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> MigrationInfoBlock:
+    def from_stream(cls, stream: TaggedBlockReader) -> MigrationInfoBlock:
         "Parse migration info"
         migration_id = stream.read_id(1)
         is_device = stream.read_bool(2)
@@ -75,7 +76,7 @@ class TreeNodeBlock(Block):
     anchor_origin_x: tp.Optional[tuple[CrdtId, float]] = None
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> TreeNodeBlock:
+    def from_stream(cls, stream: TaggedBlockReader) -> TreeNodeBlock:
         "Parse tree node block."
 
         node = TreeNodeBlock(
@@ -101,7 +102,7 @@ class PageInfoBlock(Block):
     text_lines_count: int
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> PageInfoBlock:
+    def from_stream(cls, stream: TaggedBlockReader) -> PageInfoBlock:
         "Parse page info block"
         info = PageInfoBlock(
             loads_count=stream.read_int(1),
@@ -121,7 +122,7 @@ class SceneTreeBlock(Block):
     parent_id: CrdtId
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> SceneTreeBlock:
+    def from_stream(cls, stream: TaggedBlockReader) -> SceneTreeBlock:
         "Parse scene tree block"
 
         # XXX not sure what the difference is
@@ -145,7 +146,7 @@ class Point:
     pressure: int
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream, version: int = 2) -> Point:
+    def from_stream(cls, stream: TaggedBlockReader, version: int = 2) -> Point:
         if version not in (1, 2):
             raise ValueError("Unknown version %s" % version)
         d = stream.data
@@ -239,7 +240,7 @@ class Line:
     # BoundingRect   image.Rectangle
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream, version: int = 2) -> Line:
+    def from_stream(cls, stream: TaggedBlockReader, version: int = 2) -> Line:
         tool_id = stream.read_int(1)
         tool = Pen(tool_id)
         color_id = stream.read_int(2)
@@ -275,7 +276,7 @@ class SceneItemBlock(Block):
     value: tp.Any
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> SceneItemBlock:
+    def from_stream(cls, stream: TaggedBlockReader) -> SceneItemBlock:
         "Group item block?"
 
         parent_id = stream.read_id(1)
@@ -321,7 +322,7 @@ class TextItem:
     text: str
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> TextItem:
+    def from_stream(cls, stream: TaggedBlockReader) -> TextItem:
         with stream.read_subblock(0):
             item_id = stream.read_id(2)
             left_id = stream.read_id(3)
@@ -366,7 +367,7 @@ class TextFormatItem:
     format_type: TextFormat
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> TextFormatItem:
+    def from_stream(cls, stream: TaggedBlockReader) -> TextFormatItem:
         # These are character ids, but not with an initial tag like other ids
         # have?
         a = stream.data.read_uint8()
@@ -398,7 +399,7 @@ class RootTextBlock(Block):
     width: float
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockStream) -> RootTextBlock:
+    def from_stream(cls, stream: TaggedBlockReader) -> RootTextBlock:
         "Parse root text block."
 
         block_id = stream.read_id(1)
@@ -447,7 +448,7 @@ BLOCK_TYPES: dict[int, tp.Type[Block]] = {
 }
 
 
-def _parse_blocks(stream: TaggedBlockStream) -> Iterable[Block]:
+def _parse_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
     """
     Parse blocks from reMarkable v6 file.
     """
@@ -472,6 +473,6 @@ def parse_blocks(data: tp.BinaryIO) -> Iterable[Block]:
 
     :param data: reMarkable file data.
     """
-    stream = TaggedBlockStream(data)
+    stream = TaggedBlockReader(data)
     stream.read_header()
     yield from _parse_blocks(stream)
