@@ -1,6 +1,12 @@
 import pytest
 from io import BytesIO
-from rmscene import TaggedBlockReader, TaggedBlockWriter, CrdtId, UnexpectedBlockError
+from rmscene import (
+    TaggedBlockReader,
+    TaggedBlockWriter,
+    CrdtId,
+    LwwValue,
+    UnexpectedBlockError,
+)
 
 
 def test_write_int():
@@ -84,6 +90,11 @@ def test_write_subblock_error_recovery():
         ("int", 45),
         ("float", 8.0),
         ("double", 5.4),
+        ("lww_bool", LwwValue(CrdtId(1, 4), True)),
+        ("lww_byte", LwwValue(CrdtId(1, 4), 7)),
+        ("lww_float", LwwValue(CrdtId(1, 4), 8.0)),
+        ("lww_id", LwwValue(CrdtId(1, 4), CrdtId(1, 5))),
+        ("lww_string", LwwValue(CrdtId(1, 4), "hello")),
     ],
 )
 @pytest.mark.parametrize("index", [0, 3, 20])

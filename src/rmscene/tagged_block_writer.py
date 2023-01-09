@@ -17,6 +17,7 @@ from .tagged_block_common import (
     TagType,
     DataStream,
     CrdtId,
+    LwwValue,
     UnexpectedBlockError,
 )
 
@@ -135,44 +136,38 @@ class TaggedBlockWriter:
 
     ## Higher level constructs
 
-    # def read_lww_bool(self, index: int) -> tuple[CrdtId, bool]:
-    #     "Read a LWW bool."
-    #     with self.read_subblock(index):
-    #         timestamp = self.read_id(1)
-    #         value = self.read_bool(2)
-    #     return timestamp, value
+    def write_lww_bool(self, index: int, value: LwwValue[bool]):
+        "Write a LWW bool."
+        with self.write_subblock(index):
+            self.write_id(1, value.timestamp)
+            self.write_bool(2, value.value)
 
-    # def read_lww_byte(self, index: int) -> tuple[CrdtId, int]:
-    #     "Read a LWW byte."
-    #     with self.read_subblock(index):
-    #         timestamp = self.read_id(1)
-    #         value = self.read_byte(2)
-    #     return timestamp, value
+    def write_lww_byte(self, index: int, value: LwwValue[int]):
+        "Write a LWW byte."
+        with self.write_subblock(index):
+            self.write_id(1, value.timestamp)
+            self.write_byte(2, value.value)
 
-    # def read_lww_float(self, index: int) -> tuple[CrdtId, float]:
-    #     "Read a LWW float."
-    #     with self.read_subblock(index):
-    #         timestamp = self.read_id(1)
-    #         value = self.read_float(2)
-    #     return timestamp, value
+    def write_lww_float(self, index: int, value: LwwValue[float]):
+        "Write a LWW float."
+        with self.write_subblock(index):
+            self.write_id(1, value.timestamp)
+            self.write_float(2, value.value)
 
-    # def read_lww_id(self, index: int) -> tuple[CrdtId, CrdtId]:
-    #     "Read a LWW ID."
-    #     with self.read_subblock(index):
-    #         # XXX ddvk has these the other way round?
-    #         timestamp = self.read_id(1)
-    #         value = self.read_id(2)
-    #     return timestamp, value
+    def write_lww_id(self, index: int, value: LwwValue[CrdtId]):
+        "Write a LWW ID."
+        with self.write_subblock(index):
+            # XXX ddvk has these the other way round?
+            self.write_id(1, value.timestamp)
+            self.write_id(2, value.value)
 
-    # def read_lww_string(self, index: int) -> tuple[CrdtId, str]:
-    #     "Read a LWW string."
-    #     with self.read_subblock(index):
-    #         timestamp = self.read_id(1)
-    #         with self.read_subblock(2) as block_length:
-    #             string_length = self.data.read_varuint()
-    #             # XXX not sure if this is right meaning?
-    #             is_ascii = self.data.read_bool()
-    #             assert is_ascii == 1
-    #             assert string_length + 2 == block_length
-    #             string = self.data.read_bytes(string_length).decode()
-    #     return timestamp, string
+    def write_lww_string(self, index: int, value: LwwValue[str]):
+        "Write a LWW string."
+        with self.write_subblock(index):
+            self.write_id(1, value.timestamp)
+            with self.write_subblock(2):
+                string_length = len(value.value)
+                is_ascii = True  # XXX not sure if this is right meaning?
+                self.data.write_varuint(string_length)
+                self.data.write_bool(is_ascii)
+                self.data.write_bytes(value.value.encode())
