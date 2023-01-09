@@ -1,6 +1,6 @@
 from pathlib import Path
 from uuid import UUID
-from rmscene import parse_blocks
+from rmscene import parse_blocks, LwwValue
 from rmscene.scene_stream import *
 
 
@@ -47,13 +47,13 @@ def test_normal_ab():
         ),
         TreeNodeBlock(
             node_id=CrdtId(0, 1),
-            label=(CrdtId(0, 0), ""),
-            visible=(CrdtId(0, 0), True),
+            label=LwwValue(CrdtId(0, 0), ""),
+            visible=LwwValue(CrdtId(0, 0), True),
         ),
         TreeNodeBlock(
             node_id=CrdtId(0, 11),
-            label=(CrdtId(0, 12), "Layer 1"),
-            visible=(CrdtId(0, 0), True),
+            label=LwwValue(CrdtId(0, 12), "Layer 1"),
+            visible=LwwValue(CrdtId(0, 0), True),
         ),
         SceneItemBlock(
             parent_id=CrdtId(0, 1),

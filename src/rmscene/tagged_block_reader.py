@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import logging
 import typing as tp
 
-from .tagged_block_common import DataStream, TagType, CrdtId, UnexpectedBlockError
+from .tagged_block_common import DataStream, TagType, CrdtId, UnexpectedBlockError, LwwValue
 
 
 _logger = logging.getLogger(__name__)
@@ -183,36 +183,36 @@ class TaggedBlockReader:
 
     ## Higher level constructs
 
-    def read_lww_bool(self, index: int) -> tuple[CrdtId, bool]:
+    def read_lww_bool(self, index: int) -> LwwValue[bool]:
         "Read a LWW bool."
         with self.read_subblock(index):
             timestamp = self.read_id(1)
             value = self.read_bool(2)
-        return timestamp, value
+        return LwwValue(timestamp, value)
 
-    def read_lww_byte(self, index: int) -> tuple[CrdtId, int]:
+    def read_lww_byte(self, index: int) -> LwwValue[int]:
         "Read a LWW byte."
         with self.read_subblock(index):
             timestamp = self.read_id(1)
             value = self.read_byte(2)
-        return timestamp, value
+        return LwwValue(timestamp, value)
 
-    def read_lww_float(self, index: int) -> tuple[CrdtId, float]:
+    def read_lww_float(self, index: int) -> LwwValue[float]:
         "Read a LWW float."
         with self.read_subblock(index):
             timestamp = self.read_id(1)
             value = self.read_float(2)
-        return timestamp, value
+        return LwwValue(timestamp, value)
 
-    def read_lww_id(self, index: int) -> tuple[CrdtId, CrdtId]:
+    def read_lww_id(self, index: int) -> LwwValue[CrdtId]:
         "Read a LWW ID."
         with self.read_subblock(index):
             # XXX ddvk has these the other way round?
             timestamp = self.read_id(1)
             value = self.read_id(2)
-        return timestamp, value
+        return LwwValue(timestamp, value)
 
-    def read_lww_string(self, index: int) -> tuple[CrdtId, str]:
+    def read_lww_string(self, index: int) -> LwwValue[str]:
         "Read a LWW string."
         with self.read_subblock(index):
             timestamp = self.read_id(1)
@@ -223,4 +223,4 @@ class TaggedBlockReader:
                 assert is_ascii == 1
                 assert string_length + 2 == block_length
                 string = self.data.read_bytes(string_length).decode()
-        return timestamp, string
+        return LwwValue(timestamp, string)

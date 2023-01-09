@@ -232,3 +232,12 @@ class CrdtId:
 
     def __repr__(self) -> str:
         return f"CrdtId({self.part1}, {self.part2})"
+
+
+_T = tp.TypeVar("_T")
+
+@dataclass
+class LwwValue(tp.Generic[_T]):
+    "Container for a last-write-wins value."
+    timestamp: CrdtId
+    value: _T

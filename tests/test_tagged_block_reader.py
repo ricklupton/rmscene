@@ -137,6 +137,6 @@ def test_extract_int_wrong_index():
 
 def test_extract_lww_string():
     s = stream("1c0d000000" "1f0101" "2c05000000" "0301616263")
-    timestamp, string = s.read_lww_string(1)
-    assert timestamp == CrdtId(1, 1)
-    assert string == "abc"
+    lww = s.read_lww_string(1)
+    assert lww.timestamp == CrdtId(1, 1)
+    assert lww.value == "abc"
