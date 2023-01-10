@@ -27,6 +27,17 @@ _logger = logging.getLogger(__name__)
 
 
 class Block(ABC):
+    BLOCK_TYPE: tp.ClassVar
+
+    @classmethod
+    def lookup(cls, block_type: int) -> tp.Optional[tp.Type[Block]]:
+        if getattr(cls, "BLOCK_TYPE", None) == block_type:
+            return cls
+        for subclass in cls.__subclasses__():
+            if match := subclass.lookup(block_type):
+                return match
+        return None
+
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> Block:
         raise NotImplementedError()
@@ -34,6 +45,8 @@ class Block(ABC):
 
 @dataclass
 class AuthorIdsBlock(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x09
+
     author_uuids: dict[int, UUID]
 
     @classmethod
@@ -53,6 +66,8 @@ class AuthorIdsBlock(Block):
 
 @dataclass
 class MigrationInfoBlock(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x00
+
     migration_id: CrdtId
     is_device: bool
 
@@ -66,6 +81,8 @@ class MigrationInfoBlock(Block):
 
 @dataclass
 class TreeNodeBlock(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x02
+
     node_id: CrdtId
     label: LwwValue[str]
     visible: LwwValue[bool]
@@ -96,6 +113,8 @@ class TreeNodeBlock(Block):
 
 @dataclass
 class PageInfoBlock(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x0A
+
     loads_count: int
     merges_count: int
     text_chars_count: int
@@ -115,6 +134,8 @@ class PageInfoBlock(Block):
 
 @dataclass
 class SceneTreeBlock(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x01
+
     # XXX not sure what the difference is
     tree_id: CrdtId
     node_id: CrdtId
@@ -313,6 +334,24 @@ class SceneItemBlock(Block):
         )
 
 
+# These share the same structure so can share the same implementation?
+
+class SceneGlyphItemBlock(SceneItemBlock):
+    BLOCK_TYPE: tp.ClassVar = 0x03
+
+
+class SceneGroupItemBlock(SceneItemBlock):
+    BLOCK_TYPE: tp.ClassVar = 0x04
+
+
+class SceneLineItemBlock(SceneItemBlock):
+    BLOCK_TYPE: tp.ClassVar = 0x05
+
+
+class SceneTextItemBlock(SceneItemBlock):
+    BLOCK_TYPE: tp.ClassVar = 0x06
+
+
 @dataclass
 class TextItem:
     item_id: CrdtId
@@ -391,6 +430,8 @@ class TextFormatItem:
 
 @dataclass
 class RootTextBlock(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x07
+
     block_id: CrdtId
     text_items: list[TextItem]
     text_formats: list[TextFormatItem]
@@ -436,18 +477,6 @@ class RootTextBlock(Block):
         return RootTextBlock(block_id, text_items, text_formats, pos_x, pos_y, width)
 
 
-BLOCK_TYPES: dict[int, tp.Type[Block]] = {
-    0x00: MigrationInfoBlock,
-    0x01: SceneTreeBlock,
-    0x02: TreeNodeBlock,
-    0x04: SceneItemBlock,
-    0x05: SceneItemBlock,
-    0x07: RootTextBlock,
-    0x09: AuthorIdsBlock,
-    0x0A: PageInfoBlock,
-}
-
-
 def _parse_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
     """
     Parse blocks from reMarkable v6 file.
@@ -458,12 +487,12 @@ def _parse_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
                 # no more blocks
                 return
 
-            if header.block_type in BLOCK_TYPES:
-                block_type = BLOCK_TYPES[header.block_type]
+            block_type = Block.lookup(header.block_type)
+            if block_type:
                 yield block_type.from_stream(stream)
             else:
-                print("UNKNOWN BLOCK TYPE", header.block_type)
-                print("SKIPPING", header.block_size, "bytes")
+                _logger.error("Unknown block type %s. Skipping %d bytes.",
+                              header.block_type, header.block_size)
                 stream.data.read_bytes(header.block_size)
 
 

@@ -25,7 +25,7 @@ class BlockHeader:
     block_type: int
     min_version: int
     current_version: int
-    block_size: tp.Optional[int] = None
+    block_size: int = None
     offset: tp.Optional[int] = None
 
 
