@@ -15,7 +15,7 @@ import enum
 import logging
 import typing as tp
 
-from .tagged_block_common import CrdtId
+from .tagged_block_common import CrdtId, LwwValue
 from .tagged_block_reader import TaggedBlockReader
 
 _logger = logging.getLogger(__name__)
@@ -67,13 +67,13 @@ class MigrationInfoBlock(Block):
 @dataclass
 class TreeNodeBlock(Block):
     node_id: CrdtId
-    label: tuple[CrdtId, str]
-    visible: tuple[CrdtId, bool]
+    label: LwwValue[str]
+    visible: LwwValue[bool]
 
-    anchor_id: tp.Optional[tuple[CrdtId, CrdtId]] = None
-    anchor_type: tp.Optional[tuple[CrdtId, int]] = None
-    anchor_threshold: tp.Optional[tuple[CrdtId, float]] = None
-    anchor_origin_x: tp.Optional[tuple[CrdtId, float]] = None
+    anchor_id: tp.Optional[LwwValue[CrdtId]] = None
+    anchor_type: tp.Optional[LwwValue[int]] = None
+    anchor_threshold: tp.Optional[LwwValue[float]] = None
+    anchor_origin_x: tp.Optional[LwwValue[float]] = None
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> TreeNodeBlock:
