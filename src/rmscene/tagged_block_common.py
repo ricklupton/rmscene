@@ -216,12 +216,16 @@ class DataStream:
 
     def write_varuint(self, value: int):
         """Write a varuint to the data stream."""
-        while value:
+        b = bytearray()
+        while True:
             to_write = value & 0x7F
             value >>= 7
             if value:
-                to_write |= 0x80
-            self.data.write(bytes((to_write,)))
+                b.append(to_write | 0x80)
+            else:
+                b.append(to_write)
+                break
+        self.data.write(b)
 
 
 @dataclass(eq=True, order=True, frozen=True)

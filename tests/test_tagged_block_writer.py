@@ -9,6 +9,13 @@ from rmscene import (
 )
 
 
+def test_write_id_zero():
+    buf = BytesIO()
+    s = TaggedBlockWriter(buf)
+    s.write_id(3, CrdtId(0, 0))
+    assert buf.getvalue().hex() == "3f0000"
+
+
 def test_write_int():
     buf = BytesIO()
     s = TaggedBlockWriter(buf)
@@ -84,6 +91,7 @@ def test_write_subblock_error_recovery():
     "data_type,value",
     [
         ("id", CrdtId(1, 5)),
+        ("id", CrdtId(0, 0)),
         ("bool", True),
         ("bool", False),
         ("byte", 7),
