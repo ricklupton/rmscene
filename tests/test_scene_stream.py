@@ -60,13 +60,12 @@ def test_normal_ab():
             label=LwwValue(CrdtId(0, 12), "Layer 1"),
             visible=LwwValue(CrdtId(0, 0), True),
         ),
-        SceneItemBlock(
+        SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),
             item_id=CrdtId(0, 13),
             left_id=CrdtId(0, 0),
             right_id=CrdtId(0, 0),
             deleted_length=0,
-            item_type="group",
             value=CrdtId(0, 11),
         ),
     ]
@@ -115,13 +114,12 @@ def test_normal_ab():
             label=LwwValue(CrdtId(0, 12), "Layer 1"),
             visible=LwwValue(CrdtId(0, 0), True),
         ),
-        SceneItemBlock(
+        SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),
             item_id=CrdtId(0, 13),
             left_id=CrdtId(0, 0),
             right_id=CrdtId(0, 0),
             deleted_length=0,
-            item_type="group",
             value=CrdtId(0, 11),
         ),
     ],
@@ -132,7 +130,7 @@ def test_blocks_roundtrip(block):
     reader = TaggedBlockReader(buf)
 
     # Mock header
-    with writer.write_block(1, 1, 1):
+    with writer.write_block(4, 1, 1):
         block.to_stream(writer)
 
     buf.seek(0)

@@ -371,12 +371,29 @@ class SceneItemBlock(Block):
     left_id: CrdtId
     right_id: CrdtId
     deleted_length: int
-    item_type: str
-    value: tp.Any
+    value: tp.Optional[tp.Any]
+
+    ITEM_TYPE: tp.ClassVar[int] = 0
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneItemBlock:
         "Group item block?"
+
+        assert stream.current_block
+        block_type = stream.current_block.block_type
+        if block_type == SceneGlyphItemBlock.BLOCK_TYPE:
+            subclass = SceneGlyphItemBlock
+        elif block_type == SceneGroupItemBlock.BLOCK_TYPE:
+            subclass = SceneGroupItemBlock
+        elif block_type == SceneLineItemBlock.BLOCK_TYPE:
+            subclass = SceneLineItemBlock
+        elif block_type == SceneTextItemBlock.BLOCK_TYPE:
+            subclass = SceneTextItemBlock
+        else:
+            raise ValueError(
+                "unknown scene type %d in %s"
+                % (block_type, stream.current_block)
+            )
 
         parent_id = stream.read_id(1)
         item_id = stream.read_id(2)
@@ -387,28 +404,13 @@ class SceneItemBlock(Block):
         if stream.has_subblock(6):
             with stream.read_subblock(6):
                 item_type = stream.data.read_uint8()
-                if item_type == 2:
-                    # group item
-                    # XXX don't know what this means
-                    value = stream.read_id(2)
-                    item_label = "group"
-                elif item_type == 3:
-                    # line item type
-                    assert stream.current_block is not None
-                    version = stream.current_block.current_version
-                    value = Line.from_stream(stream, version)
-                    item_label = "line"
-                else:
-                    raise ValueError(
-                        "unknown scene type %d in %s"
-                        % (item_type, stream.current_block)
-                    )
+                assert item_type == subclass.ITEM_TYPE
+                value = subclass.value_from_stream(stream)
         else:
-            item_label = "unknown"
             value = None
 
-        return SceneItemBlock(
-            parent_id, item_id, left_id, right_id, deleted_length, item_label, value
+        return subclass(
+            parent_id, item_id, left_id, right_id, deleted_length, value
         )
 
     def to_stream(self, writer: TaggedBlockWriter):
@@ -418,38 +420,86 @@ class SceneItemBlock(Block):
         writer.write_id(4, self.right_id)
         writer.write_int(5, self.deleted_length)
 
-        with writer.write_subblock(6):
-            if self.item_type == "group":
-                item_type = 2
-                writer.data.write_uint8(item_type)
-                writer.write_id(2, self.value)
-            elif self.item_type == "line":
-                item_type = 3
-                writer.data.write_uint8(item_type)
-                # XXX make sure this version ends up in block header
-                self.value.to_stream(writer, version=2)
-            else:
-                raise ValueError(
-                    "unknown scene type %s" % self.item_type
-                )
+        if self.value is not None:
+            with writer.write_subblock(6):
+                writer.data.write_uint8(self.ITEM_TYPE)
+                self.value_to_stream(writer, self.value)
+
+    @classmethod
+    @abstractmethod
+    def value_from_stream(cls, reader: TaggedBlockReader) -> tp.Any:
+        """Read the specific content of this block"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def value_to_stream(self, writer: TaggedBlockWriter, value: tp.Any):
+        """Write the specific content of this block"""
+        raise NotImplementedError()
 
 
 # These share the same structure so can share the same implementation?
 
 class SceneGlyphItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x03
+    ITEM_TYPE: tp.ClassVar = 0x01
+
+    value: tp.Any
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader) -> tp.Any:
+        return None
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value):
+        pass
 
 
 class SceneGroupItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x04
+    ITEM_TYPE: tp.ClassVar = 0x02
+
+    value: tp.Optional[CrdtId]
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader) -> CrdtId:
+        # XXX don't know what this means
+        value = reader.read_id(2)
+        return value
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value: CrdtId):
+        writer.write_id(2, value)
 
 
 class SceneLineItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x05
+    ITEM_TYPE: tp.ClassVar = 0x03
+
+    value: tp.Optional[Line]
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader) -> Line:
+        assert reader.current_block is not None
+        version = reader.current_block.current_version
+        value = Line.from_stream(reader, version)
+        return value
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value: Line):
+        # XXX make sure this version ends up in block header
+        value.to_stream(writer, version=2)
+
+
+# XXX missing "PathItemBlock"? with ITEM_TYPE 0x04
 
 
 class SceneTextItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x06
+    ITEM_TYPE: tp.ClassVar = 0x05
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader) -> tp.Any:
+        return None
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value):
+        pass
 
 
 @dataclass
