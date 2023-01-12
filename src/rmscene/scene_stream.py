@@ -6,7 +6,7 @@ With help from ddvk's v6 reader, and enum values from remt.
 
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import math
 from uuid import UUID
@@ -17,6 +17,7 @@ import typing as tp
 
 from .tagged_block_common import CrdtId, LwwValue
 from .tagged_block_reader import TaggedBlockReader
+from .tagged_block_writer import TaggedBlockWriter
 
 _logger = logging.getLogger(__name__)
 
@@ -39,7 +40,12 @@ class Block(ABC):
         return None
 
     @classmethod
-    def from_stream(cls, stream: TaggedBlockReader) -> Block:
+    @abstractmethod
+    def from_stream(cls, reader: TaggedBlockReader) -> Block:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def to_stream(self, writer: TaggedBlockWriter):
         raise NotImplementedError()
 
 
@@ -63,6 +69,15 @@ class AuthorIdsBlock(Block):
                 author_ids[author_id] = uuid
         return AuthorIdsBlock(author_ids)
 
+    def to_stream(self, writer: TaggedBlockWriter):
+        num_subblocks = len(self.author_uuids)
+        writer.data.write_varuint(num_subblocks)
+        for author_id, uuid in self.author_uuids.items():
+            with writer.write_subblock(0):
+                writer.data.write_varuint(len(uuid.bytes_le))
+                writer.data.write_bytes(uuid.bytes_le)
+                writer.data.write_uint16(author_id)
+
 
 @dataclass
 class MigrationInfoBlock(Block):
@@ -77,6 +92,10 @@ class MigrationInfoBlock(Block):
         migration_id = stream.read_id(1)
         is_device = stream.read_bool(2)
         return MigrationInfoBlock(migration_id, is_device)
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.write_id(1, self.migration_id)
+        writer.write_bool(2, self.is_device)
 
 
 @dataclass
@@ -102,6 +121,7 @@ class TreeNodeBlock(Block):
             stream.read_lww_bool(3),
         )
 
+        # XXX this may need to be generalised for other examples
         if stream.bytes_remaining_in_block() > 0:
             node.anchor_id = stream.read_lww_id(7)
             node.anchor_type = stream.read_lww_byte(8)
@@ -109,6 +129,20 @@ class TreeNodeBlock(Block):
             node.anchor_origin_x = stream.read_lww_float(10)
 
         return node
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.write_id(1, self.node_id)
+        writer.write_lww_string(2, self.label)
+        writer.write_lww_bool(3, self.visible)
+        if self.anchor_id is not None:
+            # FIXME group together in an anchor type?
+            assert (self.anchor_type is not None and
+                    self.anchor_threshold is not None and
+                    self.anchor_origin_x is not None)
+            writer.write_lww_id(7, self.anchor_id)
+            writer.write_lww_byte(8, self.anchor_type)
+            writer.write_lww_float(9, self.anchor_threshold)
+            writer.write_lww_float(10, self.anchor_origin_x)
 
 
 @dataclass
@@ -130,6 +164,12 @@ class PageInfoBlock(Block):
             text_lines_count=stream.read_int(4),
         )
         return info
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.write_int(1, self.loads_count)
+        writer.write_int(2, self.merges_count)
+        writer.write_int(3, self.text_chars_count)
+        writer.write_int(4, self.text_lines_count)
 
 
 @dataclass
@@ -155,6 +195,13 @@ class SceneTreeBlock(Block):
             # XXX can there sometimes be something else here?
 
         return SceneTreeBlock(tree_id, node_id, is_update, parent_id)
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.write_id(1, self.tree_id)
+        writer.write_id(2, self.node_id)
+        writer.write_bool(3, self.is_update)
+        with writer.write_subblock(4):
+            writer.write_id(1, self.parent_id)
 
 
 @dataclass
@@ -194,6 +241,24 @@ class Point:
             return 0x0E
         else:
             raise ValueError("Unknown version %s" % version)
+
+    def to_stream(self, writer: TaggedBlockWriter, version: int = 2):
+        if version not in (1, 2):
+            raise ValueError("Unknown version %s" % version)
+        d = writer.data
+        d.write_float32(self.x)
+        d.write_float32(self.y)
+        if version == 1:
+            # calculation based on ddvk's reader
+            d.write_float32(self.speed / 4)
+            d.write_float32(self.direction * (2 * math.pi) / 255)
+            d.write_float32(self.width / 4)
+            d.write_float32(self.pressure / 255)
+        else:
+            d.write_uint16(self.speed)
+            d.write_uint16(self.width)
+            d.write_uint8(self.direction)
+            d.write_uint8(self.pressure)
 
 
 @enum.unique
@@ -285,6 +350,19 @@ class Line:
 
         return Line(color, tool, points, thickness_scale, starting_length)
 
+    def to_stream(self, writer: TaggedBlockWriter, version: int = 2):
+        writer.write_int(1, self.tool)
+        writer.write_int(2, self.color)
+        writer.write_double(3, self.thickness_scale)
+        writer.write_float(4, self.starting_length)
+        with writer.write_subblock(5):
+            for point in self.points:
+                point.to_stream(writer, version)
+
+        # XXX didn't save
+        timestamp = CrdtId(0, 0)
+        writer.write_id(6, timestamp)
+
 
 @dataclass
 class SceneItemBlock(Block):
@@ -333,6 +411,28 @@ class SceneItemBlock(Block):
             parent_id, item_id, left_id, right_id, deleted_length, item_label, value
         )
 
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.write_id(1, self.parent_id)
+        writer.write_id(2, self.item_id)
+        writer.write_id(3, self.left_id)
+        writer.write_id(4, self.right_id)
+        writer.write_int(5, self.deleted_length)
+
+        with writer.write_subblock(6):
+            if self.item_type == "group":
+                item_type = 2
+                writer.data.write_uint8(item_type)
+                writer.write_id(2, self.value)
+            elif self.item_type == "line":
+                item_type = 3
+                writer.data.write_uint8(item_type)
+                # XXX make sure this version ends up in block header
+                self.value.to_stream(writer, version=2)
+            else:
+                raise ValueError(
+                    "unknown scene type %s" % self.item_type
+                )
+
 
 # These share the same structure so can share the same implementation?
 
@@ -380,6 +480,20 @@ class TextItem:
 
             return TextItem(item_id, left_id, right_id, deleted_length, text)
 
+    def to_stream(self, writer: TaggedBlockWriter):
+        with writer.write_subblock(0):
+            writer.write_id(2, self.item_id)
+            writer.write_id(3, self.left_id)
+            writer.write_id(4, self.right_id)
+            writer.write_int(5, self.deleted_length)
+
+            if self.text:
+                with writer.write_subblock(6):
+                    writer.data.write_varuint(len(self.text))
+                    is_ascii = True  # XXX?
+                    writer.data.write_uint8(is_ascii)  # "is ascii"?
+                    writer.data.write_bytes(self.text.encode())
+
 
 @enum.unique
 class TextFormat(enum.IntEnum):
@@ -426,6 +540,20 @@ class TextFormatItem:
             format_type = TextFormat(stream.data.read_uint8())
 
         return TextFormatItem(item_id, char_id, format_type)
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        # These are character ids, but not with an initial tag like other ids
+        # have?
+        writer.data.write_uint8(self.char_id.part1)
+        writer.data.write_varuint(self.char_id.part2)
+
+        writer.write_id(1, self.item_id)
+
+        with writer.write_subblock(2):
+            # XXX not sure what this is format?
+            c = 17
+            writer.data.write_uint8(c)
+            writer.data.write_uint8(self.format_type)
 
 
 @dataclass
@@ -475,6 +603,33 @@ class RootTextBlock(Block):
         width = stream.read_float(4)
 
         return RootTextBlock(block_id, text_items, text_formats, pos_x, pos_y, width)
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.write_id(1, self.block_id)
+
+        with writer.write_subblock(2):
+
+            # Text items
+            with writer.write_subblock(1):
+                with writer.write_subblock(1):
+                    writer.data.write_varuint(len(self.text_items))
+                    for item in self.text_items:
+                        item.to_stream(writer)
+
+            # Formatting
+            with writer.write_subblock(2):
+                with writer.write_subblock(1):
+                    writer.data.write_varuint(len(self.text_formats))
+                    for item in self.text_formats:
+                        item.to_stream(writer)
+
+        # Last section
+        with writer.write_subblock(3):
+            writer.data.write_float64(self.pos_x)
+            writer.data.write_float64(self.pos_y)
+
+        # "width" from ddvk
+        writer.write_float(4, self.width)
 
 
 def _parse_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
