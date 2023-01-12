@@ -11,7 +11,7 @@ import typing as tp
 
 from .scene_stream import (
     TextFormat,
-    parse_blocks,
+    read_blocks,
     TextItem,
     RootTextBlock,
 )
@@ -147,12 +147,12 @@ def extract_text_lines(
     yield (current_format, current_line)
 
 
-def parse_text(data: tp.BinaryIO) -> Iterable[tuple[TextFormat, str]]:
+def extract_text(data: tp.BinaryIO) -> Iterable[tuple[TextFormat, str]]:
     """
     Parse reMarkable file and return iterator of text (format, line) pairs.
 
     :param data: reMarkable file data.
     """
-    for block in parse_blocks(data):
+    for block in read_blocks(data):
         if isinstance(block, RootTextBlock):
             yield from extract_text_lines(block)

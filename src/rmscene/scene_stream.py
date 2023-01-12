@@ -682,7 +682,7 @@ class RootTextBlock(Block):
         writer.write_float(4, self.width)
 
 
-def _parse_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
+def _read_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
     """
     Parse blocks from reMarkable v6 file.
     """
@@ -701,7 +701,7 @@ def _parse_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
                 stream.data.read_bytes(header.block_size)
 
 
-def parse_blocks(data: tp.BinaryIO) -> Iterable[Block]:
+def read_blocks(data: tp.BinaryIO) -> Iterable[Block]:
     """
     Parse reMarkable file and return iterator of document items.
 
@@ -709,4 +709,4 @@ def parse_blocks(data: tp.BinaryIO) -> Iterable[Block]:
     """
     stream = TaggedBlockReader(data)
     stream.read_header()
-    yield from _parse_blocks(stream)
+    yield from _read_blocks(stream)

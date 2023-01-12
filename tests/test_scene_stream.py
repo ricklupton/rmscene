@@ -2,7 +2,7 @@ import pytest
 from io import BytesIO
 from pathlib import Path
 from uuid import UUID
-from rmscene import parse_blocks, LwwValue, TaggedBlockWriter, TaggedBlockReader
+from rmscene import read_blocks, LwwValue, TaggedBlockWriter, TaggedBlockReader
 from rmscene.scene_stream import *
 
 import logging
@@ -14,7 +14,7 @@ DATA_PATH = Path(__file__).parent / "data"
 
 def test_normal_ab():
     with open(DATA_PATH / "Normal_AB.rm", "rb") as f:
-        result = list(parse_blocks(f))
+        result = list(read_blocks(f))
 
     assert result == [
         AuthorIdsBlock(author_uuids={1: UUID("495ba59f-c943-2b5c-b455-3682f6948906")}),

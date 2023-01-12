@@ -2,8 +2,8 @@
 
 import sys
 import argparse
-from . import parse_blocks, TextFormat
-from .text import parse_text
+from . import read_blocks, TextFormat
+from .text import extract_text
 
 
 def parse_args(args):
@@ -27,14 +27,14 @@ def parse_args(args):
 def pprint_file(args) -> None:
     import pprint
 
-    result = parse_blocks(args.file)
+    result = read_blocks(args.file)
     for el in result:
         print()
         pprint.pprint(el)
 
 
 def print_text(args):
-    for fmt, line in parse_text(args.file):
+    for fmt, line in extract_text(args.file):
         if fmt == TextFormat.BULLET:
             print("- " + line)
         elif fmt == TextFormat.BULLET2:
