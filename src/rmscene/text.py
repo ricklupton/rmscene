@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from uuid import uuid4
 from collections.abc import Iterable
 from collections import defaultdict
 import logging
@@ -13,9 +14,17 @@ from .scene_stream import (
     TextFormat,
     read_blocks,
     TextItem,
+    TextFormatItem,
+    Block,
     RootTextBlock,
+    AuthorIdsBlock,
+    MigrationInfoBlock,
+    PageInfoBlock,
+    SceneTreeBlock,
+    TreeNodeBlock,
+    SceneGroupItemBlock
 )
-from .tagged_block_common import CrdtId
+from .tagged_block_common import CrdtId, LwwValue
 
 _logger = logging.getLogger(__name__)
 
@@ -156,3 +165,60 @@ def extract_text(data: tp.BinaryIO) -> Iterable[tuple[TextFormat, str]]:
     for block in read_blocks(data):
         if isinstance(block, RootTextBlock):
             yield from extract_text_lines(block)
+
+
+def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
+    """Return the basic blocks to represent `text` as plain text."""
+
+    if author_uuid is None:
+        author_uuid = uuid4()
+
+    yield AuthorIdsBlock(author_uuids={1: author_uuid})
+
+    yield MigrationInfoBlock(migration_id=CrdtId(1, 1), is_device=True)
+
+    yield PageInfoBlock(loads_count=1,
+                        merges_count=0,
+                        text_chars_count=len(text) + 1,
+                        text_lines_count=text.count("\n") + 1)
+
+    yield SceneTreeBlock(tree_id=CrdtId(0, 11),
+                         node_id=CrdtId(0, 0),
+                         is_update=True,
+                         parent_id=CrdtId(0, 1))
+
+    yield RootTextBlock(block_id=CrdtId(0, 0),
+                        text_items=[TextItem(item_id=CrdtId(1, 16),
+                                             left_id=CrdtId(0, 0),
+                                             right_id=CrdtId(0, 0),
+                                             deleted_length=0,
+                                             text=text)],
+                        text_formats=[TextFormatItem(item_id=CrdtId(1, 15),
+                                                     char_id=CrdtId(0, 0),
+                                                     format_type=TextFormat.PLAIN)],
+                        pos_x=-468.0,
+                        pos_y=234.0,
+                        width=936.0)
+
+    yield TreeNodeBlock(node_id=CrdtId(0, 1),
+                        label=LwwValue(timestamp=CrdtId(0, 0), value=''),
+                        visible=LwwValue(timestamp=CrdtId(0, 0), value=True),
+                        anchor_id=None,
+                        anchor_type=None,
+                        anchor_threshold=None,
+                        anchor_origin_x=None)
+
+    yield TreeNodeBlock(node_id=CrdtId(0, 11),
+                        label=LwwValue(timestamp=CrdtId(0, 12), value='Layer 1'),
+                        visible=LwwValue(timestamp=CrdtId(0, 0), value=True),
+                        anchor_id=None,
+                        anchor_type=None,
+                        anchor_threshold=None,
+                        anchor_origin_x=None)
+
+    yield SceneGroupItemBlock(parent_id=CrdtId(0, 1),
+                              item_id=CrdtId(0, 13),
+                              left_id=CrdtId(0, 0),
+                              right_id=CrdtId(0, 0),
+                              deleted_length=0,
+                              value=CrdtId(0, 11))
