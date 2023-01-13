@@ -29,6 +29,8 @@ _logger = logging.getLogger(__name__)
 
 class Block(ABC):
     BLOCK_TYPE: tp.ClassVar
+    MIN_VERSION: tp.ClassVar = 1
+    CURRENT_VERSION: tp.ClassVar = 1
 
     @classmethod
     def lookup(cls, block_type: int) -> tp.Optional[tp.Type[Block]]:
@@ -57,6 +59,7 @@ class AuthorIdsBlock(Block):
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> AuthorIdsBlock:
+        _logger.debug("Reading %s", cls.__name__)
         num_subblocks = stream.data.read_varuint()
         author_ids = {}
         for _ in range(num_subblocks):
@@ -70,6 +73,7 @@ class AuthorIdsBlock(Block):
         return AuthorIdsBlock(author_ids)
 
     def to_stream(self, writer: TaggedBlockWriter):
+        _logger.debug("Writing %s", type(self).__name__)
         num_subblocks = len(self.author_uuids)
         writer.data.write_varuint(num_subblocks)
         for author_id, uuid in self.author_uuids.items():
@@ -89,11 +93,13 @@ class MigrationInfoBlock(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> MigrationInfoBlock:
         "Parse migration info"
+        _logger.debug("Reading %s", cls.__name__)
         migration_id = stream.read_id(1)
         is_device = stream.read_bool(2)
         return MigrationInfoBlock(migration_id, is_device)
 
     def to_stream(self, writer: TaggedBlockWriter):
+        _logger.debug("Writing %s", type(self).__name__)
         writer.write_id(1, self.migration_id)
         writer.write_bool(2, self.is_device)
 
@@ -114,6 +120,7 @@ class TreeNodeBlock(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> TreeNodeBlock:
         "Parse tree node block."
+        _logger.debug("Reading %s", cls.__name__)
 
         node = TreeNodeBlock(
             stream.read_id(1),
@@ -131,6 +138,7 @@ class TreeNodeBlock(Block):
         return node
 
     def to_stream(self, writer: TaggedBlockWriter):
+        _logger.debug("Writing %s", type(self).__name__)
         writer.write_id(1, self.node_id)
         writer.write_lww_string(2, self.label)
         writer.write_lww_bool(3, self.visible)
@@ -148,6 +156,7 @@ class TreeNodeBlock(Block):
 @dataclass
 class PageInfoBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x0A
+    MIN_VERSION: tp.ClassVar = 0
 
     loads_count: int
     merges_count: int
@@ -157,6 +166,7 @@ class PageInfoBlock(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> PageInfoBlock:
         "Parse page info block"
+        _logger.debug("Reading %s", cls.__name__)
         info = PageInfoBlock(
             loads_count=stream.read_int(1),
             merges_count=stream.read_int(2),
@@ -166,6 +176,7 @@ class PageInfoBlock(Block):
         return info
 
     def to_stream(self, writer: TaggedBlockWriter):
+        _logger.debug("Writing %s", type(self).__name__)
         writer.write_int(1, self.loads_count)
         writer.write_int(2, self.merges_count)
         writer.write_int(3, self.text_chars_count)
@@ -185,6 +196,7 @@ class SceneTreeBlock(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneTreeBlock:
         "Parse scene tree block"
+        _logger.debug("Reading %s", cls.__name__)
 
         # XXX not sure what the difference is
         tree_id = stream.read_id(1)
@@ -197,6 +209,7 @@ class SceneTreeBlock(Block):
         return SceneTreeBlock(tree_id, node_id, is_update, parent_id)
 
     def to_stream(self, writer: TaggedBlockWriter):
+        _logger.debug("Writing %s", type(self).__name__)
         writer.write_id(1, self.tree_id)
         writer.write_id(2, self.node_id)
         writer.write_bool(3, self.is_update)
@@ -222,10 +235,14 @@ class Point:
         y = d.read_float32()
         if version == 1:
             # calculation based on ddvk's reader
-            speed = int(round(d.read_float32() * 4))
-            direction = int(round(255 * d.read_float32() / (math.pi * 2)))
+            # XXX removed rounding so that can round-trip correctly?
+            speed = d.read_float32() * 4
+            # speed = int(round(d.read_float32() * 4))
+            direction = 255 * d.read_float32() / (math.pi * 2)
+            # direction = int(round(255 * d.read_float32() / (math.pi * 2)))
             width = int(round(d.read_float32() * 4))
-            pressure = int(round(d.read_float32() * 255))
+            pressure = d.read_float32() * 255
+            # pressure = int(round(d.read_float32() * 255))
         else:
             speed = d.read_uint16()
             width = d.read_uint16()
@@ -248,6 +265,7 @@ class Point:
         d = writer.data
         d.write_float32(self.x)
         d.write_float32(self.y)
+        _logger.debug("Writing Point v%d: %s", version, self)
         if version == 1:
             # calculation based on ddvk's reader
             d.write_float32(self.speed / 4)
@@ -327,6 +345,7 @@ class Line:
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader, version: int = 2) -> Line:
+        _logger.debug("Reading Line version %d", version)
         tool_id = stream.read_int(1)
         tool = Pen(tool_id)
         color_id = stream.read_int(2)
@@ -351,6 +370,7 @@ class Line:
         return Line(color, tool, points, thickness_scale, starting_length)
 
     def to_stream(self, writer: TaggedBlockWriter, version: int = 2):
+        _logger.debug("Writing Line version %d", version)
         writer.write_int(1, self.tool)
         writer.write_int(2, self.color)
         writer.write_double(3, self.thickness_scale)
@@ -360,7 +380,7 @@ class Line:
                 point.to_stream(writer, version)
 
         # XXX didn't save
-        timestamp = CrdtId(0, 0)
+        timestamp = CrdtId(0, 1)
         writer.write_id(6, timestamp)
 
 
@@ -378,6 +398,7 @@ class SceneItemBlock(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneItemBlock:
         "Group item block?"
+        _logger.debug("Reading %s", cls.__name__)
 
         assert stream.current_block
         block_type = stream.current_block.block_type
@@ -414,6 +435,7 @@ class SceneItemBlock(Block):
         )
 
     def to_stream(self, writer: TaggedBlockWriter):
+        _logger.debug("Writing %s", type(self).__name__)
         writer.write_id(1, self.parent_id)
         writer.write_id(2, self.item_id)
         writer.write_id(3, self.left_id)
@@ -484,7 +506,7 @@ class SceneLineItemBlock(SceneItemBlock):
 
     def value_to_stream(self, writer: TaggedBlockWriter, value: Line):
         # XXX make sure this version ends up in block header
-        value.to_stream(writer, version=2)
+        value.to_stream(writer, version=1)
 
 
 # XXX missing "PathItemBlock"? with ITEM_TYPE 0x04
@@ -620,6 +642,7 @@ class RootTextBlock(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> RootTextBlock:
         "Parse root text block."
+        _logger.debug("Reading %s", cls.__name__)
 
         block_id = stream.read_id(1)
         assert block_id == CrdtId(0, 0)
@@ -655,6 +678,7 @@ class RootTextBlock(Block):
         return RootTextBlock(block_id, text_items, text_formats, pos_x, pos_y, width)
 
     def to_stream(self, writer: TaggedBlockWriter):
+        _logger.debug("Writing %s", type(self).__name__)
         writer.write_id(1, self.block_id)
 
         with writer.write_subblock(2):
@@ -710,3 +734,18 @@ def read_blocks(data: tp.BinaryIO) -> Iterable[Block]:
     stream = TaggedBlockReader(data)
     stream.read_header()
     yield from _read_blocks(stream)
+
+
+def _write_block(writer: TaggedBlockWriter, block: Block):
+    with writer.write_block(block.BLOCK_TYPE, block.MIN_VERSION, block.CURRENT_VERSION):
+        block.to_stream(writer)
+
+
+def write_blocks(data: tp.BinaryIO, blocks: Iterable[Block]):
+    """
+    Write blocks to file.
+    """
+    stream = TaggedBlockWriter(data)
+    stream.write_header()
+    for block in blocks:
+        _write_block(stream, block)
