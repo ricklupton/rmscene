@@ -29,8 +29,10 @@ _logger = logging.getLogger(__name__)
 
 class Block(ABC):
     BLOCK_TYPE: tp.ClassVar
-    MIN_VERSION: tp.ClassVar = 1
-    CURRENT_VERSION: tp.ClassVar = 1
+
+    def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
+        """Return (min_version, current_version) to use when writing."""
+        return (1, 1)
 
     @classmethod
     def lookup(cls, block_type: int) -> tp.Optional[tp.Type[Block]]:
@@ -156,7 +158,10 @@ class TreeNodeBlock(Block):
 @dataclass
 class PageInfoBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x0A
-    MIN_VERSION: tp.ClassVar = 0
+
+    def version_info(self, _) -> tuple[int, int]:
+        """Return (min_version, current_version) to use when writing."""
+        return (0, 1)
 
     loads_count: int
     merges_count: int
@@ -497,6 +502,11 @@ class SceneLineItemBlock(SceneItemBlock):
 
     value: tp.Optional[Line]
 
+    def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
+        """Return (min_version, current_version) to use when writing."""
+        ver = writer.options.get("line_version", 2)
+        return (ver, ver)
+
     @classmethod
     def value_from_stream(cls, reader: TaggedBlockReader) -> Line:
         assert reader.current_block is not None
@@ -506,7 +516,8 @@ class SceneLineItemBlock(SceneItemBlock):
 
     def value_to_stream(self, writer: TaggedBlockWriter, value: Line):
         # XXX make sure this version ends up in block header
-        value.to_stream(writer, version=1)
+        version = writer.options.get("line_version", 2)
+        value.to_stream(writer, version=version)
 
 
 # XXX missing "PathItemBlock"? with ITEM_TYPE 0x04
@@ -737,15 +748,16 @@ def read_blocks(data: tp.BinaryIO) -> Iterable[Block]:
 
 
 def _write_block(writer: TaggedBlockWriter, block: Block):
-    with writer.write_block(block.BLOCK_TYPE, block.MIN_VERSION, block.CURRENT_VERSION):
+    min_version, current_version = block.version_info(writer)
+    with writer.write_block(block.BLOCK_TYPE, min_version, current_version):
         block.to_stream(writer)
 
 
-def write_blocks(data: tp.BinaryIO, blocks: Iterable[Block]):
+def write_blocks(data: tp.BinaryIO, blocks: Iterable[Block], options: tp.Optional[dict] = None):
     """
     Write blocks to file.
     """
-    stream = TaggedBlockWriter(data)
+    stream = TaggedBlockWriter(data, options=options)
     stream.write_header()
     for block in blocks:
         _write_block(stream, block)

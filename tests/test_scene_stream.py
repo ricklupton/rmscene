@@ -25,6 +25,7 @@ def _hex_lines(b, n=32):
         "Normal_AB.rm",
         "Normal_A_stroke_2_layers.rm",
         "Bold_Heading_Bullet_Normal.rm",
+        "Lines_v2.rm"
     ]
 )
 def test_full_roundtrip(test_file):
@@ -33,8 +34,11 @@ def test_full_roundtrip(test_file):
 
     input_buf = BytesIO(data)
     output_buf = BytesIO()
+    options = {
+        "line_version": (2 if test_file == "Lines_v2.rm" else 1)
+    }
 
-    write_blocks(output_buf, read_blocks(input_buf))
+    write_blocks(output_buf, read_blocks(input_buf), options)
 
     assert _hex_lines(input_buf.getvalue()) == _hex_lines(output_buf.getvalue())
 

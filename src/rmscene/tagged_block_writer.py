@@ -28,7 +28,10 @@ _logger = logging.getLogger(__name__)
 class TaggedBlockWriter:
     """Write blocks and values to a remarkable v6 file stream."""
 
-    def __init__(self, data: tp.BinaryIO):
+    def __init__(self, data: tp.BinaryIO, options: tp.Optional[dict] = None):
+        if options is None:
+            options = {}
+        self.options = options
         rm_data = DataStream(data)
         self.data = rm_data
         self._in_block: bool = False
