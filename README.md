@@ -12,6 +12,14 @@ $ python -m rmscene print-text file.rm
 $ python -m rmscene print-blocks file.rm
 ```
 
+
+# operation
+
+Test the parser:
+``` shellsession
+$ python -m src.rmscene print-blocks page_file.rm
+```
+
 ## Acknowledgements
 
 https://github.com/ddvk/reader helped a lot in figuring out the structure and meaning of the files.
