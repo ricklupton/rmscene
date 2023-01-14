@@ -121,9 +121,11 @@ class TaggedBlockReader:
         min_version = self.data.read_uint8()
         current_version = self.data.read_uint8()
         block_type = self.data.read_uint8()
+        _logger.debug("Block header: %d %d %d", min_version, current_version, block_type)
         assert unknown == 0
         assert current_version >= 0
-        assert min_version >= 0 and min_version <= current_version
+        assert min_version >= 0
+        assert min_version <= current_version
 
         i0 = self.data.tell()
         self.current_block = BlockHeader(
