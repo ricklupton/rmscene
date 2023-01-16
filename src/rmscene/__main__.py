@@ -4,6 +4,7 @@ import sys
 import argparse
 from . import read_blocks, write_blocks, TextFormat
 from .text import extract_text, simple_text_document
+from .rm2svg import rm2svg
 
 
 def parse_args(args):
@@ -24,6 +25,11 @@ def parse_args(args):
     parser_c = subparsers.add_parser("text2rm", help="convert text")
     parser_c.add_argument("file", type=argparse.FileType("wb"), help="filename to write")
     parser_c.set_defaults(func=convert_text)
+
+    parser_d = subparsers.add_parser("rm2svg", help="convert rm to svg")
+    parser_d.add_argument("infile", type=argparse.FileType("rb"), help="filename to read")
+    parser_d.add_argument("outfile", type=argparse.FileType("wb"), help="filename to write")
+    parser_d.set_defaults(func=do_rm2svg)
 
     return parser.parse_args(args)
 
@@ -55,6 +61,12 @@ def print_text(args):
 
 def convert_text(args):
     write_blocks(args.file, simple_text_document(sys.stdin.read()))
+
+
+def do_rm2svg(args):
+    outfile = args.outfile.name
+    args.outfile.close()
+    rm2svg(args.infile, outfile)
 
 
 if __name__ == "__main__":

@@ -20,6 +20,13 @@ Test the parser:
 $ python -m src.rmscene print-blocks page_file.rm
 ```
 
+Convert a .rm file into an SVG file.
+``` shellsession
+$ python -m src.rmscene rm2svg tests/rm/dot.stroke.rm /tmp/foo.svg
+```
+
+```
+
 ## Acknowledgements
 
 https://github.com/ddvk/reader helped a lot in figuring out the structure and meaning of the files.
