@@ -112,6 +112,7 @@ def draw_stroke(block, output, svg_doc_info):
     print('----SceneLineItemBlock')
     # a SceneLineItemBlock contains a stroke
     output.write(f'        <!-- SceneLineItemBlock item_id: {block.item_id} -->\n')
+
     # make sure the object is not empty
     if block.value is None:
         return
@@ -120,6 +121,7 @@ def draw_stroke(block, output, svg_doc_info):
     pen = Pen.create(block.value.tool.value, block.value.color.value, block.value.thickness_scale)
 
     # BEGIN stroke
+    output.write(f'        <!-- Stroke tool: {block.value.tool.name} color: {block.value.color.name} -->\n')
     output.write('        <polyline ')
     output.write(f'style="fill:none;stroke:{pen.stroke_color};stroke-width:{pen.stroke_width};opacity:{pen.stroke_opacity}" ')
     output.write(f'stroke-linecap="{pen.stroke_linecap}" ')
@@ -187,7 +189,8 @@ def draw_text(block, output, svg_doc_info):
         xpos = block.pos_x + svg_doc_info.xpos_delta
         ypos = block.pos_y + svg_doc_info.ypos_delta
         output.write(f'        <!-- TextItem item_id: {text_item.item_id} -->\n')
-        output.write(f'        <text x="{xpos}" y="{ypos}" class="default">{text_item.text}</text>\n')
+        if text_item.text.strip():
+            output.write(f'        <text x="{xpos}" y="{ypos}" class="default">{text_item.text.strip()}</text>\n')
 
 
 def get_limits(blocks):
