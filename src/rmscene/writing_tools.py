@@ -8,43 +8,37 @@ import math
 _logger = logging.getLogger(__name__)
 
 
-stroke_color = {
-    'gray': {
-        0: [0, 0, 0],
-        1: [125, 125, 125],
-        2: [255, 255, 255],
-    },
-    'rgb': {
-        0: [0, 0, 0],
-        1: [255, 0, 0],
-        2: [255, 255, 255],
-        3: [150, 0, 0],
-        4: [0, 0, 125],
-    },
-}
-
-color_type = 'gray'
-# color_type = 'rgb'
-
-
-# color management
+# color_id to RGB conversion
 # 1. we use "color_id" for a unique, proprietary ID for colors,
 #   (see scene_stream.py):
-# * BLACK = 0
-# * GRAY = 1
-# * WHITE = 2
-# * YELLOW = 3
-# * GREEN = 4
-# * PINK = 5
-# * BLUE = 6
-# * RED = 7
-# * GRAY_OVERLAP = 8
-# 2. we use "color" for RGB tuples.
+remarkable_palette = {
+    # BLACK = 0
+    0: [0, 0, 0],
+    # GRAY = 1
+    1: [125, 125, 125],
+    # WHITE = 2
+    2: [255, 255, 255],
+    # https://www.color-name.com/highlighter-yellow.color
+    # YELLOW = 3
+    3: [251, 247, 25],
+    # GREEN = 4
+    4: [0, 255, 0],
+    # PINK = 5
+    # https://www.rapidtables.com/web/color/pink-color.html
+    5: [255, 192, 203],
+    # BLUE = 6
+    6: [0, 0, 255],
+    # RED = 7
+    7: [255, 0, 0],
+    # GRAY_OVERLAP = 8
+    8: [125, 125, 125],
+}
+
 
 class Pen:
     def __init__(self, base_width, base_color_id):
         self.base_width = base_width
-        self.base_color = stroke_color[color_type][base_color_id]
+        self.base_color = remarkable_palette[base_color_id]
         self.segment_length = 1000
         self.base_opacity = 1
         self.name = "Basic Pen"
@@ -98,8 +92,6 @@ class Pen:
             return Marker(width, color_id)
         # BallPoint
         elif pen_nr == 2 or pen_nr == 15:
-            if color_type == 'rgb':
-                color_id = 4
             return Ballpoint(width, color_id)
         # Fineliner
         elif pen_nr == 4 or pen_nr == 17:
@@ -113,8 +105,6 @@ class Pen:
         # Highlighter
         elif pen_nr == 5 or pen_nr == 18:
             width = 15
-            if color_type == 'rgb':
-                color_id = 3
             return Highlighter(width, color_id)
         # Erase area
         elif pen_nr == 8:
