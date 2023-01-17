@@ -52,6 +52,9 @@ SVG_HEADER = string.Template("""
 """)
 
 
+XPOS_SHIFT = SCREEN_WIDTH / 2
+
+
 @dataclass
 class SvgDocInfo:
     height: int
@@ -185,8 +188,8 @@ def draw_text(block, output, svg_doc_info):
     for text_item in block.text_items:
         # BEGIN text
         # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
-        xpos = block.pos_x + svg_doc_info.xpos_delta
-        ypos = block.pos_y + svg_doc_info.ypos_delta
+        xpos = block.pos_x + svg_doc_info.width / 2
+        ypos = block.pos_y + svg_doc_info.height / 2
         output.write(f'        <!-- TextItem item_id: {text_item.item_id} -->\n')
         if text_item.text.strip():
             output.write(f'        <text x="{xpos}" y="{ypos}" class="default">{text_item.text.strip()}</text>\n')
@@ -198,8 +201,9 @@ def get_limits(blocks):
     for block in blocks:
         if isinstance(block, SceneLineItemBlock):
             xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_stroke(block)
-        elif isinstance(block, RootTextBlock):
-            xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_text(block)
+        # text blocks use a different xpos/ypos coordinate system
+        #elif isinstance(block, RootTextBlock):
+        #    xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_text(block)
         else:
             continue
         if xmin_tmp is None:
@@ -245,13 +249,18 @@ def get_limits_text(block):
 def get_dimensions(blocks):
     # get block limits
     xmin, xmax, ymin, ymax = get_limits(blocks)
-    # {xpos,ypos} coordinates are based on the center of the top of the
-    # doc
-    xpos_delta = max(SCREEN_WIDTH / 2, -xmin if xmin is not None else 0)
+    # print(f"xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}")
+    # {xpos,ypos} coordinates are based on the top-center point
+    # of the doc **iff there are no text boxes**. When you add
+    # text boxes, the xpos/ypos values change.
+    xpos_delta = XPOS_SHIFT
+    if xmin is not None and (xmin + XPOS_SHIFT) < 0:
+        # make sure there are no negative xpos
+        xpos_delta += -(xmin + XPOS_SHIFT)
+    #ypos_delta = SCREEN_HEIGHT / 2
     ypos_delta = 0
     # adjust dimensions if needed
     width = int(math.ceil(max(SCREEN_WIDTH, xmax - xmin if xmin is not None and xmax is not None else 0)))
     height = int(math.ceil(max(SCREEN_HEIGHT, ymax - ymin if ymin is not None and ymax is not None else 0)))
-    # print(f"xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}")
     # print(f"height: {height} width: {width} xpos_delta: {xpos_delta} ypos_delta: {ypos_delta}")
-    return SvgDocInfo(height=height, width=width, xpos_delta=xpos_delta, ypos_delta=0)
+    return SvgDocInfo(height=height, width=width, xpos_delta=xpos_delta, ypos_delta=ypos_delta)
