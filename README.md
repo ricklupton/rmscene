@@ -30,6 +30,13 @@ Convert a .rm file into an PDF file.
 $ python -m src.rmscene rm2pdf tests/rm/dot.stroke.rm /tmp/foo.pdf
 ```
 
-## Acknowledgements
+# Acknowledgements
 
 https://github.com/ddvk/reader helped a lot in figuring out the structure and meaning of the files.
+
+
+# SVG/PDF Conversion Status
+
+Right now the conversor (it is the same for svg and pdf) works well while there are no text boxes. If you add text boxes, there are 2x issues:
+* (1) if the text box contains multiple lines, the lines are actually printed in the same line, and
+* (2) the position of the strokes gets corrupted.
