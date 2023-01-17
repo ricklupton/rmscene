@@ -2,6 +2,7 @@
 
 """
 
+import io
 import logging
 import math
 import string
@@ -69,9 +70,12 @@ def rm2pdf(infile, outfile):
 
 
 def rm2svg(infile, outfile):
-    # we need to process the blocks twice to understand the dimensions, so
-    # let's put the iterable into a list
-    blocks = list(read_blocks(infile))
+    # parse the lines (.rm) input file into a series of blocks
+    with open(infile, 'rb') as infh:
+        infile_datastream = io.BufferedReader(infh)
+        # we need to process the blocks twice to understand the dimensions, so
+        # let's put the iterable into a list
+        blocks = list(read_blocks(infile_datastream))
 
     # get document dimensions
     svg_doc_info = get_dimensions(blocks)

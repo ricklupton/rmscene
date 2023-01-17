@@ -27,13 +27,13 @@ def parse_args(args):
     parser_c.set_defaults(func=convert_text)
 
     parser_d = subparsers.add_parser("rm2svg", help="convert rm to svg")
-    parser_d.add_argument("infile", type=argparse.FileType("rb"), help="filename to read")
-    parser_d.add_argument("outfile", type=argparse.FileType("wb"), help="filename to write")
+    parser_d.add_argument("infile", type=str, help="filename to read")
+    parser_d.add_argument("outfile", type=str, help="filename to write")
     parser_d.set_defaults(func=do_rm2svg)
 
     parser_d = subparsers.add_parser("rm2pdf", help="convert rm to pdf")
-    parser_d.add_argument("infile", type=argparse.FileType("rb"), help="filename to read")
-    parser_d.add_argument("outfile", type=argparse.FileType("wb"), help="filename to write")
+    parser_d.add_argument("infile", type=str, help="filename to read")
+    parser_d.add_argument("outfile", type=str, help="filename to write")
     parser_d.set_defaults(func=do_rm2pdf)
 
     return parser.parse_args(args)
@@ -69,15 +69,11 @@ def convert_text(args):
 
 
 def do_rm2svg(args):
-    outfile = args.outfile.name
-    args.outfile.close()
-    rm2svg(args.infile, outfile)
+    rm2svg(args.infile, args.outfile)
 
 
 def do_rm2pdf(args):
-    outfile = args.outfile.name
-    args.outfile.close()
-    rm2pdf(args.infile, outfile)
+    rm2pdf(args.infile, args.outfile)
 
 
 if __name__ == "__main__":
