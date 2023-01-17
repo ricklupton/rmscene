@@ -170,13 +170,20 @@ def draw_text(block, output, svg_doc_info):
     # a RootTextBlock contains text
     output.write(f'        <!-- RootTextBlock item_id: {block.block_id} -->\n')
 
+    # add some style to get readable text
+    output.write('        <style>\n')
+    output.write('            .default {\n')
+    output.write('                font: 50px serif\n')
+    output.write('            }\n')
+    output.write('        </style>\n')
+
     for text_item in block.text_items:
         # BEGIN text
         # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
         xpos = block.pos_x + svg_doc_info.xpos_delta
         ypos = block.pos_y + svg_doc_info.ypos_delta
         output.write(f'        <!-- TextItem item_id: {text_item.item_id} -->\n')
-        output.write(f'        <text x="{xpos}" y="{ypos}">{text_item.text}</text>\n')
+        output.write(f'        <text x="{xpos}" y="{ypos}" class="default">{text_item.text}</text>\n')
 
 
 def get_limits(blocks):
