@@ -88,6 +88,8 @@ def rm2svg(infile, outfile):
         for block in blocks:
             if isinstance(block, SceneLineItemBlock):
                 draw_stroke(block, output, svg_doc_info)
+            elif isinstance(block, RootTextBlock):
+                draw_text(block, output, svg_doc_info)
             else:
                 print(f'warning: not converting block: {block.__class__}')
 
@@ -163,12 +165,28 @@ def draw_stroke(block, output, svg_doc_info):
     output.write('" />\n')
 
 
+def draw_text(block, output, svg_doc_info):
+    print('----RootTextBlock')
+    # a RootTextBlock contains text
+    output.write(f'        <!-- RootTextBlock item_id: {block.block_id} -->\n')
+
+    for text_item in block.text_items:
+        # BEGIN text
+        # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
+        xpos = block.pos_x + svg_doc_info.xpos_delta
+        ypos = block.pos_y + svg_doc_info.ypos_delta
+        output.write(f'        <!-- TextItem item_id: {text_item.item_id} -->\n')
+        output.write(f'        <text x="{xpos}" y="{ypos}">{text_item.text}</text>\n')
+
+
 def get_limits(blocks):
     xmin = xmax = None
     ymin = ymax = None
     for block in blocks:
         if isinstance(block, SceneLineItemBlock):
             xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_stroke(block)
+        elif isinstance(block, RootTextBlock):
+            xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_text(block)
         else:
             continue
         if xmin_tmp is None:
@@ -200,6 +218,14 @@ def get_limits_stroke(block):
             ymin = ypos
         if ymax is None or ymax < ypos:
             ymax = ypos
+    return xmin, xmax, ymin, ymax
+
+
+def get_limits_text(block):
+    xmin = block.pos_x
+    xmax = block.pos_x + block.width
+    ymin = block.pos_y
+    ymax = block.pos_y
     return xmin, xmax, ymin, ymax
 
 
