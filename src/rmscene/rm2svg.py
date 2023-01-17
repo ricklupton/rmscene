@@ -145,10 +145,9 @@ def draw_stroke(block, output, svg_doc_info):
         #    ypos = (1 / ratio) * (ypos * svg_doc_info.height) / 1872
         # process segment-origination points
         if point_id % pen.segment_length == 0:
-            tilt = point.direction  # XXX
-            segment_color = pen.get_segment_color(point.speed, tilt, point.width, point.pressure, last_segment_width)
-            segment_width = pen.get_segment_width(point.speed, tilt, point.width, point.pressure, last_segment_width)
-            segment_opacity = pen.get_segment_opacity(point.speed, tilt, point.width, point.pressure, last_segment_width)
+            segment_color = pen.get_segment_color(point.speed, point.direction, point.width, point.pressure, last_segment_width)
+            segment_width = pen.get_segment_width(point.speed, point.direction, point.width, point.pressure, last_segment_width)
+            segment_opacity = pen.get_segment_opacity(point.speed, point.direction, point.width, point.pressure, last_segment_width)
             # print(segment_color, segment_width, segment_opacity, pen.stroke_linecap)
             # UPDATE stroke
             output.write('"/>\n')

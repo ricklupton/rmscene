@@ -3,6 +3,7 @@
 """
 
 import logging
+import math
 
 _logger = logging.getLogger(__name__)
 
@@ -53,13 +54,28 @@ class Pen:
         self.stroke_width = base_width
         self.stroke_color = base_color_id
 
-    def get_segment_width(self, speed, tilt, width, pressure, last_width):
+    # note that the units of the points have had their units converted
+    # in scene_stream.py
+    # speed = d.read_float32() * 4
+    # ---> replace speed with speed / 4 [input]
+    # direction = 255 * d.read_float32() / (math.pi * 2)
+    # ---> replace tilt with direction_to_tilt() [input]
+    @classmethod
+    def direction_to_tilt(cls, direction):
+        return direction * (math.pi * 2) / 255
+    # width = int(round(d.read_float32() * 4))
+    # ---> replace width with width / 4 [input]
+    # ---> replace width with 4 * width [output]
+    # pressure = d.read_float32() * 255
+    # ---> replace pressure with pressure / 255 [input]
+
+    def get_segment_width(self, speed, direction, width, pressure, last_width):
         return self.base_width
 
-    def get_segment_color(self, speed, tilt, width, pressure, last_width):
+    def get_segment_color(self, speed, direction, width, pressure, last_width):
         return "rgb"+str(tuple(self.base_color))
 
-    def get_segment_opacity(self, speed, tilt, width, pressure, last_width):
+    def get_segment_opacity(self, speed, direction, width, pressure, last_width):
         return self.base_opacity
 
     def cutoff(self, value):
@@ -123,20 +139,20 @@ class Ballpoint(Pen):
         self.segment_length = 5
         self.name = "Ballpoint"
 
-    def get_segment_width(self, speed, tilt, width, pressure, last_width):
-        segment_width = (0.5 + pressure) + (1 * width) - 0.5*(speed/50)
+    def get_segment_width(self, speed, direction, width, pressure, last_width):
+        segment_width = (0.5 + pressure / 255) + (1 * width / 4) - 0.5*((speed / 4)/50)
         return segment_width
 
-    def get_segment_color(self, speed, tilt, width, pressure, last_width):
-        intensity = (0.1 * -(speed / 35)) + (1.2 * pressure) + 0.5
+    def get_segment_color(self, speed, direction, width, pressure, last_width):
+        intensity = (0.1 * - ((speed / 4) / 35)) + (1.2 * pressure / 255) + 0.5
         intensity = self.cutoff(intensity)
         # using segment color not opacity because the dots interfere with each other.
         # Color must be 255 rgb
         segment_color = [int(abs(intensity - 1) * 255)] * 3
         return "rgb"+str(tuple(segment_color))
 
-    # def get_segment_opacity(self, speed, tilt, width, pressure, last_width):
-    #     segment_opacity = (0.2 * -(speed / 35)) + (0.8 * pressure)
+    # def get_segment_opacity(self, speed, direction, width, pressure, last_width):
+    #     segment_opacity = (0.2 * - ((speed / 4) / 35)) + (0.8 * pressure / 255)
     #     segment_opacity *= segment_opacity
     #     segment_opacity = self.cutoff(segment_opacity)
     #     return segment_opacity
@@ -148,8 +164,8 @@ class Marker(Pen):
         self.segment_length = 3
         self.name = "Marker"
 
-    def get_segment_width(self, speed, tilt, width, pressure, last_width):
-        segment_width = 0.9 * (((1 * width)) - 0.4 * tilt) + (0.1 * last_width)
+    def get_segment_width(self, speed, direction, width, pressure, last_width):
+        segment_width = 0.9 * ((width / 4) - 0.4 * self.direction_to_tilt(direction)) + (0.1 * last_width)
         return segment_width
 
 
@@ -159,15 +175,15 @@ class Pencil(Pen):
         self.segment_length = 2
         self.name = "Pencil"
 
-    def get_segment_width(self, speed, tilt, width, pressure, last_width):
-        segment_width = 0.7 * ((((0.8*self.base_width) + (0.5 * pressure)) * (1 * width)) - (0.25 * tilt**1.8) - (0.6 * speed / 50))
-        # segment_width = 1.3*(((self.base_width * 0.4) * pressure) - 0.5 * ((tilt ** 0.5)) + (0.5 * last_width))
+    def get_segment_width(self, speed, direction, width, pressure, last_width):
+        segment_width = 0.7 * ((((0.8*self.base_width) + (0.5 * pressure / 255)) * (width / 4)) - (0.25 * self.direction_to_tilt(direction)**1.8) - (0.6 * (speed / 4) / 50))
+        # segment_width = 1.3*(((self.base_width * 0.4) * pressure) - 0.5 * ((self.direction_to_tilt(direction) ** 0.5)) + (0.5 * last_width))
         max_width = self.base_width * 10
         segment_width = segment_width if segment_width < max_width else max_width
         return segment_width
 
-    def get_segment_opacity(self, speed, tilt, width, pressure, last_width):
-        segment_opacity = (0.1 * -(speed / 35)) + (1 * pressure)
+    def get_segment_opacity(self, speed, direction, width, pressure, last_width):
+        segment_opacity = (0.1 * - ((speed / 4) / 35)) + (1 * pressure / 255)
         segment_opacity = self.cutoff(segment_opacity) - 0.1
         return segment_opacity
 
@@ -188,12 +204,12 @@ class Brush(Pen):
         self.opacity = 1
         self.name = "Brush"
 
-    def get_segment_width(self, speed, tilt, width, pressure, last_width):
-        segment_width = 0.7 * (((1 + (1.4 * pressure)) * (1 * width)) - (0.5 * tilt) - (0.5 * speed / 50))  # + (0.2 * last_width)
+    def get_segment_width(self, speed, direction, width, pressure, last_width):
+        segment_width = 0.7 * (((1 + (1.4 * pressure / 255)) * (width / 4)) - (0.5 * self.direction_to_tilt(direction)) - ((speed / 4) / 50))  # + (0.2 * last_width)
         return segment_width
 
-    def get_segment_color(self, speed, tilt, width, pressure, last_width):
-        intensity = (pressure ** 1.5 - 0.2 * (speed / 50)) * 1.5
+    def get_segment_color(self, speed, direction, width, pressure, last_width):
+        intensity = ((pressure / 255) ** 1.5 - 0.2 * ((speed / 4) / 50)) * 1.5
         intensity = self.cutoff(intensity)
         # using segment color not opacity because the dots interfere with each other.
         # Color must be 255 rgb
@@ -236,6 +252,6 @@ class Caligraphy(Pen):
         self.segment_length = 2
         self.name = "Calligraphy"
 
-    def get_segment_width(self, speed, tilt, width, pressure, last_width):
-        segment_width = 0.9 * (((1 + pressure) * (1 * width)) - 0.3 * tilt) + (0.1 * last_width)
+    def get_segment_width(self, speed, direction, width, pressure, last_width):
+        segment_width = 0.9 * (((1 + pressure / 255) * (width / 4)) - 0.3 * self.direction_to_tilt(direction)) + (0.1 * last_width)
         return segment_width
