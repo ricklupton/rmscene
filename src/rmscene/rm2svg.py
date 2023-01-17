@@ -5,6 +5,7 @@
 import logging
 import math
 import string
+import tempfile
 
 from dataclasses import dataclass
 
@@ -24,6 +25,10 @@ from .scene_stream import (
 
 from .writing_tools import (
     Pen,
+)
+
+from .utils import (
+    run_command,
 )
 
 _logger = logging.getLogger(__name__)
@@ -52,6 +57,15 @@ class SvgDocInfo:
     width: int
     xpos_delta: float
     ypos_delta: float
+
+
+def rm2pdf(infile, outfile):
+    tmp_outfile = tempfile.NamedTemporaryFile().name + ".svg"
+    rm2svg(infile, tmp_outfile)
+    # use inkscape to convert svg to pdf
+    command = 'inkscape %s --export-filename=%s' % (tmp_outfile, outfile)
+    returncode, out, err = run_command(command)
+    assert(returncode == 0)
 
 
 def rm2svg(infile, outfile):

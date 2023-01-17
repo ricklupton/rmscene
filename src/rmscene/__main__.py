@@ -4,7 +4,7 @@ import sys
 import argparse
 from . import read_blocks, write_blocks, TextFormat
 from .text import extract_text, simple_text_document
-from .rm2svg import rm2svg
+from .rm2svg import rm2svg, rm2pdf
 
 
 def parse_args(args):
@@ -30,6 +30,11 @@ def parse_args(args):
     parser_d.add_argument("infile", type=argparse.FileType("rb"), help="filename to read")
     parser_d.add_argument("outfile", type=argparse.FileType("wb"), help="filename to write")
     parser_d.set_defaults(func=do_rm2svg)
+
+    parser_d = subparsers.add_parser("rm2pdf", help="convert rm to pdf")
+    parser_d.add_argument("infile", type=argparse.FileType("rb"), help="filename to read")
+    parser_d.add_argument("outfile", type=argparse.FileType("wb"), help="filename to write")
+    parser_d.set_defaults(func=do_rm2pdf)
 
     return parser.parse_args(args)
 
@@ -67,6 +72,12 @@ def do_rm2svg(args):
     outfile = args.outfile.name
     args.outfile.close()
     rm2svg(args.infile, outfile)
+
+
+def do_rm2pdf(args):
+    outfile = args.outfile.name
+    args.outfile.close()
+    rm2pdf(args.infile, outfile)
 
 
 if __name__ == "__main__":

@@ -25,6 +25,9 @@ Convert a .rm file into an SVG file.
 $ python -m src.rmscene rm2svg tests/rm/dot.stroke.rm /tmp/foo.svg
 ```
 
+Convert a .rm file into an PDF file.
+``` shellsession
+$ python -m src.rmscene rm2pdf tests/rm/dot.stroke.rm /tmp/foo.pdf
 ```
 
 ## Acknowledgements
