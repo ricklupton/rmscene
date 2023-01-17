@@ -72,7 +72,7 @@ def rm2pdf(infile, outfile):
     assert(returncode == 0)
 
 
-def rm2svg(infile, outfile):
+def rm2svg(infile, outfile, debug=0):
     # parse the lines (.rm) input file into a series of blocks
     with open(infile, 'rb') as infh:
         infile_datastream = io.BufferedReader(infh)
@@ -81,7 +81,7 @@ def rm2svg(infile, outfile):
         blocks = list(read_blocks(infile_datastream))
 
     # get document dimensions
-    svg_doc_info = get_dimensions(blocks)
+    svg_doc_info = get_dimensions(blocks, debug)
 
     with open(outfile, 'w') as output:
         # add svg header
@@ -94,11 +94,12 @@ def rm2svg(infile, outfile):
 
         for block in blocks:
             if isinstance(block, SceneLineItemBlock):
-                draw_stroke(block, output, svg_doc_info)
+                draw_stroke(block, output, svg_doc_info, debug)
             elif isinstance(block, RootTextBlock):
-                draw_text(block, output, svg_doc_info)
+                draw_text(block, output, svg_doc_info, debug)
             else:
-                print(f'warning: not converting block: {block.__class__}')
+                if debug > 0:
+                    print(f'warning: not converting block: {block.__class__}')
 
         # Overlay the page with a clickable rect to flip pages
         output.write('\n')
@@ -111,8 +112,9 @@ def rm2svg(infile, outfile):
         output.close()
 
 
-def draw_stroke(block, output, svg_doc_info):
-    print('----SceneLineItemBlock')
+def draw_stroke(block, output, svg_doc_info, debug):
+    if debug > 0:
+        print('----SceneLineItemBlock')
     # a SceneLineItemBlock contains a stroke
     output.write(f'        <!-- SceneLineItemBlock item_id: {block.item_id} -->\n')
 
@@ -173,8 +175,9 @@ def draw_stroke(block, output, svg_doc_info):
     output.write('" />\n')
 
 
-def draw_text(block, output, svg_doc_info):
-    print('----RootTextBlock')
+def draw_text(block, output, svg_doc_info, debug):
+    if debug > 0:
+        print('----RootTextBlock')
     # a RootTextBlock contains text
     output.write(f'        <!-- RootTextBlock item_id: {block.block_id} -->\n')
 
@@ -246,10 +249,11 @@ def get_limits_text(block):
     return xmin, xmax, ymin, ymax
 
 
-def get_dimensions(blocks):
+def get_dimensions(blocks, debug):
     # get block limits
     xmin, xmax, ymin, ymax = get_limits(blocks)
-    # print(f"xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}")
+    if debug > 0:
+        print(f"xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}")
     # {xpos,ypos} coordinates are based on the top-center point
     # of the doc **iff there are no text boxes**. When you add
     # text boxes, the xpos/ypos values change.
@@ -262,5 +266,6 @@ def get_dimensions(blocks):
     # adjust dimensions if needed
     width = int(math.ceil(max(SCREEN_WIDTH, xmax - xmin if xmin is not None and xmax is not None else 0)))
     height = int(math.ceil(max(SCREEN_HEIGHT, ymax - ymin if ymin is not None and ymax is not None else 0)))
-    # print(f"height: {height} width: {width} xpos_delta: {xpos_delta} ypos_delta: {ypos_delta}")
+    if debug > 0:
+        print(f"height: {height} width: {width} xpos_delta: {xpos_delta} ypos_delta: {ypos_delta}")
     return SvgDocInfo(height=height, width=width, xpos_delta=xpos_delta, ypos_delta=ypos_delta)
