@@ -121,7 +121,7 @@ def draw_stroke(block, output, svg_doc_info):
     pen = Pen.create(block.value.tool.value, block.value.color.value, block.value.thickness_scale)
 
     # BEGIN stroke
-    output.write(f'        <!-- Stroke tool: {block.value.tool.name} color: {block.value.color.name} -->\n')
+    output.write(f'        <!-- Stroke tool: {block.value.tool.name} color: {block.value.color.name} thickness_scale: {block.value.thickness_scale} -->\n')
     output.write('        <polyline ')
     output.write(f'style="fill:none;stroke:{pen.stroke_color};stroke-width:{pen.stroke_width};opacity:{pen.stroke_opacity}" ')
     output.write(f'stroke-linecap="{pen.stroke_linecap}" ')
