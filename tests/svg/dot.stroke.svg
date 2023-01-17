@@ -1,0 +1,24 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" height="1872" width="1404">
+    <script type="application/ecmascript"> <![CDATA[
+        var visiblePage = 'p1';
+        function goToPage(page) {
+            document.getElementById(visiblePage).setAttribute('style', 'display: none');
+            document.getElementById(page).setAttribute('style', 'display: inline');
+            visiblePage = page;
+        }
+    ]]>
+    </script>
+
+    <g id="p1" style="display:inline">
+        <filter id="blurMe"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
+        <!-- SceneLineItemBlock item_id: CrdtId(0, 14) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="276.710,259.646 276.741,259.658 276.733,259.713 276.364,259.507 276.246,259.830 275.182,259.839 274.888,259.903 274.807,260.133 274.871,260.058 274.927,260.015 275.077,259.998 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 16) -->
+
+        <!-- clickable rect to flip pages -->
+        <rect x="0" y="0" width="1404" height="1872" fill-opacity="0"/>
+    </g>
+</svg>

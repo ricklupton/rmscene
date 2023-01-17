@@ -1,0 +1,111 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" height="1872" width="1404">
+    <script type="application/ecmascript"> <![CDATA[
+        var visiblePage = 'p1';
+        function goToPage(page) {
+            document.getElementById(visiblePage).setAttribute('style', 'display: none');
+            document.getElementById(page).setAttribute('style', 'display: inline');
+            visiblePage = page;
+        }
+    ]]>
+    </script>
+
+    <g id="p1" style="display:inline">
+        <filter id="blurMe"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 14) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="291.853,312.929 291.096,311.051 294.068,316.369 296.199,322.411 297.821,328.067 302.027,347.645 305.178,368.560 310.075,395.320 310.511,400.012 310.277,406.353 309.747,408.913 308.767,411.404 306.063,415.001 303.568,417.293 301.356,418.659 295.936,419.997 292.718,418.628 290.469,416.494 288.934,414.684 286.452,409.740 285.259,404.386 285.247,398.410 288.450,393.550 290.960,391.710 295.010,390.561 299.055,389.813 302.253,390.113 305.455,391.160 306.600,390.969 310.499,392.781 314.026,395.288 317.320,397.886 319.249,399.977 322.298,402.260 322.366,402.862 322.859,403.130 323.236,402.844 323.674,403.214 323.606,403.632 323.697,402.754 325.435,401.997 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 15) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="337.901,389.810 336.874,390.482 338.497,391.080 340.137,390.789 342.024,390.850 342.766,391.168 345.113,390.651 348.303,390.582 355.046,387.079 356.116,386.300 356.737,385.332 357.197,384.189 357.589,381.387 357.202,379.407 355.809,377.163 355.223,377.154 354.597,376.556 352.962,375.911 351.513,375.950 348.569,377.126 346.627,378.461 344.288,382.383 341.815,388.959 340.092,397.946 340.878,400.466 342.950,404.434 343.631,404.798 345.737,407.928 349.050,410.299 350.508,410.957 352.902,410.998 358.262,409.864 360.676,408.679 364.050,406.513 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 16) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="431.755,313.958 430.116,308.653 428.535,305.858 426.611,303.739 424.590,302.632 423.424,302.467 421.528,302.954 420.108,303.701 416.850,306.372 410.583,313.631 407.561,317.653 403.198,325.445 400.105,334.849 398.897,340.473 397.202,351.309 396.148,362.741 395.972,372.050 396.408,378.622 397.335,385.153 399.506,395.580 404.211,413.304 407.808,423.895 414.518,440.167 417.204,448.182 419.019,454.522 420.731,462.833 421.124,467.732 420.518,471.803 420.143,472.436 419.557,472.361 419.047,472.250 417.872,471.704 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 17) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="381.558,419.250 380.883,418.522 380.312,418.035 379.480,416.963 379.513,416.504 381.040,416.778 382.404,416.325 396.654,410.033 402.563,407.845 411.729,405.436 417.705,404.556 419.087,404.549 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 18) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="467.265,382.732 466.557,381.971 462.055,379.668 457.190,378.370 453.550,378.833 447.412,380.158 444.000,382.329 438.851,388.512 437.275,391.660 436.731,394.506 436.524,396.990 437.308,399.922 438.403,402.317 441.014,405.247 443.179,406.196 444.838,406.319 448.427,407.273 451.006,406.088 455.958,402.320 459.343,397.058 461.137,392.238 463.955,380.522 464.600,375.259 463.853,378.630 463.563,389.595 464.685,399.306 466.358,402.890 469.296,407.128 471.831,410.043 472.599,410.242 473.649,409.855 475.069,408.449 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 19) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="496.526,378.739 496.268,378.489 496.017,378.365 495.729,378.294 495.749,378.249 495.613,378.269 496.022,378.959 495.200,383.368 495.010,386.277 495.575,394.184 497.062,398.485 498.286,400.741 499.751,402.302 501.532,402.738 502.820,402.218 505.071,400.181 506.080,398.193 508.104,395.683 510.534,391.841 513.062,386.562 515.636,379.024 516.679,374.900 516.558,375.628 516.631,375.708 516.699,375.562 516.882,375.424 517.007,375.350 517.007,375.350 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 20) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="532.818,324.559 532.725,324.339 532.368,323.988 532.075,323.343 532.226,323.119 533.459,325.653 534.768,329.940 537.927,344.847 542.293,368.150 548.631,391.818 548.970,393.997 551.759,402.858 552.486,406.342 552.195,406.053 552.091,405.574 552.082,405.308 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 21) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="574.154,307.213 574.230,306.727 574.054,306.168 574.226,305.900 575.055,307.080 577.621,313.049 579.357,317.962 581.233,325.811 582.008,332.632 582.644,349.544 583.702,363.362 585.221,372.873 586.795,378.005 588.495,387.729 589.662,403.504 589.462,403.026 589.456,402.890 589.408,402.700 589.292,402.308 589.292,402.308 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 22) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="564.067,349.844 563.872,349.484 563.311,348.202 562.907,347.750 563.099,347.429 563.756,347.824 568.448,347.347 579.099,343.341 590.783,339.966 600.613,337.783 607.835,337.607 613.970,338.480 616.389,339.515 618.311,340.901 618.311,340.901 619.458,342.247 619.458,342.247 619.458,342.247 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 23) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="872.346,359.645 872.088,358.693 871.056,357.235 870.418,356.379 869.697,356.063 866.846,355.812 865.447,356.344 864.729,356.155 862.351,356.465 859.492,357.183 855.081,358.875 852.575,360.252 844.779,362.910 833.890,365.973 831.078,367.564 831.028,367.768 832.748,367.865 835.136,369.642 839.820,371.736 853.995,374.516 861.449,376.753 865.353,378.804 867.892,380.606 870.185,382.848 871.175,384.388 871.346,385.290 871.027,386.629 869.319,388.449 861.987,392.340 854.731,395.685 837.950,402.738 837.208,403.241 837.393,403.051 838.940,402.856 839.725,402.610 841.450,402.490 843.162,401.680 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 24) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="894.207,346.877 894.330,346.856 894.364,346.812 894.471,346.967 894.385,347.531 895.755,351.508 897.107,357.770 897.931,369.989 898.018,375.739 897.510,382.159 896.595,387.203 896.362,387.820 895.955,388.328 895.770,388.427 895.770,388.427 895.486,388.629 895.486,388.629 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 25) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="897.078,337.163 896.983,336.761 896.646,334.983 895.793,332.400 896.385,333.039 896.781,333.271 896.781,333.271 897.885,333.844 897.885,333.844 897.885,333.844 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 26) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="918.201,353.095 918.271,352.740 918.308,352.201 918.351,351.525 918.346,351.071 918.426,350.864 919.374,351.540 922.012,349.908 924.859,348.831 930.854,347.757 934.740,350.666 936.701,353.791 938.380,357.911 939.099,360.743 939.488,365.502 939.105,372.975 937.470,382.810 937.012,388.150 937.835,390.993 940.019,393.637 942.053,393.697 946.113,392.507 948.047,392.262 958.532,385.035 960.804,382.843 962.906,380.137 963.239,379.553 963.654,378.362 963.752,377.844 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 27) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="932.463,365.539 932.331,365.345 931.917,364.341 931.325,363.458 932.219,364.021 933.401,364.155 937.753,363.697 948.565,361.038 950.991,359.900 951.630,359.527 951.630,359.527 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 28) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="973.142,371.418 973.300,371.380 973.348,371.692 974.512,373.074 976.301,374.357 977.551,374.546 978.221,375.038 980.578,375.772 983.633,375.838 986.167,375.132 989.398,373.388 996.118,366.348 998.439,362.691 1000.255,358.232 1000.762,353.697 1000.176,348.175 999.320,345.787 998.033,344.164 995.977,342.976 993.641,342.358 990.365,344.070 986.985,346.321 983.069,349.399 977.605,355.893 973.358,363.675 970.967,369.725 969.832,374.840 970.168,378.392 971.065,380.343 975.171,384.851 978.892,386.972 990.165,391.061 998.187,392.724 1002.917,392.974 1006.116,392.560 1007.948,391.912 1009.727,391.026 1012.106,389.568 1012.733,389.099 1012.733,389.099 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 29) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="160.923,126.514 161.054,126.070 159.976,125.571 157.571,126.102 155.172,127.436 152.037,128.329 136.809,128.909 122.187,130.710 106.777,133.877 91.245,138.275 74.722,142.177 60.196,144.990 35.495,148.582 0.088,156.787 0.093,166.648 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 30) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="138.101,180.099 139.117,179.958 138.626,180.037 138.625,179.843 138.388,179.355 137.431,170.817 137.467,166.349 138.123,161.343 137.285,152.968 136.958,121.953 136.082,98.165 135.116,55.153 134.322,40.021 134.155,24.484 133.107,11.692 132.983,-0.021 132.757,0.000 129.283,0.004 126.389,0.019 122.541,-0.025 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 31) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="1303.115,0.000 1305.416,47.502 1305.717,82.392 1305.202,95.186 1300.407,165.562 1300.193,175.738 1301.119,188.982 1302.835,199.162 1303.403,205.159 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 32) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="1226.430,136.540 1226.665,136.735 1226.908,136.839 1230.264,137.807 1235.767,139.048 1246.024,140.746 1263.676,142.487 1281.544,143.305 1324.915,142.602 1336.418,142.170 1364.291,140.289 1403.000,139.460 1403.000,138.210 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 33) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="1272.712,1728.956 1271.208,1727.702 1269.776,1726.844 1268.578,1743.332 1268.750,1755.302 1269.311,1761.494 1270.836,1770.058 1272.351,1775.647 1276.830,1789.264 1278.795,1797.003 1282.540,1815.353 1284.379,1828.288 1284.949,1835.428 1285.867,1871.080 1287.849,1871.000 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 34) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="1222.545,1747.130 1223.575,1745.974 1229.383,1743.873 1240.129,1741.579 1250.474,1740.032 1274.641,1737.652 1313.437,1735.514 1325.333,1735.399 1351.582,1736.507 1374.222,1739.306 1402.436,1742.120 1403.000,1742.686 1403.000,1740.486 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 35) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="150.527,1698.019 150.907,1699.058 151.052,1700.018 152.900,1718.637 154.496,1729.950 157.086,1759.349 158.661,1773.193 159.416,1820.742 159.745,1834.535 160.826,1860.022 161.595,1871.000 159.363,1871.000 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 36) -->
+        <!-- Stroke tool: MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="0.000,1731.558 0.000,1732.033 0.000,1732.932 0.004,1735.557 0.001,1736.365 0.396,1736.791 6.530,1738.253 12.541,1739.211 19.450,1740.026 27.252,1740.397 62.294,1740.305 76.354,1739.706 90.305,1738.511 116.930,1735.555 158.651,1730.222 183.405,1727.996 195.068,1727.038 202.616,1726.332 206.353,1726.011 213.834,1725.377 " />
+
+        <!-- clickable rect to flip pages -->
+        <rect x="0" y="0" width="1404" height="1872" fill-opacity="0"/>
+    </g>
+</svg>

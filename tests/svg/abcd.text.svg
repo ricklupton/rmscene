@@ -1,0 +1,27 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" height="1872" width="1404">
+    <script type="application/ecmascript"> <![CDATA[
+        var visiblePage = 'p1';
+        function goToPage(page) {
+            document.getElementById(visiblePage).setAttribute('style', 'display: none');
+            document.getElementById(page).setAttribute('style', 'display: inline');
+            visiblePage = page;
+        }
+    ]]>
+    </script>
+
+    <g id="p1" style="display:inline">
+        <filter id="blurMe"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
+        <!-- RootTextBlock item_id: CrdtId(0, 0) -->
+        <style>
+            .default {
+                font: 50px serif
+            }
+        </style>
+        <!-- TextItem item_id: CrdtId(1, 14) -->
+        <text x="234.0" y="1170.0" class="default">abc</text>
+
+        <!-- clickable rect to flip pages -->
+        <rect x="0" y="0" width="1404" height="1872" fill-opacity="0"/>
+    </g>
+</svg>

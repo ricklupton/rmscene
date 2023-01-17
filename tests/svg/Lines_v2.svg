@@ -1,0 +1,149 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" height="1872" width="1404">
+    <script type="application/ecmascript"> <![CDATA[
+        var visiblePage = 'p1';
+        function goToPage(page) {
+            document.getElementById(visiblePage).setAttribute('style', 'display: none');
+            document.getElementById(page).setAttribute('style', 'display: inline');
+            visiblePage = page;
+        }
+    ]]>
+    </script>
+
+    <g id="p1" style="display:inline">
+        <filter id="blurMe"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 14) -->
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 15) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:2.493;opacity:1" stroke-linecap="round" points="172.502,91.426 172.294,91.416 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 16) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:2.498;opacity:1" stroke-linecap="round" points="171.956,90.886 172.144,91.119 172.110,90.788 172.342,90.931 172.205,90.994 "/>
+        <polyline style="fill:none; stroke:rgb(86, 86, 86) ;stroke-width:2.633;opacity:1" stroke-linecap="round" points="172.205,90.994 172.214,91.103 172.108,91.001 171.820,91.069 172.649,90.817 173.138,90.917 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:2.929;opacity:1" stroke-linecap="round" points="173.138,90.917 173.657,90.930 175.900,90.485 180.077,91.256 182.084,90.935 184.244,91.242 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:2.970;opacity:1" stroke-linecap="round" points="184.244,91.242 185.876,90.994 187.207,91.352 194.678,91.074 195.230,91.356 198.281,90.731 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:2.945;opacity:1" stroke-linecap="round" points="198.281,90.731 200.670,91.103 204.167,90.512 206.216,91.103 212.078,91.156 214.849,90.568 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:2.916;opacity:1" stroke-linecap="round" points="214.849,90.568 218.313,91.250 219.976,91.141 222.794,90.362 228.166,90.564 231.362,89.996 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:2.993;opacity:1" stroke-linecap="round" points="231.362,89.996 235.072,90.210 238.780,89.700 241.459,89.915 243.368,89.365 243.882,89.688 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.082;opacity:1" stroke-linecap="round" points="243.882,89.688 245.169,89.140 248.332,88.881 247.770,89.200 247.552,89.037 247.845,88.998 "/>
+        <polyline style="fill:none; stroke:rgb(85, 85, 85) ;stroke-width:2.637;opacity:1" stroke-linecap="round" points="247.845,88.998 247.915,89.072 247.875,89.107 247.875,89.107 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 17) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(129, 129, 129) ;stroke-width:2.475;opacity:1" stroke-linecap="round" points="297.828,86.605 297.768,86.605 297.580,86.605 296.331,86.472 296.190,86.557 "/>
+        <polyline style="fill:none; stroke:rgb(76, 76, 76) ;stroke-width:2.666;opacity:1" stroke-linecap="round" points="296.190,86.557 296.322,86.509 296.359,86.595 296.424,86.601 296.470,86.613 296.399,86.618 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.041;opacity:1" stroke-linecap="round" points="296.399,86.618 296.507,86.617 296.595,86.668 296.616,86.743 296.703,86.723 296.456,86.838 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.856;opacity:1" stroke-linecap="round" points="296.456,86.838 296.605,86.936 297.008,86.892 296.610,87.213 296.782,87.393 297.047,87.206 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.483;opacity:1" stroke-linecap="round" points="297.047,87.206 298.320,87.565 302.759,87.867 306.662,87.812 308.355,87.099 309.117,87.326 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.495;opacity:1" stroke-linecap="round" points="309.117,87.326 314.430,87.026 325.062,87.321 327.185,86.957 333.742,87.062 336.882,86.787 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.491;opacity:1" stroke-linecap="round" points="336.882,86.787 341.914,87.409 348.260,87.229 354.611,87.478 355.568,87.210 359.294,87.839 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.494;opacity:1" stroke-linecap="round" points="359.294,87.839 367.344,86.878 374.533,86.967 375.406,86.747 375.574,86.955 376.624,86.257 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.496;opacity:1" stroke-linecap="round" points="376.624,86.257 376.508,86.511 376.230,86.289 375.774,86.374 375.537,86.520 375.234,86.644 "/>
+        <polyline style="fill:none; stroke:rgb(97, 97, 97) ;stroke-width:2.598;opacity:1" stroke-linecap="round" points="375.234,86.644 375.234,86.644 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 18) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:2.485;opacity:1" stroke-linecap="round" points="428.614,87.319 429.131,87.283 429.243,87.143 429.302,87.054 429.208,87.026 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.054;opacity:1" stroke-linecap="round" points="429.208,87.026 429.216,87.188 429.351,87.191 429.317,87.283 429.227,87.346 428.964,87.394 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.204;opacity:1" stroke-linecap="round" points="428.964,87.394 428.834,87.567 428.734,87.462 428.585,87.703 429.510,88.358 429.980,88.060 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.492;opacity:1" stroke-linecap="round" points="429.980,88.060 434.950,89.059 436.525,88.772 442.286,88.880 444.203,89.284 458.143,89.420 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.495;opacity:1" stroke-linecap="round" points="458.143,89.420 458.871,89.728 460.359,89.349 466.586,89.477 467.577,89.197 469.984,89.680 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.492;opacity:1" stroke-linecap="round" points="469.984,89.680 474.572,89.675 477.464,89.349 481.100,89.425 483.335,89.184 484.248,88.788 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.490;opacity:1" stroke-linecap="round" points="484.248,88.788 487.520,88.647 491.740,88.856 506.286,88.412 507.813,88.888 508.619,88.852 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.497;opacity:1" stroke-linecap="round" points="508.619,88.852 509.958,88.180 509.439,88.322 509.411,87.951 509.114,87.904 507.424,88.221 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.799;opacity:1" stroke-linecap="round" points="507.424,88.221 506.963,88.429 506.963,88.429 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 19) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.485;opacity:1" stroke-linecap="round" points="172.505,127.764 173.354,128.281 173.061,127.859 173.306,127.822 173.214,128.110 "/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.490;opacity:1" stroke-linecap="round" points="173.214,128.110 174.881,128.279 176.868,127.698 176.966,127.403 178.885,127.461 180.864,128.306 "/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.493;opacity:1" stroke-linecap="round" points="180.864,128.306 183.265,128.367 186.000,127.967 186.678,127.468 188.816,127.348 193.114,128.400 "/>
+        <polyline style="fill:none; stroke:rgb(125, 125, 125) ;stroke-width:3.503;opacity:1" stroke-linecap="round" points="193.114,128.400 193.521,128.874 197.937,127.981 200.521,128.475 202.212,128.276 204.339,129.032 "/>
+        <polyline style="fill:none; stroke:rgb(119, 119, 119) ;stroke-width:3.522;opacity:1" stroke-linecap="round" points="204.339,129.032 206.999,128.814 208.500,128.925 209.166,129.300 210.119,129.002 212.332,129.067 "/>
+        <polyline style="fill:none; stroke:rgb(113, 113, 113) ;stroke-width:3.537;opacity:1" stroke-linecap="round" points="212.332,129.067 213.662,128.560 221.391,129.217 223.767,128.743 230.254,128.598 231.987,128.086 "/>
+        <polyline style="fill:none; stroke:rgb(96, 96, 96) ;stroke-width:3.594;opacity:1" stroke-linecap="round" points="231.987,128.086 234.157,129.095 235.392,129.014 235.573,128.696 236.277,128.846 236.746,128.576 "/>
+        <polyline style="fill:none; stroke:rgb(52, 52, 52) ;stroke-width:3.740;opacity:1" stroke-linecap="round" points="236.746,128.576 240.930,127.949 242.381,127.416 243.510,127.531 243.794,127.870 243.578,128.051 "/>
+        <polyline style="fill:none; stroke:rgb(46, 46, 46) ;stroke-width:3.762;opacity:1" stroke-linecap="round" points="243.578,128.051 244.948,127.894 245.155,127.615 248.287,127.564 249.123,127.836 249.212,127.581 "/>
+        <polyline style="fill:none; stroke:rgb(27, 27, 27) ;stroke-width:3.825;opacity:1" stroke-linecap="round" points="249.212,127.581 248.924,127.779 249.147,127.872 247.988,128.004 248.118,128.103 247.785,128.155 "/>
+        <polyline style="fill:none; stroke:rgb(103, 103, 103) ;stroke-width:3.572;opacity:1" stroke-linecap="round" points="247.785,128.155 247.565,128.455 247.758,128.415 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 20) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.482;opacity:1" stroke-linecap="round" points="296.675,128.299 295.495,128.851 295.887,128.815 295.905,128.806 295.665,128.971 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.948;opacity:1" stroke-linecap="round" points="295.665,128.971 295.842,128.908 296.050,128.939 296.102,128.900 296.062,128.845 296.187,128.831 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.108;opacity:1" stroke-linecap="round" points="296.187,128.831 296.209,128.615 296.357,128.958 296.185,129.220 296.812,129.506 296.571,129.518 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.995;opacity:1" stroke-linecap="round" points="296.571,129.518 296.633,129.946 297.817,129.594 300.087,129.899 307.149,129.623 307.382,129.288 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.995;opacity:1" stroke-linecap="round" points="307.382,129.288 308.145,129.569 308.231,129.330 309.634,129.642 311.219,129.565 314.865,128.817 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.992;opacity:1" stroke-linecap="round" points="314.865,128.817 318.982,128.811 319.888,128.555 324.455,128.611 324.854,128.854 326.174,128.499 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.992;opacity:1" stroke-linecap="round" points="326.174,128.499 327.386,129.033 329.537,128.802 329.999,128.396 331.416,128.718 332.142,128.339 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.995;opacity:1" stroke-linecap="round" points="332.142,128.339 335.636,128.555 336.324,128.227 339.082,127.990 341.517,128.023 341.758,128.477 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.995;opacity:1" stroke-linecap="round" points="341.758,128.477 342.111,128.181 342.543,128.322 343.028,127.842 346.115,128.251 348.511,127.952 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.992;opacity:1" stroke-linecap="round" points="348.511,127.952 350.295,128.311 354.277,128.014 354.656,128.344 358.706,127.962 366.427,128.185 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.992;opacity:1" stroke-linecap="round" points="366.427,128.185 366.905,127.649 367.240,128.017 369.126,128.087 371.246,127.358 371.544,127.866 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.997;opacity:1" stroke-linecap="round" points="371.544,127.866 372.457,127.496 371.904,127.537 372.052,127.142 372.073,127.455 372.699,127.159 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.394;opacity:1" stroke-linecap="round" points="372.699,127.159 372.873,127.445 373.106,127.605 372.986,127.704 372.986,127.704 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 21) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.480;opacity:1" stroke-linecap="round" points="426.130,127.586 426.593,127.500 426.465,127.533 426.455,127.784 426.398,127.751 "/>
+        <polyline style="fill:none; stroke:rgb(11, 11, 11) ;stroke-width:3.880;opacity:1" stroke-linecap="round" points="426.398,127.751 426.315,127.809 426.374,127.914 426.241,127.939 426.211,127.936 426.166,127.974 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.782;opacity:1" stroke-linecap="round" points="426.166,127.974 426.237,127.672 426.301,128.072 426.625,128.572 429.189,129.433 432.189,129.614 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.997;opacity:1" stroke-linecap="round" points="432.189,129.614 432.580,129.896 435.470,129.779 443.193,130.908 446.243,130.915 446.725,131.402 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.990;opacity:1" stroke-linecap="round" points="446.725,131.402 446.999,131.144 450.439,130.672 455.581,130.783 456.166,130.341 457.642,130.687 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.995;opacity:1" stroke-linecap="round" points="457.642,130.687 458.204,130.414 459.415,130.493 460.465,130.775 460.928,131.334 463.859,130.749 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.997;opacity:1" stroke-linecap="round" points="463.859,130.749 466.061,131.009 469.951,130.501 474.517,130.643 475.070,130.958 476.677,130.655 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.995;opacity:1" stroke-linecap="round" points="476.677,130.655 483.256,130.812 483.754,131.072 485.759,130.600 491.762,130.739 493.296,130.328 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.990;opacity:1" stroke-linecap="round" points="493.296,130.328 496.601,130.682 499.963,130.480 500.849,130.896 501.799,130.262 507.674,129.976 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.995;opacity:1" stroke-linecap="round" points="507.674,129.976 508.718,129.792 508.990,129.408 509.716,129.601 513.532,129.149 514.095,129.458 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.997;opacity:1" stroke-linecap="round" points="514.095,129.458 515.410,128.834 515.734,128.986 515.396,129.014 515.378,128.726 515.033,128.904 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.992;opacity:1" stroke-linecap="round" points="515.033,128.904 514.160,128.570 513.819,128.621 513.398,128.778 512.956,128.891 512.423,129.055 "/>
+        <polyline style="fill:none; stroke:rgb(51, 51, 51) ;stroke-width:3.747;opacity:1" stroke-linecap="round" points="512.423,129.055 512.423,129.055 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 22) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:3.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:4.992;opacity:1" stroke-linecap="round" points="169.776,170.977 173.060,170.554 175.180,169.853 179.341,170.416 183.072,169.426 "/>
+        <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:4.995;opacity:1" stroke-linecap="round" points="183.072,169.426 186.685,169.367 187.641,169.645 189.645,169.517 193.948,169.934 194.474,169.658 "/>
+        <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:5.000;opacity:1" stroke-linecap="round" points="194.474,169.658 198.353,170.199 198.567,170.631 198.874,170.204 200.317,169.839 204.699,169.999 "/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:4.990;opacity:1" stroke-linecap="round" points="204.699,169.999 208.985,170.735 209.844,170.577 210.114,170.902 212.758,170.518 214.017,170.777 "/>
+        <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:4.995;opacity:1" stroke-linecap="round" points="214.017,170.777 217.383,170.317 218.676,170.568 220.194,170.225 222.185,170.326 224.980,169.763 "/>
+        <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:4.995;opacity:1" stroke-linecap="round" points="224.980,169.763 228.572,170.075 229.788,170.890 233.044,169.888 234.521,169.804 239.056,170.088 "/>
+        <polyline style="fill:none; stroke:rgb(124, 124, 124) ;stroke-width:5.004;opacity:1" stroke-linecap="round" points="239.056,170.088 240.057,169.894 241.194,169.996 240.930,170.046 241.283,170.340 240.702,170.088 "/>
+        <polyline style="fill:none; stroke:rgb(115, 115, 115) ;stroke-width:5.034;opacity:1" stroke-linecap="round" points="240.702,170.088 243.689,169.980 244.385,169.825 244.177,169.572 244.638,169.865 244.422,170.179 "/>
+        <polyline style="fill:none; stroke:rgb(124, 124, 124) ;stroke-width:5.009;opacity:1" stroke-linecap="round" points="244.422,170.179 244.330,169.892 244.936,170.181 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 23) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:3.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:4.985;opacity:1" stroke-linecap="round" points="296.075,169.192 298.025,168.622 300.491,168.795 301.599,168.419 305.906,168.982 "/>
+        <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:4.995;opacity:1" stroke-linecap="round" points="305.906,168.982 306.627,168.750 307.082,169.081 309.591,168.249 314.000,168.114 314.209,167.883 "/>
+        <polyline style="fill:none; stroke:rgb(60, 60, 60) ;stroke-width:5.212;opacity:1" stroke-linecap="round" points="314.209,167.883 316.043,168.731 316.649,168.506 316.985,168.594 318.171,168.417 319.673,168.363 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.412;opacity:1" stroke-linecap="round" points="319.673,168.363 319.886,168.175 324.548,168.078 324.644,167.793 324.409,167.762 324.507,168.074 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.468;opacity:1" stroke-linecap="round" points="324.507,168.074 324.810,167.984 324.429,168.063 324.644,168.281 329.079,167.482 329.873,167.800 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.488;opacity:1" stroke-linecap="round" points="329.873,167.800 330.526,167.506 336.559,167.564 337.053,167.324 339.974,167.797 346.349,167.502 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.506;opacity:1" stroke-linecap="round" points="346.349,167.502 349.705,167.592 350.321,167.908 350.657,167.640 352.106,167.748 356.158,166.920 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.523;opacity:1" stroke-linecap="round" points="356.158,166.920 366.052,166.794 369.071,165.502 375.822,165.236 376.143,164.805 377.034,165.036 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.524;opacity:1" stroke-linecap="round" points="377.034,165.036 377.418,164.730 378.288,164.819 378.813,165.164 379.275,164.957 378.978,164.627 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.590;opacity:1" stroke-linecap="round" points="378.978,164.627 380.326,164.728 380.282,164.436 379.613,164.577 379.538,164.761 379.333,164.867 "/>
+        <polyline style="fill:none; stroke:rgb(35, 35, 35) ;stroke-width:5.297;opacity:1" stroke-linecap="round" points="379.333,164.867 379.081,164.928 378.966,165.047 378.841,165.158 378.841,165.158 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(1, 24) -->
+        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:3.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:4.987;opacity:1" stroke-linecap="round" points="430.147,168.753 429.711,167.861 429.654,168.126 429.542,168.240 429.480,168.178 "/>
+        <polyline style="fill:none; stroke:rgb(7, 7, 7) ;stroke-width:5.390;opacity:1" stroke-linecap="round" points="429.480,168.178 429.421,168.418 429.568,168.645 429.556,168.763 429.385,168.799 429.527,168.885 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:6.235;opacity:1" stroke-linecap="round" points="429.527,168.885 429.412,168.961 429.295,168.887 429.457,168.977 429.365,169.063 429.952,169.168 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.244;opacity:1" stroke-linecap="round" points="429.952,169.168 429.959,169.316 430.203,168.939 434.465,169.198 438.190,168.936 440.773,168.387 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.240;opacity:1" stroke-linecap="round" points="440.773,168.387 445.332,168.221 446.202,168.432 450.811,167.815 451.678,168.045 456.171,167.574 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.242;opacity:1" stroke-linecap="round" points="456.171,167.574 456.734,167.263 459.899,167.840 461.487,167.406 465.340,167.083 467.703,167.428 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.240;opacity:1" stroke-linecap="round" points="467.703,167.428 470.480,167.377 471.104,167.757 471.772,167.447 476.804,167.052 483.752,167.075 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.242;opacity:1" stroke-linecap="round" points="483.752,167.075 488.459,166.808 489.202,166.490 493.304,166.614 495.557,166.245 496.738,166.538 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.240;opacity:1" stroke-linecap="round" points="496.738,166.538 500.397,166.391 504.067,166.669 507.954,165.954 508.821,166.093 509.426,165.680 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.248;opacity:1" stroke-linecap="round" points="509.426,165.680 511.058,166.183 513.364,165.328 517.840,165.225 518.572,165.614 521.137,165.248 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.248;opacity:1" stroke-linecap="round" points="521.137,165.248 521.388,164.851 521.630,165.165 521.399,165.244 523.126,164.805 524.928,165.058 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:8.245;opacity:1" stroke-linecap="round" points="524.928,165.058 525.071,165.427 525.201,165.249 524.861,165.347 523.868,164.444 523.716,164.403 "/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:7.116;opacity:1" stroke-linecap="round" points="523.716,164.403 523.503,164.477 523.223,164.564 523.223,164.564 " />
+
+        <!-- clickable rect to flip pages -->
+        <rect x="0" y="0" width="1404" height="1872" fill-opacity="0"/>
+    </g>
+</svg>
