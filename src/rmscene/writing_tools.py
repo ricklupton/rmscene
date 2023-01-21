@@ -1,5 +1,7 @@
 """Common code for writing tools.
 
+Code originally from https://github.com/lschwetlick/maxio through
+https://github.com/chemag/maxio .
 """
 
 import logging

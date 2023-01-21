@@ -1,5 +1,7 @@
 """Convert blocks to svg file.
 
+Code originally from https://github.com/lschwetlick/maxio through
+https://github.com/chemag/maxio .
 """
 
 import io
