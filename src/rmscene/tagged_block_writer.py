@@ -169,9 +169,13 @@ class TaggedBlockWriter:
         "Write a LWW string."
         with self.write_subblock(index):
             self.write_id(1, value.timestamp)
-            with self.write_subblock(2):
-                string_length = len(value.value)
-                is_ascii = True  # XXX not sure if this is right meaning?
-                self.data.write_varuint(string_length)
-                self.data.write_bool(is_ascii)
-                self.data.write_bytes(value.value.encode())
+            self.write_string(2, value.value)
+
+    def write_string(self, index: int, value: str):
+        """Write a standard string block."""
+        with self.write_subblock(index):
+            string_length = len(value)
+            is_ascii = True  # XXX not sure if this is right meaning?
+            self.data.write_varuint(string_length)
+            self.data.write_bool(is_ascii)
+            self.data.write_bytes(value.encode())

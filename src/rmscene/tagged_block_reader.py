@@ -218,11 +218,16 @@ class TaggedBlockReader:
         "Read a LWW string."
         with self.read_subblock(index):
             timestamp = self.read_id(1)
-            with self.read_subblock(2) as block_length:
-                string_length = self.data.read_varuint()
-                # XXX not sure if this is right meaning?
-                is_ascii = self.data.read_bool()
-                assert is_ascii == 1
-                assert string_length + 2 == block_length
-                string = self.data.read_bytes(string_length).decode()
+            string = self.read_string(2)
         return LwwValue(timestamp, string)
+
+    def read_string(self, index: int) -> str:
+        """Read a standard string block."""
+        with self.read_subblock(index) as block_length:
+            string_length = self.data.read_varuint()
+            # XXX not sure if this is right meaning?
+            is_ascii = self.data.read_bool()
+            assert is_ascii == 1
+            assert string_length + 2 == block_length
+            string = self.data.read_bytes(string_length).decode()
+            return string

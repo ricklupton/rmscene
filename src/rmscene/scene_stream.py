@@ -552,12 +552,7 @@ class TextItem:
             deleted_length = stream.read_int(5)
 
             if stream.has_subblock(6):
-                with stream.read_subblock(6) as length:
-                    assert length >= 2
-                    num_chars = stream.data.read_varuint()
-                    _ = stream.data.read_uint8()  # "is ascii"?
-                    assert num_chars + 2 == length
-                    text = stream.data.read_bytes(num_chars).decode()
+                text = stream.read_string(6)
             else:
                 text = ""
 
@@ -571,11 +566,7 @@ class TextItem:
             writer.write_int(5, self.deleted_length)
 
             if self.text:
-                with writer.write_subblock(6):
-                    writer.data.write_varuint(len(self.text))
-                    is_ascii = True  # XXX?
-                    writer.data.write_uint8(is_ascii)  # "is ascii"?
-                    writer.data.write_bytes(self.text.encode())
+                writer.write_string(6, self.text)
 
 
 @enum.unique
