@@ -238,22 +238,24 @@ def draw_rtb(block, output, page_info, debug):
     output.write(f"        <!-- RootTextBlock item_id: {block.block_id} -->\n")
 
     # add some style to get readable text
+    text_size = 50
     output.write("        <style>\n")
     output.write("            .default {\n")
-    output.write("                font: 50px serif\n")
+    output.write(f"                font: {text_size}px serif\n")
     output.write("            }\n")
     output.write("        </style>\n")
 
+    xpos = block.pos_x + page_info.xpos_delta
+    ypos = block.pos_y + page_info.ypos_delta
     for text_item in block.text_items:
         # BEGIN text
         # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
-        xpos = block.pos_x + page_info.width / 2
-        ypos = block.pos_y + page_info.height / 2
         output.write(f"        <!-- TextItem item_id: {text_item.item_id} -->\n")
         if text_item.text.strip():
             output.write(
                 f'        <text x="{xpos}" y="{ypos}" class="default">{text_item.text.strip()}</text>\n'
             )
+        ypos += text_size * 1.5
 
 
 def get_limits(blocks, page_info, debug):
