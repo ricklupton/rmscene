@@ -135,8 +135,8 @@ def rm2svg(infile, outfile, debug=0):
 
 
 def draw_slib(block, output, page_info, debug):
-    if debug > 0:
-        print("----SceneLineItemBlock")
+    if debug > 1:
+        print(f"-- SceneLineItemBlock item_id: {block.item_id}\n")
     # a SceneLineItemBlock contains a stroke
     output.write(f"        <!-- SceneLineItemBlock item_id: {block.item_id} -->\n")
 
@@ -151,7 +151,7 @@ def draw_slib(block, output, page_info, debug):
 
     # BEGIN stroke
     output.write(
-        f"        <!-- Stroke tool: {block.value.tool.name} color: {block.value.color.name} thickness_scale: {block.value.thickness_scale} -->\n"
+        f"        <!-- Stroke tool: item_id: {block.item_id} {block.value.tool.name} color: {block.value.color.name} thickness_scale: {block.value.thickness_scale} -->\n"
     )
     output.write("        <polyline ")
     output.write(
@@ -232,8 +232,8 @@ def draw_slib(block, output, page_info, debug):
 
 
 def draw_rtb(block, output, page_info, debug):
-    if debug > 0:
-        print("----RootTextBlock")
+    if debug > 1:
+        print("----RootTextBlock item_id: {block.block_id}")
     # a RootTextBlock contains text
     output.write(f"        <!-- RootTextBlock item_id: {block.block_id} -->\n")
 
@@ -269,6 +269,8 @@ def get_limits(blocks, page_info, debug):
             xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_slib(
                 block, page_info, debug
             )
+            if debug > 0:
+                print(f"-- SceneLineItemBlock item_id: {block.item_id} xmin: {xmin_tmp} xmax: {xmax_tmp} ymin: {ymin_tmp} ymax: {ymax_tmp}")
         # text blocks use a different xpos/ypos coordinate system
         # elif isinstance(block, RootTextBlock):
         #    xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_rtb(block, page_info, debug)
@@ -283,7 +285,7 @@ def get_limits(blocks, page_info, debug):
         ymax = ymax_tmp if (ymax is None or ymax < ymax_tmp) else ymax
         if debug > 1:
             print(
-                f"-- block: {type(block)} xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}\n"
+                f"-- block: {type(block)} xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}"
             )
     return xmin, xmax, ymin, ymax
 
@@ -339,8 +341,8 @@ def get_limits_rtb(block, page_info, debug):
 def get_dimensions(blocks, page_info, debug):
     # get block limits
     xmin, xmax, ymin, ymax = get_limits(blocks, page_info, debug)
-    if debug > 0:
-        print(f"xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}\n")
+    if debug > 2:
+        print(f"-- limits: xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}")
     # {xpos,ypos} coordinates are based on the top-center point
     # of the doc **iff there are no text boxes**. When you add
     # text boxes, the xpos/ypos values change.
