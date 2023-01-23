@@ -19,15 +19,15 @@
             }
         </style>
         <!-- TextItem item_id: CrdtId(1, 14) -->
-        <text x="234.0" y="1170.0" class="default">A</text>
+        <text x="234.0" y="264.66038513183594" class="default">A</text>
         <!-- SceneLineItemBlock item_id: CrdtId(1, 25) -->
-        <!-- Stroke tool: FINELINER_2 color: BLACK thickness_scale: 2.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 25) FINELINER_2 color: BLACK thickness_scale: 2.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
-        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.573;opacity:1" stroke-linecap="round" points="685.660,-30.418 686.244,-30.082 686.696,-30.540 686.771,-30.083 686.601,-30.382 686.925,-30.287 686.266,-30.660 " />
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.573;opacity:1" stroke-linecap="round" points="221.660,0.243 222.244,0.579 222.696,0.121 222.771,0.578 222.601,0.278 222.925,0.374 222.266,0.000 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 31) -->
-        <!-- Stroke tool: FINELINER_2 color: BLACK thickness_scale: 2.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 31) FINELINER_2 color: BLACK thickness_scale: 2.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
-        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.573;opacity:1" stroke-linecap="round" points="738.183,14.313 738.501,14.600 738.490,13.908 738.630,14.820 738.362,15.011 738.593,15.680 738.591,15.312 " />
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.573;opacity:1" stroke-linecap="round" points="274.183,44.974 274.501,45.260 274.490,44.568 274.630,45.480 274.362,45.671 274.593,46.341 274.591,45.972 " />
 
         <!-- clickable rect to flip pages -->
         <rect x="0" y="0" width="1404" height="1872" fill-opacity="0"/>

@@ -14,11 +14,11 @@
         <filter id="blurMe"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
         <!-- SceneLineItemBlock item_id: CrdtId(1, 14) -->
         <!-- SceneLineItemBlock item_id: CrdtId(1, 15) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 15) BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:2.493;opacity:1" stroke-linecap="round" points="172.502,91.426 172.294,91.416 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 16) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 16) BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:2.498;opacity:1" stroke-linecap="round" points="171.956,90.886 172.144,91.119 172.110,90.788 172.342,90.931 172.205,90.994 "/>
         <polyline style="fill:none; stroke:rgb(86, 86, 86) ;stroke-width:2.633;opacity:1" stroke-linecap="round" points="172.205,90.994 172.214,91.103 172.108,91.001 171.820,91.069 172.649,90.817 173.138,90.917 "/>
@@ -30,7 +30,7 @@
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.082;opacity:1" stroke-linecap="round" points="243.882,89.688 245.169,89.140 248.332,88.881 247.770,89.200 247.552,89.037 247.845,88.998 "/>
         <polyline style="fill:none; stroke:rgb(85, 85, 85) ;stroke-width:2.637;opacity:1" stroke-linecap="round" points="247.845,88.998 247.915,89.072 247.875,89.107 247.875,89.107 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 17) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 17) BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(129, 129, 129) ;stroke-width:2.475;opacity:1" stroke-linecap="round" points="297.828,86.605 297.768,86.605 297.580,86.605 296.331,86.472 296.190,86.557 "/>
         <polyline style="fill:none; stroke:rgb(76, 76, 76) ;stroke-width:2.666;opacity:1" stroke-linecap="round" points="296.190,86.557 296.322,86.509 296.359,86.595 296.424,86.601 296.470,86.613 296.399,86.618 "/>
@@ -43,7 +43,7 @@
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.496;opacity:1" stroke-linecap="round" points="376.624,86.257 376.508,86.511 376.230,86.289 375.774,86.374 375.537,86.520 375.234,86.644 "/>
         <polyline style="fill:none; stroke:rgb(97, 97, 97) ;stroke-width:2.598;opacity:1" stroke-linecap="round" points="375.234,86.644 375.234,86.644 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 18) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 18) BALLPOINT_2 color: BLACK thickness_scale: 1.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:1.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:2.485;opacity:1" stroke-linecap="round" points="428.614,87.319 429.131,87.283 429.243,87.143 429.302,87.054 429.208,87.026 "/>
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.054;opacity:1" stroke-linecap="round" points="429.208,87.026 429.216,87.188 429.351,87.191 429.317,87.283 429.227,87.346 428.964,87.394 "/>
@@ -55,7 +55,7 @@
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.497;opacity:1" stroke-linecap="round" points="508.619,88.852 509.958,88.180 509.439,88.322 509.411,87.951 509.114,87.904 507.424,88.221 "/>
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.799;opacity:1" stroke-linecap="round" points="507.424,88.221 506.963,88.429 506.963,88.429 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 19) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 19) BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.485;opacity:1" stroke-linecap="round" points="172.505,127.764 173.354,128.281 173.061,127.859 173.306,127.822 173.214,128.110 "/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.490;opacity:1" stroke-linecap="round" points="173.214,128.110 174.881,128.279 176.868,127.698 176.966,127.403 178.885,127.461 180.864,128.306 "/>
@@ -69,7 +69,7 @@
         <polyline style="fill:none; stroke:rgb(27, 27, 27) ;stroke-width:3.825;opacity:1" stroke-linecap="round" points="249.212,127.581 248.924,127.779 249.147,127.872 247.988,128.004 248.118,128.103 247.785,128.155 "/>
         <polyline style="fill:none; stroke:rgb(103, 103, 103) ;stroke-width:3.572;opacity:1" stroke-linecap="round" points="247.785,128.155 247.565,128.455 247.758,128.415 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 20) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 20) BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.482;opacity:1" stroke-linecap="round" points="296.675,128.299 295.495,128.851 295.887,128.815 295.905,128.806 295.665,128.971 "/>
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:3.948;opacity:1" stroke-linecap="round" points="295.665,128.971 295.842,128.908 296.050,128.939 296.102,128.900 296.062,128.845 296.187,128.831 "/>
@@ -85,7 +85,7 @@
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.997;opacity:1" stroke-linecap="round" points="371.544,127.866 372.457,127.496 371.904,127.537 372.052,127.142 372.073,127.455 372.699,127.159 "/>
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.394;opacity:1" stroke-linecap="round" points="372.699,127.159 372.873,127.445 373.106,127.605 372.986,127.704 372.986,127.704 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 21) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 21) BALLPOINT_2 color: BLACK thickness_scale: 2.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:3.480;opacity:1" stroke-linecap="round" points="426.130,127.586 426.593,127.500 426.465,127.533 426.455,127.784 426.398,127.751 "/>
         <polyline style="fill:none; stroke:rgb(11, 11, 11) ;stroke-width:3.880;opacity:1" stroke-linecap="round" points="426.398,127.751 426.315,127.809 426.374,127.914 426.241,127.939 426.211,127.936 426.166,127.974 "/>
@@ -101,7 +101,7 @@
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.992;opacity:1" stroke-linecap="round" points="515.033,128.904 514.160,128.570 513.819,128.621 513.398,128.778 512.956,128.891 512.423,129.055 "/>
         <polyline style="fill:none; stroke:rgb(51, 51, 51) ;stroke-width:3.747;opacity:1" stroke-linecap="round" points="512.423,129.055 512.423,129.055 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 22) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 22) BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:3.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:4.992;opacity:1" stroke-linecap="round" points="169.776,170.977 173.060,170.554 175.180,169.853 179.341,170.416 183.072,169.426 "/>
         <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:4.995;opacity:1" stroke-linecap="round" points="183.072,169.426 186.685,169.367 187.641,169.645 189.645,169.517 193.948,169.934 194.474,169.658 "/>
@@ -113,7 +113,7 @@
         <polyline style="fill:none; stroke:rgb(115, 115, 115) ;stroke-width:5.034;opacity:1" stroke-linecap="round" points="240.702,170.088 243.689,169.980 244.385,169.825 244.177,169.572 244.638,169.865 244.422,170.179 "/>
         <polyline style="fill:none; stroke:rgb(124, 124, 124) ;stroke-width:5.009;opacity:1" stroke-linecap="round" points="244.422,170.179 244.330,169.892 244.936,170.181 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 23) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 23) BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:3.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:4.985;opacity:1" stroke-linecap="round" points="296.075,169.192 298.025,168.622 300.491,168.795 301.599,168.419 305.906,168.982 "/>
         <polyline style="fill:none; stroke:rgb(127, 127, 127) ;stroke-width:4.995;opacity:1" stroke-linecap="round" points="305.906,168.982 306.627,168.750 307.082,169.081 309.591,168.249 314.000,168.114 314.209,167.883 "/>
@@ -127,7 +127,7 @@
         <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:5.590;opacity:1" stroke-linecap="round" points="378.978,164.627 380.326,164.728 380.282,164.436 379.613,164.577 379.538,164.761 379.333,164.867 "/>
         <polyline style="fill:none; stroke:rgb(35, 35, 35) ;stroke-width:5.297;opacity:1" stroke-linecap="round" points="379.333,164.867 379.081,164.928 378.966,165.047 378.841,165.158 378.841,165.158 " />
         <!-- SceneLineItemBlock item_id: CrdtId(1, 24) -->
-        <!-- Stroke tool: BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
+        <!-- Stroke tool: item_id: CrdtId(1, 24) BALLPOINT_2 color: BLACK thickness_scale: 3.0 -->
         <polyline style="fill:none;stroke:0;stroke-width:3.0;opacity:1" stroke-linecap="round" points=""/>
         <polyline style="fill:none; stroke:rgb(128, 128, 128) ;stroke-width:4.987;opacity:1" stroke-linecap="round" points="430.147,168.753 429.711,167.861 429.654,168.126 429.542,168.240 429.480,168.178 "/>
         <polyline style="fill:none; stroke:rgb(7, 7, 7) ;stroke-width:5.390;opacity:1" stroke-linecap="round" points="429.480,168.178 429.421,168.418 429.568,168.645 429.556,168.763 429.385,168.799 429.527,168.885 "/>

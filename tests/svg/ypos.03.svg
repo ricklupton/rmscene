@@ -1,0 +1,35 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" height="1872" width="1404">
+    <script type="application/ecmascript"> <![CDATA[
+        var visiblePage = 'p1';
+        function goToPage(page) {
+            document.getElementById(visiblePage).setAttribute('style', 'display: none');
+            document.getElementById(page).setAttribute('style', 'display: inline');
+            visiblePage = page;
+        }
+    ]]>
+    </script>
+
+    <g id="p1" style="display:inline">
+        <filter id="blurMe"><feGaussianBlur in="SourceGraphic" stdDeviation="10" /></filter>
+        <!-- RootTextBlock item_id: CrdtId(0, 0) -->
+        <style>
+            .default {
+                font: 50px serif
+            }
+        </style>
+        <!-- TextItem item_id: CrdtId(1, 14) -->
+        <text x="234.22998046875" y="502.0" class="default">abc</text>
+        <!-- SceneLineItemBlock item_id: CrdtId(0, 25) -->
+        <!-- Stroke tool: item_id: CrdtId(0, 25) MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="215.877,0.000 215.304,0.001 215.946,0.129 216.217,1.494 216.255,10.792 217.030,19.390 219.738,35.640 223.051,63.844 224.301,103.427 225.795,115.140 228.725,132.080 230.916,147.057 231.476,157.361 232.296,164.906 232.369,173.380 233.093,179.781 233.402,186.714 234.334,192.450 234.392,195.235 233.683,198.479 233.413,198.405 233.660,197.996 233.194,198.317 233.476,198.490 222.829,199.105 213.403,200.085 202.997,202.064 182.750,204.354 166.018,205.260 152.932,206.848 143.132,207.391 133.554,208.403 118.260,208.874 112.832,209.675 102.143,210.432 92.930,211.751 77.412,212.735 45.814,216.977 25.404,217.857 20.129,218.530 9.928,219.044 0.609,220.289 0.000,220.441 0.241,220.999 0.209,220.214 0.235,220.202 0.235,220.202 " />
+        <!-- SceneLineItemBlock item_id: CrdtId(0, 34) -->
+        <!-- Stroke tool: item_id: CrdtId(0, 34) MECHANICAL_PENCIL_2 color: BLACK thickness_scale: 2.0 -->
+        <polyline style="fill:none;stroke:0;stroke-width:2.0;opacity:1" stroke-linecap="round" points=""/>
+        <polyline style="fill:none; stroke:rgb(0, 0, 0) ;stroke-width:4.000;opacity:0.7" stroke-linecap="round" points="348.598,193.622 346.603,188.662 348.114,191.306 350.251,196.878 351.450,205.949 351.849,219.426 351.482,231.643 351.767,239.313 356.343,276.845 356.755,283.657 356.524,305.783 357.035,306.968 356.862,306.366 357.208,306.311 356.963,306.170 356.967,305.854 356.867,305.871 356.753,305.686 357.221,304.832 " />
+
+        <!-- clickable rect to flip pages -->
+        <rect x="0" y="0" width="1404" height="1872" fill-opacity="0"/>
+    </g>
+</svg>

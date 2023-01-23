@@ -19,20 +19,20 @@
             }
         </style>
         <!-- TextItem item_id: CrdtId(1, 17) -->
-        <text x="234.0" y="1170.0" class="default">A</text>
+        <text x="234.0" y="234.0" class="default">A</text>
         <!-- TextItem item_id: CrdtId(2, 60) -->
-        <text x="234.0" y="1170.0" class="default">new line</text>
+        <text x="234.0" y="309.0" class="default">new line</text>
         <!-- TextItem item_id: CrdtId(1, 18) -->
-        <text x="234.0" y="1170.0" class="default">B</text>
+        <text x="234.0" y="384.0" class="default">B</text>
         <!-- TextItem item_id: CrdtId(1, 22) -->
-        <text x="234.0" y="1170.0" class="default">is</text>
+        <text x="234.0" y="459.0" class="default">is</text>
         <!-- TextItem item_id: CrdtId(1, 26) -->
         <!-- TextItem item_id: CrdtId(2, 59) -->
-        <text x="234.0" y="1170.0" class="default">a</text>
+        <text x="234.0" y="609.0" class="default">a</text>
         <!-- TextItem item_id: CrdtId(1, 36) -->
-        <text x="234.0" y="1170.0" class="default">letter of the alphabet</text>
+        <text x="234.0" y="684.0" class="default">letter of the alphabet</text>
         <!-- TextItem item_id: CrdtId(1, 20) -->
-        <text x="234.0" y="1170.0" class="default">C</text>
+        <text x="234.0" y="759.0" class="default">C</text>
 
         <!-- clickable rect to flip pages -->
         <rect x="0" y="0" width="1404" height="1872" fill-opacity="0"/>
