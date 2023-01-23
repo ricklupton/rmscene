@@ -348,8 +348,10 @@ def get_dimensions(blocks, page_info, debug):
     if xmin is not None and (xmin + XPOS_SHIFT) < 0:
         # make sure there are no negative xpos
         xpos_delta += -(xmin + XPOS_SHIFT)
-    # ypos_delta = SCREEN_HEIGHT / 2
     ypos_delta = 0
+    if ymin is not None and ymin < 0:
+        ypos_delta = -ymin
+        print(f"negative ypos found: shifting ypos_delta: {ypos_delta}")
     # adjust dimensions if needed
     width = int(
         math.ceil(
