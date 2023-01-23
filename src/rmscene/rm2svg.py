@@ -60,11 +60,23 @@ XPOS_SHIFT = SCREEN_WIDTH / 2
 
 
 @dataclass
-class SvgDocInfo:
+class PageInfo:
+    tnb_dict: dict
+    stb_tree: dict
+    sgib_tree: dict
     height: int
     width: int
     xpos_delta: float
     ypos_delta: float
+
+    def __init__(self):
+        self.tnb_dict = {}
+        self.stb_tree = {}
+        self.sgib_tree = {}
+        self.height = 0
+        self.width = 0
+        self.xpos_delta = 0
+        self.ypos_delta = 0
 
 
 def rm2pdf(infile, outfile):
@@ -84,13 +96,13 @@ def rm2svg(infile, outfile, debug=0):
         # let's put the iterable into a list
         blocks = list(read_blocks(infile_datastream))
 
-    # get document dimensions
-    svg_doc_info = get_dimensions(blocks, debug)
+    # get page info
+    page_info = get_page_info(blocks, debug)
 
     with open(outfile, "w") as output:
         # add svg header
         output.write(
-            SVG_HEADER.substitute(height=svg_doc_info.height, width=svg_doc_info.width)
+            SVG_HEADER.substitute(height=page_info.height, width=page_info.width)
         )
         output.write("\n")
 
@@ -102,9 +114,9 @@ def rm2svg(infile, outfile, debug=0):
 
         for block in blocks:
             if isinstance(block, SceneLineItemBlock):
-                draw_stroke(block, output, svg_doc_info, debug)
+                draw_slib(block, output, page_info, debug)
             elif isinstance(block, RootTextBlock):
-                draw_text(block, output, svg_doc_info, debug)
+                draw_rtb(block, output, page_info, debug)
             else:
                 if debug > 0:
                     print(f"warning: not converting block: {block.__class__}")
@@ -113,7 +125,7 @@ def rm2svg(infile, outfile, debug=0):
         output.write("\n")
         output.write("        <!-- clickable rect to flip pages -->\n")
         output.write(
-            f'        <rect x="0" y="0" width="{svg_doc_info.width}" height="{svg_doc_info.height}" fill-opacity="0"/>\n'
+            f'        <rect x="0" y="0" width="{page_info.width}" height="{page_info.height}" fill-opacity="0"/>\n'
         )
         # Closing page group
         output.write("    </g>\n")
@@ -122,7 +134,7 @@ def rm2svg(infile, outfile, debug=0):
         output.close()
 
 
-def draw_stroke(block, output, svg_doc_info, debug):
+def draw_slib(block, output, page_info, debug):
     if debug > 0:
         print("----SceneLineItemBlock")
     # a SceneLineItemBlock contains a stroke
@@ -148,22 +160,30 @@ def draw_stroke(block, output, svg_doc_info, debug):
     output.write(f'stroke-linecap="{pen.stroke_linecap}" ')
     output.write('points="')
 
+    # get the block alignment
+    xpos_delta, ypos_delta = get_slib_anchor_info(block, page_info, debug)
+    # add the doc alignment
+    xpos_delta += page_info.xpos_delta
+    ypos_delta += page_info.ypos_delta
+
     last_xpos = -1.0
     last_ypos = -1.0
     last_segment_width = 0
     # Iterate through the point to form a polyline
     for point_id, point in enumerate(block.value.points):
+        # get the block alignment
+
         # align the original position
-        xpos = point.x + svg_doc_info.xpos_delta
-        ypos = point.y + svg_doc_info.ypos_delta
+        xpos = point.x + xpos_delta
+        ypos = point.y + ypos_delta
         # stretch the original position
-        # ratio = (svg_doc_info.height / svg_doc_info.width) / (1872 / 1404)
+        # ratio = (page_info.height / page_info.width) / (1872 / 1404)
         # if ratio > 1:
-        #    xpos = ratio * ((xpos * svg_doc_info.width) / 1404)
-        #    ypos = (ypos * svg_doc_info.height) / 1872
+        #    xpos = ratio * ((xpos * page_info.width) / 1404)
+        #    ypos = (ypos * page_info.height) / 1872
         # else:
-        #    xpos = (xpos * svg_doc_info.width) / 1404
-        #    ypos = (1 / ratio) * (ypos * svg_doc_info.height) / 1872
+        #    xpos = (xpos * page_info.width) / 1404
+        #    ypos = (1 / ratio) * (ypos * page_info.height) / 1872
         # process segment-origination points
         if point_id % pen.segment_length == 0:
             segment_color = pen.get_segment_color(
@@ -211,7 +231,7 @@ def draw_stroke(block, output, svg_doc_info, debug):
     output.write('" />\n')
 
 
-def draw_text(block, output, svg_doc_info, debug):
+def draw_rtb(block, output, page_info, debug):
     if debug > 0:
         print("----RootTextBlock")
     # a RootTextBlock contains text
@@ -227,8 +247,8 @@ def draw_text(block, output, svg_doc_info, debug):
     for text_item in block.text_items:
         # BEGIN text
         # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
-        xpos = block.pos_x + svg_doc_info.width / 2
-        ypos = block.pos_y + svg_doc_info.height / 2
+        xpos = block.pos_x + page_info.width / 2
+        ypos = block.pos_y + page_info.height / 2
         output.write(f"        <!-- TextItem item_id: {text_item.item_id} -->\n")
         if text_item.text.strip():
             output.write(
@@ -236,36 +256,59 @@ def draw_text(block, output, svg_doc_info, debug):
             )
 
 
-def get_limits(blocks):
+def get_limits(blocks, page_info, debug):
     xmin = xmax = None
     ymin = ymax = None
     for block in blocks:
+        if debug > 1:
+            print(f"-- block: {block}\n")
+        # 1. parse block
         if isinstance(block, SceneLineItemBlock):
-            xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_stroke(block)
+            xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_slib(
+                block, page_info, debug
+            )
         # text blocks use a different xpos/ypos coordinate system
         # elif isinstance(block, RootTextBlock):
-        #    xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_text(block)
+        #    xmin_tmp, xmax_tmp, ymin_tmp, ymax_tmp = get_limits_rtb(block, page_info, debug)
         else:
             continue
+        # 2. update bounds
         if xmin_tmp is None:
             continue
-        if xmin is None or xmin > xmin_tmp:
-            xmin = xmin_tmp
-        if xmax is None or xmax < xmax_tmp:
-            xmax = xmax_tmp
-        if ymin is None or ymin > ymin_tmp:
-            ymin = ymin_tmp
-        if ymax is None or ymax < ymax_tmp:
-            ymax = ymax_tmp
+        xmin = xmin_tmp if (xmin is None or xmin > xmin_tmp) else xmin
+        xmax = xmax_tmp if (xmax is None or xmax < xmax_tmp) else xmax
+        ymin = ymin_tmp if (ymin is None or ymin > ymin_tmp) else ymin
+        ymax = ymax_tmp if (ymax is None or ymax < ymax_tmp) else ymax
+        if debug > 1:
+            print(
+                f"-- block: {type(block)} xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}\n"
+            )
     return xmin, xmax, ymin, ymax
 
 
-def get_limits_stroke(block):
+def get_slib_anchor_info(block, page_info, debug):
+    tnb_id = block.parent_id.part2
+    xpos_delta = 0
+    ypos_delta = 0
+    while tnb_id != 1:
+        if (
+            page_info.tnb_dict[tnb_id].anchor_type is not None
+            and page_info.tnb_dict[tnb_id].anchor_type.value == 2
+        ):
+            xpos_delta += page_info.tnb_dict[tnb_id].anchor_origin_x.value
+        # move to the parent TNB
+        tnb_id = page_info.stb_tree[tnb_id]
+    return xpos_delta, ypos_delta
+
+
+def get_limits_slib(block, page_info, debug):
     # make sure the object is not empty
     if block.value is None:
         return None, None, None, None
     xmin = xmax = None
     ymin = ymax = None
+    # get the anchor information
+    xpos_delta, ypos_delta = get_slib_anchor_info(block, page_info, debug)
     for point in block.value.points:
         xpos, ypos = point.x, point.y
         if xmin is None or xmin > xpos:
@@ -276,10 +319,14 @@ def get_limits_stroke(block):
             ymin = ypos
         if ymax is None or ymax < ypos:
             ymax = ypos
+    xmin += xpos_delta
+    xmax += xpos_delta
+    ymin += ypos_delta
+    ymax += ypos_delta
     return xmin, xmax, ymin, ymax
 
 
-def get_limits_text(block):
+def get_limits_rtb(block, page_info, debug):
     xmin = block.pos_x
     xmax = block.pos_x + block.width
     ymin = block.pos_y
@@ -287,11 +334,11 @@ def get_limits_text(block):
     return xmin, xmax, ymin, ymax
 
 
-def get_dimensions(blocks, debug):
+def get_dimensions(blocks, page_info, debug):
     # get block limits
-    xmin, xmax, ymin, ymax = get_limits(blocks)
+    xmin, xmax, ymin, ymax = get_limits(blocks, page_info, debug)
     if debug > 0:
-        print(f"xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}")
+        print(f"xmin: {xmin} xmax: {xmax} ymin: {ymin} ymax: {ymax}\n")
     # {xpos,ypos} coordinates are based on the top-center point
     # of the doc **iff there are no text boxes**. When you add
     # text boxes, the xpos/ypos values change.
@@ -322,6 +369,33 @@ def get_dimensions(blocks, debug):
         print(
             f"height: {height} width: {width} xpos_delta: {xpos_delta} ypos_delta: {ypos_delta}"
         )
-    return SvgDocInfo(
-        height=height, width=width, xpos_delta=xpos_delta, ypos_delta=ypos_delta
-    )
+    return height, width, xpos_delta, ypos_delta
+
+
+# only use case for the TNB tree is going from leaf to root, so we can
+# just do with the child->parent tuples. For efficiency, we keep the latter
+# in a dictionary.
+# Note that both the STB and the SGIB objects seem to do the same mappings.
+# We will keep both.
+def get_page_info(blocks, debug):
+    page_info = PageInfo()
+    # parse the TNB/STB/SGIB blocks to get the page tree
+    for block in blocks:
+        if isinstance(block, TreeNodeBlock):
+            page_info.tnb_dict[block.node_id.part2] = block
+        elif isinstance(block, SceneTreeBlock):
+            page_info.stb_tree[block.tree_id.part2] = block.parent_id.part2
+        elif isinstance(block, SceneGroupItemBlock):
+            page_info.sgib_tree[block.value.part2] = block.parent_id.part2
+    # TODO(chema): check the stb_tree and sgib_tree are the same, otherwise
+    # print a warning
+
+    # get the dimensions
+    (
+        page_info.height,
+        page_info.width,
+        page_info.xpos_delta,
+        page_info.ypos_delta,
+    ) = get_dimensions(blocks, page_info, debug)
+
+    return page_info
