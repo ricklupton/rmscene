@@ -67,7 +67,7 @@ def test_normal_ab():
                     left_id=CrdtId(0, 0),
                     right_id=CrdtId(0, 0),
                     deleted_length=0,
-                    text="AB",
+                    value="AB",
                 )
             ],
             text_formats=[
@@ -126,7 +126,7 @@ def test_normal_ab():
                     left_id=CrdtId(0, 0),
                     right_id=CrdtId(0, 0),
                     deleted_length=0,
-                    text="AB",
+                    value="AB",
                 )
             ],
             text_formats=[

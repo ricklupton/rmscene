@@ -18,6 +18,7 @@ import typing as tp
 from .tagged_block_common import CrdtId, LwwValue
 from .tagged_block_reader import TaggedBlockReader
 from .tagged_block_writer import TaggedBlockWriter
+from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 
 _logger = logging.getLogger(__name__)
 
@@ -555,12 +556,7 @@ class SceneTextItemBlock(SceneItemBlock):
 
 
 @dataclass
-class TextItem:
-    item_id: CrdtId
-    left_id: CrdtId
-    right_id: CrdtId
-    deleted_length: int
-    text: str
+class TextItem(CrdtSequenceItem[str]):
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> TextItem:
@@ -584,8 +580,8 @@ class TextItem:
             writer.write_id(4, self.right_id)
             writer.write_int(5, self.deleted_length)
 
-            if self.text:
-                writer.write_string(6, self.text)
+            if self.value:
+                writer.write_string(6, self.value)
 
 
 @enum.unique
