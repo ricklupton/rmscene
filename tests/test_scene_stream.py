@@ -5,6 +5,7 @@ from uuid import UUID
 from rmscene import read_blocks, write_blocks, LwwValue, TaggedBlockWriter, TaggedBlockReader
 from rmscene.scene_stream import *
 from rmscene.tagged_block_common import HEADER_V6
+from rmscene.crdt_sequence import CrdtSequenceItem
 
 import logging
 logger = logging.getLogger(__name__)
@@ -93,11 +94,13 @@ def test_normal_ab():
         ),
         SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),
-            item_id=CrdtId(0, 13),
-            left_id=CrdtId(0, 0),
-            right_id=CrdtId(0, 0),
-            deleted_length=0,
-            value=CrdtId(0, 11),
+            item=CrdtSequenceItem(
+                item_id=CrdtId(0, 13),
+                left_id=CrdtId(0, 0),
+                right_id=CrdtId(0, 0),
+                deleted_length=0,
+                value=CrdtId(0, 11),
+            )
         ),
     ]
 
@@ -147,11 +150,13 @@ def test_normal_ab():
         ),
         SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),
-            item_id=CrdtId(0, 13),
-            left_id=CrdtId(0, 0),
-            right_id=CrdtId(0, 0),
-            deleted_length=0,
-            value=CrdtId(0, 11),
+            item=CrdtSequenceItem(
+                item_id=CrdtId(0, 13),
+                left_id=CrdtId(0, 0),
+                right_id=CrdtId(0, 0),
+                deleted_length=0,
+                value=CrdtId(0, 11),
+            )
         ),
     ],
 )

@@ -164,9 +164,13 @@ def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
                         anchor_threshold=None,
                         anchor_origin_x=None)
 
-    yield SceneGroupItemBlock(parent_id=CrdtId(0, 1),
-                              item_id=CrdtId(0, 13),
-                              left_id=CrdtId(0, 0),
-                              right_id=CrdtId(0, 0),
-                              deleted_length=0,
-                              value=CrdtId(0, 11))
+    yield SceneGroupItemBlock(
+        parent_id=CrdtId(0, 1),
+        item=CrdtSequenceItem(
+            item_id=CrdtId(0, 13),
+            left_id=CrdtId(0, 0),
+            right_id=CrdtId(0, 0),
+            deleted_length=0,
+            value=CrdtId(0, 11)
+        )
+    )

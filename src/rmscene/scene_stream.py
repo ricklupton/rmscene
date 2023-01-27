@@ -401,11 +401,7 @@ class Line:
 @dataclass
 class SceneItemBlock(Block):
     parent_id: CrdtId
-    item_id: CrdtId
-    left_id: CrdtId
-    right_id: CrdtId
-    deleted_length: int
-    value: tp.Optional[tp.Any]
+    item: CrdtSequenceItem
 
     ITEM_TYPE: tp.ClassVar[int] = 0
 
@@ -448,26 +444,22 @@ class SceneItemBlock(Block):
 
         return subclass(
             parent_id,
-            item_id,
-            left_id,
-            right_id,
-            deleted_length,
-            value,
+            CrdtSequenceItem(item_id, left_id, right_id, deleted_length, value),
             extra_data=extra_data,
         )
 
     def to_stream(self, writer: TaggedBlockWriter):
         _logger.debug("Writing %s", type(self).__name__)
         writer.write_id(1, self.parent_id)
-        writer.write_id(2, self.item_id)
-        writer.write_id(3, self.left_id)
-        writer.write_id(4, self.right_id)
-        writer.write_int(5, self.deleted_length)
+        writer.write_id(2, self.item.item_id)
+        writer.write_id(3, self.item.left_id)
+        writer.write_id(4, self.item.right_id)
+        writer.write_int(5, self.item.deleted_length)
 
-        if self.value is not None:
+        if self.item.value is not None:
             with writer.write_subblock(6):
                 writer.data.write_uint8(self.ITEM_TYPE)
-                self.value_to_stream(writer, self.value)
+                self.value_to_stream(writer, self.item.value)
 
                 writer.data.write_bytes(self.extra_data)
 
