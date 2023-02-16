@@ -415,9 +415,9 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
     with stream.read_subblock(6):
         num_x = stream.data.read_varuint()
         rectangles = [
-            stream.data.read_bytes(32).hex() for _ in range(num_x)
+            [stream.data.read_float64() for _ in range(4)]
+            for _ in range(num_x)
         ]
-        pass
     return si.GlyphRange(start, length, color, text, rectangles)
 
 
