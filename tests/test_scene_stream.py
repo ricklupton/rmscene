@@ -104,6 +104,13 @@ def test_normal_ab():
     ]
 
 
+def test_read_glyph_range():
+    with open(DATA_PATH / "Wikipedia_highlighted.rm", "rb") as f:
+        result = [block for block in read_blocks(f) if isinstance(block, SceneGlyphItemBlock)]
+
+    assert result[0].item.value.text == "The reMarkable uses electronic paper"
+
+
 @pytest.mark.parametrize(
     "block",
     [

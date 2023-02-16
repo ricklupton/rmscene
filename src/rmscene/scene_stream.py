@@ -402,16 +402,35 @@ class SceneItemBlock(Block):
 
 # These share the same structure so can share the same implementation?
 
+def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
+    _logger.debug("Reading GlyphRange")
+    start = stream.read_int(2)
+    length = stream.read_int(3)
+    # ddvk has this as a byte?
+    color_id = stream.read_int(4)
+    color = si.PenColor(color_id)
+    text = stream.read_string(5)
+    if len(text) != length:
+        _logger.warning("GlyphRange text length %d != length value %d", len(text), length)
+    with stream.read_subblock(6):
+        num_x = stream.data.read_varuint()
+        rectangles = [
+            stream.data.read_bytes(32).hex() for _ in range(num_x)
+        ]
+        pass
+    return si.GlyphRange(start, length, color, text, rectangles)
+
 
 class SceneGlyphItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x03
     ITEM_TYPE: tp.ClassVar = 0x01
 
-    value: tp.Any
+    value: tp.Optional[si.GlyphRange]
 
     @classmethod
-    def value_from_stream(cls, reader: TaggedBlockReader) -> tp.Any:
-        return None
+    def value_from_stream(cls, reader: TaggedBlockReader) -> si.GlyphRange:
+        value = glyph_range_from_stream(reader)
+        return value
 
     def value_to_stream(self, writer: TaggedBlockWriter, value):
         pass
