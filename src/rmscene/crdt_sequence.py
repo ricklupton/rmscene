@@ -27,16 +27,39 @@ class CrdtSequence(tp.Generic[_T]):
             items = []
         self._items = {item.item_id: item for item in items}
 
+    def __eq__(self, other):
+        if isinstance(other, CrdtSequence):
+            return self._items == other._items
+        if isinstance(other, (list, tuple)):
+            return self == CrdtSequence(other)
+        raise NotImplemented
+
+    def __repr__(self):
+        return "CrdtSequence(%s)" % (
+            ", ".join(str(i) for i in self._items.values())
+        )
+
     def __iter__(self) -> tp.Iterator[CrdtId]:
         """Return ids in order"""
         yield from toposort_items(self._items.values())
 
-    def values(self) -> Iterable[CrdtSequenceItem[_T]]:
+    def items(self) -> Iterable[CrdtSequenceItem[_T]]:
+        """Iterate through CrdtSequenceItems."""
         return self._items.values()
+
+    def values(self) -> Iterable[_T]:
+        """Iterate through stored values."""
+        for item_id in self:
+            yield self[item_id]
 
     def __getitem__(self, key: CrdtId) -> _T:
         """Return item with key"""
         return self._items[key].value
+
+    def add(self, item: CrdtSequenceItem[_T]):
+        if item.item_id in self._items:
+            raise ValueError("Already have item %s" % item.item_id)
+        self._items[item.item_id] = item
 
 
 END_MARKER = CrdtId(0, 0)

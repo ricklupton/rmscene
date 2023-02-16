@@ -83,14 +83,13 @@ def test_normal_ab():
             width=936.0,
         ),
         TreeNodeBlock(
-            node_id=CrdtId(0, 1),
-            label=LwwValue(CrdtId(0, 0), ""),
-            visible=LwwValue(CrdtId(0, 0), True),
+            group=si.Group(node_id=CrdtId(0, 1)),
         ),
         TreeNodeBlock(
-            node_id=CrdtId(0, 11),
-            label=LwwValue(CrdtId(0, 12), "Layer 1"),
-            visible=LwwValue(CrdtId(0, 0), True),
+            group=si.Group(
+                node_id=CrdtId(0, 11),
+                label=LwwValue(CrdtId(0, 12), "Layer 1"),
+            ),
         ),
         SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),
@@ -144,9 +143,10 @@ def test_normal_ab():
             width=936.0,
         ),
         TreeNodeBlock(
-            node_id=CrdtId(0, 11),
-            label=LwwValue(CrdtId(0, 12), "Layer 1"),
-            visible=LwwValue(CrdtId(0, 0), True),
+            group=si.Group(
+                node_id=CrdtId(0, 11),
+                label=LwwValue(CrdtId(0, 12), "Layer 1"),
+            ),
         ),
         SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),

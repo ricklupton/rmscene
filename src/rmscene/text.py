@@ -24,6 +24,7 @@ from .scene_stream import (
     TreeNodeBlock,
     SceneGroupItemBlock
 )
+from . import scene_items as si
 from .tagged_block_common import CrdtId, LwwValue
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 
@@ -148,21 +149,18 @@ def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
                         pos_y=234.0,
                         width=936.0)
 
-    yield TreeNodeBlock(node_id=CrdtId(0, 1),
-                        label=LwwValue(timestamp=CrdtId(0, 0), value=''),
-                        visible=LwwValue(timestamp=CrdtId(0, 0), value=True),
-                        anchor_id=None,
-                        anchor_type=None,
-                        anchor_threshold=None,
-                        anchor_origin_x=None)
+    yield TreeNodeBlock(
+        si.Group(
+            node_id=CrdtId(0, 1),
+        )
+    )
 
-    yield TreeNodeBlock(node_id=CrdtId(0, 11),
-                        label=LwwValue(timestamp=CrdtId(0, 12), value='Layer 1'),
-                        visible=LwwValue(timestamp=CrdtId(0, 0), value=True),
-                        anchor_id=None,
-                        anchor_type=None,
-                        anchor_threshold=None,
-                        anchor_origin_x=None)
+    yield TreeNodeBlock(
+        si.Group(
+            node_id=CrdtId(0, 11),
+            label=LwwValue(timestamp=CrdtId(0, 12), value='Layer 1'),
+        )
+    )
 
     yield SceneGroupItemBlock(
         parent_id=CrdtId(0, 1),

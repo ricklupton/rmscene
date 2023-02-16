@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import math
 from uuid import UUID
-from dataclasses import dataclass, KW_ONLY
+from dataclasses import dataclass, replace, KW_ONLY
 import enum
 import logging
 import typing as tp
@@ -19,6 +19,8 @@ from .tagged_block_common import CrdtId, LwwValue
 from .tagged_block_reader import TaggedBlockReader
 from .tagged_block_writer import TaggedBlockWriter
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
+from .scene_tree import SceneTree
+from . import scene_items as si
 
 _logger = logging.getLogger(__name__)
 
@@ -116,51 +118,45 @@ class MigrationInfoBlock(Block):
 class TreeNodeBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x02
 
-    node_id: CrdtId
-    label: LwwValue[str]
-    visible: LwwValue[bool]
-
-    anchor_id: tp.Optional[LwwValue[CrdtId]] = None
-    anchor_type: tp.Optional[LwwValue[int]] = None
-    anchor_threshold: tp.Optional[LwwValue[float]] = None
-    anchor_origin_x: tp.Optional[LwwValue[float]] = None
+    group: si.Group
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> TreeNodeBlock:
         "Parse tree node block."
         _logger.debug("Reading %s", cls.__name__)
 
-        node = TreeNodeBlock(
-            stream.read_id(1),
-            stream.read_lww_string(2),
-            stream.read_lww_bool(3),
+        group = si.Group(
+            node_id=stream.read_id(1),
+            label=stream.read_lww_string(2),
+            visible=stream.read_lww_bool(3),
         )
 
         # XXX this may need to be generalised for other examples
         if stream.bytes_remaining_in_block() > 0:
-            node.anchor_id = stream.read_lww_id(7)
-            node.anchor_type = stream.read_lww_byte(8)
-            node.anchor_threshold = stream.read_lww_float(9)
-            node.anchor_origin_x = stream.read_lww_float(10)
+            group.anchor_id = stream.read_lww_id(7)
+            group.anchor_type = stream.read_lww_byte(8)
+            group.anchor_threshold = stream.read_lww_float(9)
+            group.anchor_origin_x = stream.read_lww_float(10)
 
-        return node
+        return cls(group)
 
     def to_stream(self, writer: TaggedBlockWriter):
         _logger.debug("Writing %s", type(self).__name__)
-        writer.write_id(1, self.node_id)
-        writer.write_lww_string(2, self.label)
-        writer.write_lww_bool(3, self.visible)
-        if self.anchor_id is not None:
+        group = self.group
+        writer.write_id(1, group.node_id)
+        writer.write_lww_string(2, group.label)
+        writer.write_lww_bool(3, group.visible)
+        if group.anchor_id is not None:
             # FIXME group together in an anchor type?
             assert (
-                self.anchor_type is not None
-                and self.anchor_threshold is not None
-                and self.anchor_origin_x is not None
+                group.anchor_type is not None
+                and group.anchor_threshold is not None
+                and group.anchor_origin_x is not None
             )
-            writer.write_lww_id(7, self.anchor_id)
-            writer.write_lww_byte(8, self.anchor_type)
-            writer.write_lww_float(9, self.anchor_threshold)
-            writer.write_lww_float(10, self.anchor_origin_x)
+            writer.write_lww_id(7, group.anchor_id)
+            writer.write_lww_byte(8, group.anchor_type)
+            writer.write_lww_float(9, group.anchor_threshold)
+            writer.write_lww_float(10, group.anchor_origin_x)
 
 
 @dataclass
@@ -211,7 +207,9 @@ class SceneTreeBlock(Block):
         "Parse scene tree block"
         _logger.debug("Reading %s", cls.__name__)
 
-        # XXX not sure what the difference is
+        # XXX not sure what the difference is. This "tree_id" is used as the
+        # plain "Id" in the SceneTree.NodeMap in ddvk's reader. If the parent_id
+        # is equal to the root_id (1, 1), this node represents a layer.
         tree_id = stream.read_id(1)
         node_id = stream.read_id(2)
         is_update = stream.read_bool(3)
@@ -230,172 +228,99 @@ class SceneTreeBlock(Block):
             writer.write_id(1, self.parent_id)
 
 
-@dataclass
-class Point:
-    x: float
-    y: float
-    speed: int
-    direction: int
-    width: int
-    pressure: int
-
-    @classmethod
-    def from_stream(cls, stream: TaggedBlockReader, version: int = 2) -> Point:
-        if version not in (1, 2):
-            raise ValueError("Unknown version %s" % version)
-        d = stream.data
-        x = d.read_float32()
-        y = d.read_float32()
-        if version == 1:
-            # calculation based on ddvk's reader
-            # XXX removed rounding so that can round-trip correctly?
-            speed = d.read_float32() * 4
-            # speed = int(round(d.read_float32() * 4))
-            direction = 255 * d.read_float32() / (math.pi * 2)
-            # direction = int(round(255 * d.read_float32() / (math.pi * 2)))
-            width = int(round(d.read_float32() * 4))
-            pressure = d.read_float32() * 255
-            # pressure = int(round(d.read_float32() * 255))
-        else:
-            speed = d.read_uint16()
-            width = d.read_uint16()
-            direction = d.read_uint8()
-            pressure = d.read_uint8()
-        return cls(x, y, speed, direction, width, pressure)
-
-    @classmethod
-    def serialized_size(cls, version: int = 2) -> int:
-        if version == 1:
-            return 0x18
-        elif version == 2:
-            return 0x0E
-        else:
-            raise ValueError("Unknown version %s" % version)
-
-    def to_stream(self, writer: TaggedBlockWriter, version: int = 2):
-        if version not in (1, 2):
-            raise ValueError("Unknown version %s" % version)
-        d = writer.data
-        d.write_float32(self.x)
-        d.write_float32(self.y)
-        _logger.debug("Writing Point v%d: %s", version, self)
-        if version == 1:
-            # calculation based on ddvk's reader
-            d.write_float32(self.speed / 4)
-            d.write_float32(self.direction * (2 * math.pi) / 255)
-            d.write_float32(self.width / 4)
-            d.write_float32(self.pressure / 255)
-        else:
-            d.write_uint16(self.speed)
-            d.write_uint16(self.width)
-            d.write_uint8(self.direction)
-            d.write_uint8(self.pressure)
+def point_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Point:
+    if version not in (1, 2):
+        raise ValueError("Unknown version %s" % version)
+    d = stream.data
+    x = d.read_float32()
+    y = d.read_float32()
+    if version == 1:
+        # calculation based on ddvk's reader
+        # XXX removed rounding so that can round-trip correctly?
+        speed = d.read_float32() * 4
+        # speed = int(round(d.read_float32() * 4))
+        direction = 255 * d.read_float32() / (math.pi * 2)
+        # direction = int(round(255 * d.read_float32() / (math.pi * 2)))
+        width = int(round(d.read_float32() * 4))
+        pressure = d.read_float32() * 255
+        # pressure = int(round(d.read_float32() * 255))
+    else:
+        speed = d.read_uint16()
+        width = d.read_uint16()
+        direction = d.read_uint8()
+        pressure = d.read_uint8()
+    return si.Point(x, y, speed, direction, width, pressure)
 
 
-@enum.unique
-class Pen(enum.IntEnum):
-    """
-    Stroke pen id representing reMarkable tablet tools.
-
-    Tool examples: ballpoint, fineliner, highlighter or eraser.
-    """
-
-    # XXX this list is from remt pre-v6
-
-    BALLPOINT_1 = 2
-    BALLPOINT_2 = 15
-    CALIGRAPHY = 21
-    ERASER = 6
-    ERASER_AREA = 8
-    FINELINER_1 = 4
-    FINELINER_2 = 17
-    HIGHLIGHTER_1 = 5
-    HIGHLIGHTER_2 = 18
-    MARKER_1 = 3
-    MARKER_2 = 16
-    MECHANICAL_PENCIL_1 = 7
-    MECHANICAL_PENCIL_2 = 13
-    PAINTBRUSH_1 = 0
-    PAINTBRUSH_2 = 12
-    PENCIL_1 = 1
-    PENCIL_2 = 14
-
-    @classmethod
-    def is_highlighter(cls, value: int) -> bool:
-        return value in (cls.HIGHLIGHTER_1, cls.HIGHLIGHTER_2)
+def point_serialized_size(version: int = 2) -> int:
+    if version == 1:
+        return 0x18
+    elif version == 2:
+        return 0x0E
+    else:
+        raise ValueError("Unknown version %s" % version)
 
 
-@enum.unique
-class PenColor(enum.IntEnum):
-    """
-    Color index value.
-    """
-
-    # XXX list from remt pre-v6
-
-    BLACK = 0
-    GRAY = 1
-    WHITE = 2
-
-    YELLOW = 3
-    GREEN = 4
-    PINK = 5
-
-    BLUE = 6
-    RED = 7
-
-    GRAY_OVERLAP = 8
+def point_to_stream(point: si.Point, writer: TaggedBlockWriter, version: int = 2):
+    if version not in (1, 2):
+        raise ValueError("Unknown version %s" % version)
+    d = writer.data
+    d.write_float32(point.x)
+    d.write_float32(point.y)
+    _logger.debug("Writing Point v%d: %s", version, point)
+    if version == 1:
+        # calculation based on ddvk's reader
+        d.write_float32(point.speed / 4)
+        d.write_float32(point.direction * (2 * math.pi) / 255)
+        d.write_float32(point.width / 4)
+        d.write_float32(point.pressure / 255)
+    else:
+        d.write_uint16(point.speed)
+        d.write_uint16(point.width)
+        d.write_uint8(point.direction)
+        d.write_uint8(point.pressure)
 
 
-@dataclass
-class Line:
-    color: PenColor
-    tool: Pen
-    points: list[Point]
-    thickness_scale: float
-    starting_length: float
-    # BoundingRect   image.Rectangle
+def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
+    _logger.debug("Reading Line version %d", version)
+    tool_id = stream.read_int(1)
+    tool = si.Pen(tool_id)
+    color_id = stream.read_int(2)
+    color = si.PenColor(color_id)
+    thickness_scale = stream.read_double(3)
+    starting_length = stream.read_float(4)
+    with stream.read_subblock(5) as block_info:
+        data_length = block_info.size
+        point_size = point_serialized_size(version)
+        if data_length % point_size != 0:
+            raise ValueError(
+                "Point data size mismatch: %d is not multiple of point_size"
+                % data_length
+            )
+        num_points = data_length // point_size
+        points = [
+            point_from_stream(stream, version=version) for _ in range(num_points)
+        ]
 
-    @classmethod
-    def from_stream(cls, stream: TaggedBlockReader, version: int = 2) -> Line:
-        _logger.debug("Reading Line version %d", version)
-        tool_id = stream.read_int(1)
-        tool = Pen(tool_id)
-        color_id = stream.read_int(2)
-        color = PenColor(color_id)
-        thickness_scale = stream.read_double(3)
-        starting_length = stream.read_float(4)
-        with stream.read_subblock(5) as block_info:
-            data_length = block_info.size
-            point_size = Point.serialized_size(version)
-            if data_length % point_size != 0:
-                raise ValueError(
-                    "Point data size mismatch: %d is not multiple of point_size"
-                    % data_length
-                )
-            num_points = data_length // point_size
-            points = [
-                Point.from_stream(stream, version=version) for _ in range(num_points)
-            ]
+    # XXX unused
+    timestamp = stream.read_id(6)
 
-        # XXX unused
-        timestamp = stream.read_id(6)
+    return si.Line(color, tool, points, thickness_scale, starting_length)
 
-        return Line(color, tool, points, thickness_scale, starting_length)
 
-    def to_stream(self, writer: TaggedBlockWriter, version: int = 2):
-        _logger.debug("Writing Line version %d", version)
-        writer.write_int(1, self.tool)
-        writer.write_int(2, self.color)
-        writer.write_double(3, self.thickness_scale)
-        writer.write_float(4, self.starting_length)
-        with writer.write_subblock(5):
-            for point in self.points:
-                point.to_stream(writer, version)
+def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
+    _logger.debug("Writing Line version %d", version)
+    writer.write_int(1, line.tool)
+    writer.write_int(2, line.color)
+    writer.write_double(3, line.thickness_scale)
+    writer.write_float(4, line.starting_length)
+    with writer.write_subblock(5):
+        for point in line.points:
+            point_to_stream(point, writer, version)
 
-        # XXX didn't save
-        timestamp = CrdtId(0, 1)
-        writer.write_id(6, timestamp)
+    # XXX didn't save
+    timestamp = CrdtId(0, 1)
+    writer.write_id(6, timestamp)
 
 
 @dataclass
@@ -512,7 +437,7 @@ class SceneLineItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x05
     ITEM_TYPE: tp.ClassVar = 0x03
 
-    value: tp.Optional[Line]
+    value: tp.Optional[si.Line]
 
     def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
         """Return (min_version, current_version) to use when writing."""
@@ -520,16 +445,16 @@ class SceneLineItemBlock(SceneItemBlock):
         return (ver, ver)
 
     @classmethod
-    def value_from_stream(cls, reader: TaggedBlockReader) -> Line:
+    def value_from_stream(cls, reader: TaggedBlockReader) -> si.Line:
         assert reader.current_block is not None
         version = reader.current_block.current_version
-        value = Line.from_stream(reader, version)
+        value = line_from_stream(reader, version)
         return value
 
-    def value_to_stream(self, writer: TaggedBlockWriter, value: Line):
+    def value_to_stream(self, writer: TaggedBlockWriter, value: si.Line):
         # XXX make sure this version ends up in block header
         version = writer.options.get("line_version", 2)
-        value.to_stream(writer, version=version)
+        line_to_stream(value, writer, version=version)
 
 
 # XXX missing "PathItemBlock"? with ITEM_TYPE 0x04
@@ -763,3 +688,31 @@ def write_blocks(
     stream.write_header()
     for block in blocks:
         _write_block(stream, block)
+
+
+def build_tree(tree: SceneTree, blocks: Iterable[Block]):
+    for b in blocks:
+        if isinstance(b, SceneTreeBlock):
+            # XXX check node_id and is_update
+            # pending_tree_nodes[b.tree_id] = b
+            tree.add_node(b.tree_id, parent_id=b.parent_id)
+        elif isinstance(b, TreeNodeBlock):
+            # Expect this node to already exist; adding information
+            # if b.node_id not in pending_tree_nodes:
+            if b.group.node_id not in tree:
+                raise ValueError("Node does not exist for TreeNodeBlock: %s" % b.group.node_id)
+            node = tree[b.group.node_id]
+            node.label = b.group.label
+            node.visible = b.group.visible
+        elif isinstance(b, SceneGroupItemBlock):
+            # Add this entry to children of parent_id
+            node_id = b.item.value
+            if node_id not in tree:
+                raise ValueError("Node does not exist for SceneGroupItemBlock: %s" % node_id)
+            item = replace(b.item, value=tree[node_id])
+            tree.add_item(item, b.parent_id)
+        elif isinstance(b, SceneLineItemBlock):
+            # Add this entry to children of parent_id
+            tree.add_item(b.item, b.parent_id)
+
+    pass
