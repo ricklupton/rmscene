@@ -49,6 +49,13 @@ class TestBlock:
             pass  # not reading anything
         assert "only read" in caplog.records[0].message
 
+    def test_skips_to_end_of_block_if_not_all_read(self):
+        s = stream(self.TEST_DATA)
+        with s.read_block():
+            assert s.data.tell() == 8
+            # not reading anything
+        assert s.data.tell() == 12
+
     def test_error_if_already_in_block(self):
         s = stream(self.TEST_DATA)
         with s.read_block():

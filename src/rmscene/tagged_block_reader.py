@@ -182,6 +182,13 @@ class TaggedBlockReader:
                 "%s starting at %d, length %d, only read %d"
                 % (what, i0, length, i1 - i0)
             )
+            # Discard the rest
+            remaining = i0 + length - i1
+            excess = self.data.read_bytes(remaining)
+            _logger.warning(
+                "Excess bytes:\n    %s",
+                "\n    ".join(excess[i:i+32].hex() for i in range(0, len(excess), 32))
+            )
 
     ## Higher level constructs
 
