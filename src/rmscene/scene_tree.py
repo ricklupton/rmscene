@@ -31,6 +31,7 @@ class SceneTree:
         self._node_ids = {self.root.node_id: self.root}
         # self.root = SceneTreeNode(CrdtId(0, 1), CrdtSequence([]))
         # self._nodes = {self.root.node_id: self.root}
+        self.root_text: tp.Optional["RootTextBlock"] = None
 
     def __contains__(self, node_id: CrdtId):
         return node_id in self._node_ids

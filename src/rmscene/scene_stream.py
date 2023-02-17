@@ -743,8 +743,12 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
                 raise ValueError("Node does not exist for SceneGroupItemBlock: %s" % node_id)
             item = replace(b.item, value=tree[node_id])
             tree.add_item(item, b.parent_id)
-        elif isinstance(b, SceneLineItemBlock):
+        elif isinstance(b, (SceneLineItemBlock, SceneGlyphItemBlock)):
             # Add this entry to children of parent_id
             tree.add_item(b.item, b.parent_id)
+        elif isinstance(b, RootTextBlock):
+            if tree.root_text is not None:
+                _logger.error("Overwriting RootTextBlock\n  Old: %s\n  New: %s", tree.root_text, b)
+            tree.root_text = b
 
     pass
