@@ -29,6 +29,7 @@ def _hex_lines(b, n=32):
         ("Bold_Heading_Bullet_Normal.rm", 1),
         ("Lines_v2.rm", 2),
         ("Lines_v2_updated.rm", 2),  # extra 7fXXXX part of Line data was added
+        ("Wikipedia_highlighted.rm", 2),
     ],
 )
 def test_full_roundtrip(test_file, line_version):
@@ -165,6 +166,34 @@ def test_read_glyph_range():
                 value=CrdtId(0, 11),
             )
         ),
+        SceneGlyphItemBlock(
+            parent_id=CrdtId(0, 11),
+            item=CrdtSequenceItem(
+                item_id=CrdtId(1, 17),
+                left_id=CrdtId(1, 16),
+                right_id=CrdtId(0, 0),
+                deleted_length=0,
+                value=si.GlyphRange(
+                    start=1536,
+                    text="display technology.[13]",
+                    color=si.PenColor.YELLOW,
+                    rectangles=[
+                        si.Rectangle(
+                            x=-809.061564750815,
+                            y=1724.1146737357485,
+                            w=333.5427440226558,
+                            h=56.30432956921868,
+                        ),
+                        si.Rectangle(
+                            x=-485.51105154941456,
+                            y=1730.4364894378523,
+                            w=58.22011730763188,
+                            h=33.42225280328421,
+                        ),
+                    ],
+                ),
+            ),
+        )
     ],
 )
 def test_blocks_roundtrip(block):
@@ -172,8 +201,9 @@ def test_blocks_roundtrip(block):
     writer = TaggedBlockWriter(buf)
     reader = TaggedBlockReader(buf)
 
-    # Mock header
-    with writer.write_block(4, 1, 1):
+    # Use 4 as a fallback -- it only matters for the SceneItem blocks
+    block_type = getattr(block, "BLOCK_TYPE", 4)
+    with writer.write_block(block_type, 1, 1):
         block.to_stream(writer)
 
     buf.seek(0)

@@ -124,9 +124,16 @@ class Text(SceneItem):
 
 
 @dataclass
+class Rectangle:
+    x: float
+    y: float
+    w: float
+    h: float
+
+
+@dataclass
 class GlyphRange(SceneItem):
     start: int
-    length: int
-    color: PenColor
     text: str
-    rectangles: list
+    color: PenColor
+    rectangles: list[Rectangle]
