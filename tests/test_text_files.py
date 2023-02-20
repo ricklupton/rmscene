@@ -25,9 +25,9 @@ def test_list():
     with open(DATA_PATH / "Bold_Heading_Bullet_Normal.rm", "rb") as f:
         lines = list(extract_text(f))
     assert lines == [
-        (TextFormat.BOLD, "A"),
-        (TextFormat.HEADING, "new line"),
-        (TextFormat.BULLET, "B is a letter of the alphabet"),
+        (TextFormat.BOLD, "A\n"),
+        (TextFormat.HEADING, "new line\n"),
+        (TextFormat.BULLET, "B is a letter of the alphabet\n"),
         (TextFormat.PLAIN, "C"),
     ]
 

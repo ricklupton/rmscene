@@ -73,10 +73,10 @@ def expand_text_items(items: Iterable[TextItem]) -> Iterable[TextItem]:
 
 def extract_text_lines(
     root_text_block: RootTextBlock,
-) -> tp.Iterator[tuple[TextFormat, str]]:
+) -> tp.Iterator[tuple[TextFormat, str, list[CrdtId]]]:
     """Extract lines of text with associated formatting.
 
-    Returns (format, line) pairs.
+    Returns (format, line, char_ids) tuples.
 
     """
     format_for_char = {fmt.char_id: fmt for fmt in root_text_block.text_formats}
@@ -88,21 +88,23 @@ def extract_text_lines(
     char_items = CrdtSequence(expand_text_items(root_text_block.text_items))
 
     current_line = ""
+    current_ids = []
     for k in char_items:
         char = char_items[k]
         assert len(char) <= 1
+        current_line += char
+        current_ids += [k]
         if char == "\n":
-            yield (current_format, current_line)
+            yield (current_format, current_line, current_ids)
             current_format = TextFormat.PLAIN
             current_line = ""
-        else:
-            current_line += char
+            current_ids = []
         if k in format_for_char:
             current_format = format_for_char[k].format_type
             if char != "\n":
                 _logger.warning("format does not apply to whole line")
 
-    yield (current_format, current_line)
+    yield (current_format, current_line, current_ids)
 
 
 def extract_text(data: tp.BinaryIO) -> Iterable[tuple[TextFormat, str]]:
@@ -113,7 +115,8 @@ def extract_text(data: tp.BinaryIO) -> Iterable[tuple[TextFormat, str]]:
     """
     for block in read_blocks(data):
         if isinstance(block, RootTextBlock):
-            yield from extract_text_lines(block)
+            for fmt, s, _ in extract_text_lines(block):
+                yield (fmt, s)
 
 
 def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
