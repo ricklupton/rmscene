@@ -407,21 +407,30 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
     color_id = stream.read_int(4)  # ddvk has this as a byte?
     color = si.PenColor(color_id)
     text = stream.read_string(5)
+
+    # Note: the decoded text length is not always the same as the length in the
+    # glyph range...
     if len(text) != length:
-        _logger.warning("GlyphRange text length %d != length value %d", len(text), length)
+        _logger.debug(
+            "GlyphRange text length %d != length value %d: %r",
+            len(text),
+            length,
+            text,
+        )
+
     with stream.read_subblock(6):
         num_rects = stream.data.read_varuint()
         rectangles = [
             si.Rectangle(*[stream.data.read_float64() for _ in range(4)])
             for _ in range(num_rects)
         ]
-    return si.GlyphRange(start, text, color, rectangles)
+
+    return si.GlyphRange(start, length, text, color, rectangles)
 
 
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
-    length = len(item.text)
     stream.write_int(2, item.start)
-    stream.write_int(3, length)
+    stream.write_int(3, item.length)
     stream.write_int(4, item.color)
     stream.write_string(5, item.text)
     with stream.write_subblock(6):

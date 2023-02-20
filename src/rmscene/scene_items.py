@@ -134,6 +134,7 @@ class Rectangle:
 @dataclass
 class GlyphRange(SceneItem):
     start: int
+    length: int
     text: str
     color: PenColor
     rectangles: list[Rectangle]

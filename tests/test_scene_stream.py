@@ -182,6 +182,7 @@ def test_read_glyph_range():
                 deleted_length=0,
                 value=si.GlyphRange(
                     start=1536,
+                    length=23,
                     text="display technology.[13]",
                     color=si.PenColor.YELLOW,
                     rectangles=[
