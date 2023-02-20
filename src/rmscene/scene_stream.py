@@ -298,9 +298,7 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
                 % data_length
             )
         num_points = data_length // point_size
-        points = [
-            point_from_stream(stream, version=version) for _ in range(num_points)
-        ]
+        points = [point_from_stream(stream, version=version) for _ in range(num_points)]
 
     # XXX unused
     timestamp = stream.read_id(6)
@@ -402,10 +400,11 @@ class SceneItemBlock(Block):
 
 # These share the same structure so can share the same implementation?
 
+
 def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
     start = stream.read_int(2)
     length = stream.read_int(3)
-    color_id = stream.read_int(4)   # ddvk has this as a byte?
+    color_id = stream.read_int(4)  # ddvk has this as a byte?
     color = si.PenColor(color_id)
     text = stream.read_string(5)
     if len(text) != length:
@@ -506,7 +505,6 @@ class SceneTextItemBlock(SceneItemBlock):
 
 @dataclass
 class TextItem(CrdtSequenceItem[str]):
-
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> TextItem:
         with stream.read_subblock(0):
@@ -732,7 +730,9 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
             # Expect this node to already exist; adding information
             # if b.node_id not in pending_tree_nodes:
             if b.group.node_id not in tree:
-                raise ValueError("Node does not exist for TreeNodeBlock: %s" % b.group.node_id)
+                raise ValueError(
+                    "Node does not exist for TreeNodeBlock: %s" % b.group.node_id
+                )
             node = tree[b.group.node_id]
             node.label = b.group.label
             node.visible = b.group.visible
@@ -740,7 +740,9 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
             # Add this entry to children of parent_id
             node_id = b.item.value
             if node_id not in tree:
-                raise ValueError("Node does not exist for SceneGroupItemBlock: %s" % node_id)
+                raise ValueError(
+                    "Node does not exist for SceneGroupItemBlock: %s" % node_id
+                )
             item = replace(b.item, value=tree[node_id])
             tree.add_item(item, b.parent_id)
         elif isinstance(b, (SceneLineItemBlock, SceneGlyphItemBlock)):
@@ -748,7 +750,9 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
             tree.add_item(b.item, b.parent_id)
         elif isinstance(b, RootTextBlock):
             if tree.root_text is not None:
-                _logger.error("Overwriting RootTextBlock\n  Old: %s\n  New: %s", tree.root_text, b)
+                _logger.error(
+                    "Overwriting RootTextBlock\n  Old: %s\n  New: %s", tree.root_text, b
+                )
             tree.root_text = b
 
     pass
