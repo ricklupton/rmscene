@@ -745,6 +745,10 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
             node = tree[b.group.node_id]
             node.label = b.group.label
             node.visible = b.group.visible
+            node.anchor_id = b.group.anchor_id
+            node.anchor_type = b.group.anchor_type
+            node.anchor_threshold = b.group.anchor_threshold
+            node.anchor_origin_x = b.group.anchor_origin_x
         elif isinstance(b, SceneGroupItemBlock):
             # Add this entry to children of parent_id
             node_id = b.item.value
