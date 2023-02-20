@@ -21,6 +21,12 @@ def _hex_lines(b, n=32):
     ]
 
 
+LINES_V2_FILES = [
+    "Lines_v2.rm",
+    "Wikipedia_highlighted_p2.rm",
+]
+
+
 @pytest.mark.parametrize(
     "test_file,line_version",
     [
@@ -29,7 +35,8 @@ def _hex_lines(b, n=32):
         ("Bold_Heading_Bullet_Normal.rm", 1),
         ("Lines_v2.rm", 2),
         ("Lines_v2_updated.rm", 2),  # extra 7fXXXX part of Line data was added
-        ("Wikipedia_highlighted.rm", 2),
+        ("Wikipedia_highlighted_p1.rm", 2),
+        ("Wikipedia_highlighted_p2.rm", 2),
     ],
 )
 def test_full_roundtrip(test_file, line_version):
@@ -106,7 +113,7 @@ def test_normal_ab():
 
 
 def test_read_glyph_range():
-    with open(DATA_PATH / "Wikipedia_highlighted.rm", "rb") as f:
+    with open(DATA_PATH / "Wikipedia_highlighted_p1.rm", "rb") as f:
         result = [block for block in read_blocks(f) if isinstance(block, SceneGlyphItemBlock)]
 
     assert result[0].item.value.text == "The reMarkable uses electronic paper"

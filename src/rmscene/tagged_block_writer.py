@@ -176,8 +176,9 @@ class TaggedBlockWriter:
     def write_string(self, index: int, value: str):
         """Write a standard string block."""
         with self.write_subblock(index):
-            string_length = len(value)
+            b = value.encode()
+            bytes_length = len(b)
             is_ascii = True  # XXX not sure if this is right meaning?
-            self.data.write_varuint(string_length)
+            self.data.write_varuint(bytes_length)
             self.data.write_bool(is_ascii)
             self.data.write_bytes(value.encode())

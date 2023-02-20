@@ -255,5 +255,9 @@ class TaggedBlockReader:
             is_ascii = self.data.read_bool()
             assert is_ascii == 1
             assert string_length + 2 <= block_info.size
-            string = self.data.read_bytes(string_length).decode()
+            b = self.data.read_bytes(string_length)
+            string = b.decode()
+            if len(b) != len(string):
+                _logger.debug("read_string: decoded %r (%d) to %r (%d)",
+                              b, len(b), string, len(string))
             return string
