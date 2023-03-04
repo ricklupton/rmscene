@@ -33,6 +33,11 @@ class Group(SceneItem):
 
     children is a sequence of other SceneItems.
 
+    `anchor_id` refers to a text character which provides the anchor y-position
+    for this group. There are two values that seem to be special:
+    - `0xfffffffffffe` seems to be used for lines right at the top of the page?
+    - `0xffffffffffff` seems to be used for lines right at the bottom of the page?
+
     """
 
     node_id: CrdtId

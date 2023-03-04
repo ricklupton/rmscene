@@ -69,3 +69,15 @@ def test_unknown_id():
     result2 = list(CrdtSequence(reversed(items)))
     assert result1 == result2
     assert result1 == [cid(28), cid(31), cid(33), cid(15)]
+
+
+def test_iterates_in_order():
+    # Order should be "AB"
+    items = [
+        make_item(1, 0, 0, 0, "A"),
+        make_item(2, 1, 0, 0, "B"),
+    ]
+
+    for test_items in (items, reversed(items)):
+        assert list(CrdtSequence(test_items).values()) == ["A", "B"]
+        assert list(CrdtSequence(test_items).items()) == [(cid(1), "A"), (cid(2), "B")]

@@ -107,6 +107,31 @@ def extract_text_lines(
     yield (current_format, current_line, current_ids)
 
 
+LINE_HEIGHTS = {
+    TextFormat.PLAIN: 30,
+    TextFormat.BULLET: 30,
+    TextFormat.BOLD: 35,
+    TextFormat.HEADING: 70,
+}
+
+
+def anchor_positions(
+    lines: tp.Iterable[tuple[TextFormat, str, list[CrdtId]]],
+    anchor_ids: tp.Optional[tp.Collection[CrdtId]] = None,
+):
+    if anchor_ids is not None:
+        anchor_ids = set(anchor_ids)
+    y = 0
+
+    result = {}
+    for fmt, line, ids in lines:
+        relevant_ids = set(ids) & anchor_ids if anchor_ids is not None else set(ids)
+        for k in relevant_ids:
+            result[k] = y
+        y += LINE_HEIGHTS[fmt]
+    return result
+
+
 def extract_text(data: tp.BinaryIO) -> Iterable[tuple[TextFormat, str]]:
     """
     Parse reMarkable file and return iterator of text (format, line) pairs.
