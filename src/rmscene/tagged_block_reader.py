@@ -53,6 +53,7 @@ class TaggedBlockReader:
         rm_data = DataStream(data)
         self.data = rm_data
         self.current_block: tp.Optional[MainBlockInfo] = None
+        self._warned_about_extra_data = False
 
     def read_header(self) -> None:
         """Read the file header.
@@ -192,17 +193,20 @@ class TaggedBlockReader:
                 % (type(block_info), i0, length, i1, i1 - (i0 + length))
             )
         if i1 < i0 + length:
-            _logger.warning(
-                "%s starting at %d, length %d, only read %d"
-                % (type(block_info), i0, length, i1 - i0)
-            )
+            if not self._warned_about_extra_data:
+                _logger.warning(
+                    "Some data has not been read. The data may have been written using "
+                    "a newer format than this reader supports."
+                )
+                self._warned_about_extra_data = True
+            _logger.info("In %s only read %d bytes", block_info, i1 - i0)
             # Discard the rest
             remaining = i0 + length - i1
             excess = self.data.read_bytes(remaining)
             block_info.extra_data = excess
-            _logger.info(
-                "Excess bytes:\n    %s",
-                "\n    ".join(excess[i:i+32].hex() for i in range(0, len(excess), 32))
+            _logger.debug(
+                "Excess bytes:\n %s",
+                "\n".join(excess[i : i + 32].hex() for i in range(0, len(excess), 32)),
             )
 
     ## Higher level constructs
