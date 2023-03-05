@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import math
 from uuid import UUID
-from dataclasses import dataclass
+from dataclasses import dataclass, KW_ONLY
 import enum
 import logging
 import typing as tp
@@ -27,8 +27,13 @@ _logger = logging.getLogger(__name__)
 ############################################################
 
 
+@dataclass
 class Block(ABC):
     BLOCK_TYPE: tp.ClassVar
+
+    # Store any unrecognised data we can't understand
+    _: KW_ONLY
+    extra_data: bytes = b""
 
     def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
         """Return (min_version, current_version) to use when writing."""
@@ -357,7 +362,8 @@ class Line:
         color = PenColor(color_id)
         thickness_scale = stream.read_double(3)
         starting_length = stream.read_float(4)
-        with stream.read_subblock(5) as data_length:
+        with stream.read_subblock(5) as block_info:
+            data_length = block_info.size
             point_size = Point.serialized_size(version)
             if data_length % point_size != 0:
                 raise ValueError(
@@ -428,15 +434,24 @@ class SceneItemBlock(Block):
         deleted_length = stream.read_int(5)
 
         if stream.has_subblock(6):
-            with stream.read_subblock(6):
+            with stream.read_subblock(6) as block_info:
                 item_type = stream.data.read_uint8()
                 assert item_type == subclass.ITEM_TYPE
                 value = subclass.value_from_stream(stream)
+            # Keep known extra data
+            extra_data = block_info.extra_data
         else:
             value = None
+            extra_data = b""
 
         return subclass(
-            parent_id, item_id, left_id, right_id, deleted_length, value
+            parent_id,
+            item_id,
+            left_id,
+            right_id,
+            deleted_length,
+            value,
+            extra_data=extra_data,
         )
 
     def to_stream(self, writer: TaggedBlockWriter):
@@ -451,6 +466,8 @@ class SceneItemBlock(Block):
             with writer.write_subblock(6):
                 writer.data.write_uint8(self.ITEM_TYPE)
                 self.value_to_stream(writer, self.value)
+
+                writer.data.write_bytes(self.extra_data)
 
     @classmethod
     @abstractmethod
@@ -606,8 +623,7 @@ class TextFormatItem:
         # don't think it is referring to it.
         item_id = stream.read_id(1)
 
-        with stream.read_subblock(2) as length:
-            assert length == 2
+        with stream.read_subblock(2):
             # XXX not sure what this is format?
             c = stream.data.read_uint8()
             assert c == 17
@@ -713,18 +729,21 @@ def _read_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
     Parse blocks from reMarkable v6 file.
     """
     while True:
-        with stream.read_block() as header:
-            if header is None:
+        with stream.read_block() as block_info:
+            if block_info is None:
                 # no more blocks
                 return
 
-            block_type = Block.lookup(header.block_type)
+            block_type = Block.lookup(block_info.block_type)
             if block_type:
                 yield block_type.from_stream(stream)
             else:
-                _logger.error("Unknown block type %s. Skipping %d bytes.",
-                              header.block_type, header.block_size)
-                stream.data.read_bytes(header.block_size)
+                _logger.error(
+                    "Unknown block type %s. Skipping %d bytes.",
+                    block_info.block_type,
+                    block_info.size,
+                )
+                stream.data.read_bytes(block_info.size)
 
 
 def read_blocks(data: tp.BinaryIO) -> Iterable[Block]:

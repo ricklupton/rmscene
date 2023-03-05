@@ -18,13 +18,13 @@ class TestBlock:
 
     def test_read_block(self):
         s = stream(self.TEST_DATA)
-        with s.read_block() as header:
-            assert header is not None
-            assert header.block_size == 4
-            assert header.block_type == 5
-            assert header.min_version == 1
-            assert header.current_version == 2
-            assert header.offset == 8
+        with s.read_block() as block_info:
+            assert block_info is not None
+            assert block_info.size == 4
+            assert block_info.block_type == 5
+            assert block_info.min_version == 1
+            assert block_info.current_version == 2
+            assert block_info.offset == 8
 
             value = s.data.read_uint32()
             assert value == 0xFF
@@ -71,8 +71,8 @@ class TestSubblock:
 
     def test_read_subblock(self):
         s = stream(self.TEST_DATA)
-        with s.read_subblock(5) as length:
-            assert length == 4
+        with s.read_subblock(5) as block_info:
+            assert block_info.size == 4
             value = s.data.read_uint32()
             assert value == 0xFF
 
@@ -102,8 +102,8 @@ class TestSubblock:
                 pass
 
         # We can still read the next block after catching the error.
-        with s.read_subblock(5) as length:
-            assert length == 4
+        with s.read_subblock(5) as block_info:
+            assert block_info.size == 4
 
     def test_error_on_overflow(self):
         s = stream(self.TEST_DATA)

@@ -4,6 +4,7 @@ from pathlib import Path
 from uuid import UUID
 from rmscene import read_blocks, write_blocks, LwwValue, TaggedBlockWriter, TaggedBlockReader
 from rmscene.scene_stream import *
+from rmscene.tagged_block_common import HEADER_V6
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,23 +21,22 @@ def _hex_lines(b, n=32):
 
 
 @pytest.mark.parametrize(
-    "test_file",
+    "test_file,line_version",
     [
-        "Normal_AB.rm",
-        "Normal_A_stroke_2_layers.rm",
-        "Bold_Heading_Bullet_Normal.rm",
-        "Lines_v2.rm"
-    ]
+        ("Normal_AB.rm", 1),
+        ("Normal_A_stroke_2_layers.rm", 1),
+        ("Bold_Heading_Bullet_Normal.rm", 1),
+        ("Lines_v2.rm", 2),
+        ("Lines_v2_updated.rm", 2),  # extra 7fXXXX part of Line data was added
+    ],
 )
-def test_full_roundtrip(test_file):
+def test_full_roundtrip(test_file, line_version):
     with open(DATA_PATH / test_file, "rb") as f:
         data = f.read()
 
     input_buf = BytesIO(data)
     output_buf = BytesIO()
-    options = {
-        "line_version": (2 if test_file == "Lines_v2.rm" else 1)
-    }
+    options = {"line_version": line_version}
 
     write_blocks(output_buf, read_blocks(input_buf), options)
 
@@ -182,3 +182,31 @@ def test_write_blocks():
 
     assert buf.getvalue()[:43] == b"reMarkable .lines file, version=6          "
     assert buf.getvalue()[43:].hex() == "05000000000101001f01012101"
+
+
+def test_blocks_keep_unknown_data():
+    # The "7f 010f" is new, unknown data
+    data_hex = """
+    56000000 00020205
+    1f 0219
+    2f 021e
+    3f 0000
+    4f 0000
+    54 0000 0000
+    6c 4000 0000
+       03
+       14 0f000000
+       24 00000000
+       38 00000000 0000f03f
+       44 00000000
+       5c 1c000000
+          f8fe82c2 f42a30c3 03000800 0000b869
+          83c2622d 30c30000 08000000
+       6f 0001
+       7f 010f
+    """
+    buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
+    reader = TaggedBlockReader(buf)
+    block = next(read_blocks(buf))
+    assert isinstance(block, SceneLineItemBlock)
+    assert block.extra_data == bytes.fromhex("7f 010f")
