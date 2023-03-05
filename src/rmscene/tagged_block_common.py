@@ -216,6 +216,8 @@ class DataStream:
 
     def write_varuint(self, value: int):
         """Write a varuint to the data stream."""
+        if value < 0:
+            raise ValueError("value is negative")
         b = bytearray()
         while True:
             to_write = value & 0x7F

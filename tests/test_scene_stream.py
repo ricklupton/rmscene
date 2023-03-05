@@ -210,3 +210,50 @@ def test_blocks_keep_unknown_data():
     block = next(read_blocks(buf))
     assert isinstance(block, SceneLineItemBlock)
     assert block.extra_data == bytes.fromhex("7f 010f")
+
+
+from hypothesis import given, strategies as st
+
+
+crdt_id_strategy = st.builds(
+    CrdtId,
+    st.integers(min_value=0, max_value=2**8-1),
+    st.integers(min_value=0, max_value=2**64-1),
+)
+st.register_type_strategy(CrdtId, crdt_id_strategy)
+
+author_ids_block_strategy = st.builds(
+    AuthorIdsBlock,
+    st.dictionaries(st.integers(min_value=0, max_value=65535), st.uuids())
+)
+
+block_strategy = st.one_of([
+    author_ids_block_strategy,
+    st.builds(MigrationInfoBlock),
+])
+
+
+
+@given(block_strategy)
+def test_blocks_roundtrip_2(block):
+    buf = BytesIO()
+    writer = TaggedBlockWriter(buf)
+    reader = TaggedBlockReader(buf)
+
+    # Mock header
+    with writer.write_block(4, 1, 1):
+        block.to_stream(writer)
+
+    buf.seek(0)
+    logger.info("After writing block %s", type(block))
+    logger.info("Buffer: %s", buf.getvalue().hex())
+    with reader.read_block():
+        block2 = block.from_stream(reader)
+    assert block2 == block
+
+
+@given(...)
+def test_write_id(crdt_id: CrdtId):
+    buf = BytesIO()
+    s = TaggedBlockWriter(buf)
+    s.write_id(3, crdt_id)
