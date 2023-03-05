@@ -151,9 +151,11 @@ class TreeNodeBlock(Block):
         writer.write_lww_bool(3, self.visible)
         if self.anchor_id is not None:
             # FIXME group together in an anchor type?
-            assert (self.anchor_type is not None and
-                    self.anchor_threshold is not None and
-                    self.anchor_origin_x is not None)
+            assert (
+                self.anchor_type is not None
+                and self.anchor_threshold is not None
+                and self.anchor_origin_x is not None
+            )
             writer.write_lww_id(7, self.anchor_id)
             writer.write_lww_byte(8, self.anchor_type)
             writer.write_lww_float(9, self.anchor_threshold)
@@ -423,8 +425,7 @@ class SceneItemBlock(Block):
             subclass = SceneTextItemBlock
         else:
             raise ValueError(
-                "unknown scene type %d in %s"
-                % (block_type, stream.current_block)
+                "unknown scene type %d in %s" % (block_type, stream.current_block)
             )
 
         parent_id = stream.read_id(1)
@@ -482,6 +483,7 @@ class SceneItemBlock(Block):
 
 
 # These share the same structure so can share the same implementation?
+
 
 class SceneGlyphItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x03
@@ -763,7 +765,9 @@ def _write_block(writer: TaggedBlockWriter, block: Block):
         block.to_stream(writer)
 
 
-def write_blocks(data: tp.BinaryIO, blocks: Iterable[Block], options: tp.Optional[dict] = None):
+def write_blocks(
+    data: tp.BinaryIO, blocks: Iterable[Block], options: tp.Optional[dict] = None
+):
     """
     Write blocks to file.
     """
