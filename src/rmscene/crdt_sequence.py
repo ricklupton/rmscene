@@ -12,6 +12,7 @@ from .tagged_block_common import CrdtId
 
 _T = tp.TypeVar("_T")
 
+
 @dataclass
 class CrdtSequenceItem(tp.Generic[_T]):
     item_id: CrdtId
@@ -44,9 +45,7 @@ class CrdtSequence(tp.Generic[_T]):
         raise NotImplemented
 
     def __repr__(self):
-        return "CrdtSequence(%s)" % (
-            ", ".join(str(i) for i in self._items.values())
-        )
+        return "CrdtSequence(%s)" % (", ".join(str(i) for i in self._items.values()))
 
     ## Access values, in order
 
@@ -54,19 +53,17 @@ class CrdtSequence(tp.Generic[_T]):
         """Return ids in order"""
         yield from toposort_items(self._items.values())
 
-    def keys(self) -> Iterable[CrdtId]:
+    def keys(self) -> list[CrdtId]:
         """Return CrdtIds in order."""
         return list(self)
 
-    def values(self) -> Iterable[_T]:
-        """Iterate through stored values in order."""
-        for item_id in self:
-            yield self[item_id]
+    def values(self) -> list[_T]:
+        """Return list of sorted values."""
+        return [self[item_id] for item_id in self]
 
     def items(self) -> Iterable[tuple[CrdtId, _T]]:
-        """Iterate through stored values in order."""
-        for item_id in self:
-            yield item_id, self[item_id]
+        """Return list of sorted key, value pairs."""
+        return [(item_id, self[item_id]) for item_id in self]
 
     def __getitem__(self, key: CrdtId) -> _T:
         """Return item with key"""
@@ -74,9 +71,9 @@ class CrdtSequence(tp.Generic[_T]):
 
     ## Access SequenceItems
 
-    def sequence_items(self) -> Iterable[CrdtSequenceItem[_T]]:
+    def sequence_items(self) -> list[CrdtSequenceItem[_T]]:
         """Iterate through CrdtSequenceItems."""
-        return self._items.values()
+        return list(self._items.values())
 
     ## Modify sequence
 
