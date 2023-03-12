@@ -9,8 +9,13 @@ from .tagged_block_common import CrdtId, LwwValue
 from .tagged_block_reader import TaggedBlockReader
 from .tagged_block_writer import TaggedBlockWriter
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
+from .text import expand_text_items
+
 
 _logger = logging.getLogger(__name__)
+
+
+## Base class
 
 
 @dataclass
@@ -18,9 +23,7 @@ class SceneItem:
     """Base class for items stored in scene tree."""
 
 
-@dataclass
-class GlyphHighlight(SceneItem):
-    """A GlyphItem represents some highlighted text."""
+## Group
 
 
 @dataclass
@@ -49,6 +52,10 @@ class Group(SceneItem):
     anchor_type: tp.Optional[LwwValue[int]] = None
     anchor_threshold: tp.Optional[LwwValue[float]] = None
     anchor_origin_x: tp.Optional[LwwValue[float]] = None
+
+
+## Strokes
+
 
 @enum.unique
 class PenColor(enum.IntEnum):
@@ -124,8 +131,93 @@ class Line(SceneItem):
     starting_length: float
 
 
+## Text
+
+
+@enum.unique
+class TextFormat(enum.IntEnum):
+    """
+    Text format type.
+    """
+
+    PLAIN = 1
+    HEADING = 2
+    BOLD = 3
+    BULLET = 4
+    BULLET2 = 5
+
+
+END_MARKER = CrdtId(0, 0)
+
+
+@dataclass
 class Text(SceneItem):
-    """Not sure how this is used."""
+    """Block of text.
+
+    `items` are a CRDT sequence of strings. The `item_id` for each string refers
+    to its first character; subsequent characters implicitly have sequential
+    ids.
+
+    `formats` are LWW values representing a mapping of character IDs to
+    `TextFormat` values. These formats apply to each line of text (until the
+    next newline).
+
+    `pos_x`, `pos_y` and `width` are dimensions for the text block.
+
+    """
+
+    items: CrdtSequence[str]
+    formats: list[LwwValue[tuple[CrdtId, TextFormat]]]
+    pos_x: float
+    pos_y: float
+    width: float
+
+    def formatted_lines_with_ids(self) -> tp.Iterator[tuple[TextFormat, str, list[CrdtId]]]:
+        """Extract lines of text with associated formatting and char ids.
+
+        Returns (format, line, char_ids) tuples.
+
+        """
+
+        char_formats = {lww.value[0]: lww.value[1] for lww in self.formats}
+        if END_MARKER in char_formats:
+            current_format = char_formats[END_MARKER]
+        else:
+            current_format = TextFormat.PLAIN
+
+        # Expand from strings to characters
+        char_items = CrdtSequence(expand_text_items(self.items.sequence_items()))
+
+        current_line = ""
+        current_ids = []
+        for k in char_items:
+            char = char_items[k]
+            assert len(char) <= 1
+            current_line += char
+            current_ids += [k]
+            if char == "\n":
+                yield (current_format, current_line, current_ids)
+                current_format = TextFormat.PLAIN
+                current_line = ""
+                current_ids = []
+            if k in char_formats:
+                current_format = char_formats[k]
+                if char != "\n":
+                    _logger.warning("format does not apply to whole line")
+
+        yield (current_format, current_line, current_ids)
+
+    def formatted_lines(self) -> tp.Iterator[tuple[TextFormat, str]]:
+        """Extract lines of text with associated formatting.
+
+        Returns (format, line) tuples.
+
+        """
+        for fmt, s, _ in self.formatted_lines_with_ids():
+            yield (fmt, s)
+
+
+## Glyph range
 
 
 @dataclass

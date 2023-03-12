@@ -4,19 +4,11 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from collections.abc import Iterable
-import math
-from uuid import UUID
-from dataclasses import dataclass, field
-import enum
 import logging
 import typing as tp
 
-from .tagged_block_common import CrdtId, LwwValue
-from .tagged_block_reader import TaggedBlockReader
-from .tagged_block_writer import TaggedBlockWriter
-from .crdt_sequence import CrdtSequence, CrdtSequenceItem
+from .tagged_block_common import CrdtId
+from .crdt_sequence import CrdtSequenceItem
 from . import scene_items as si
 
 _logger = logging.getLogger(__name__)
@@ -29,9 +21,7 @@ class SceneTree:
     def __init__(self):
         self.root = si.Group(ROOT_ID)
         self._node_ids = {self.root.node_id: self.root}
-        # self.root = SceneTreeNode(CrdtId(0, 1), CrdtSequence([]))
-        # self._nodes = {self.root.node_id: self.root}
-        self.root_text: tp.Optional["RootTextBlock"] = None
+        self.root_text: tp.Optional[si.Text] = None
 
     def __contains__(self, node_id: CrdtId):
         return node_id in self._node_ids
@@ -52,3 +42,15 @@ class SceneTree:
             raise ValueError("Parent id not known: %s" % parent_id)
         parent = self._node_ids[parent_id]
         parent.children.add(item)
+
+    def walk(self) -> tp.Iterator[si.SceneItem]:
+        """Iterate through all leaf items (not groups)."""
+        yield from _walk_items(self.root)
+
+
+def _walk_items(item):
+    if isinstance(item, si.Group):
+        for child in item.children.values():
+            yield from _walk_items(child)
+    else:
+        yield item

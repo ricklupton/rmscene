@@ -1,8 +1,8 @@
 from uuid import UUID
 from io import BytesIO
 from pathlib import Path
-from rmscene.text import extract_text_lines, extract_text, simple_text_document, anchor_positions
 from rmscene.scene_stream import *
+from rmscene.scene_items import Text, TextFormat
 
 
 DATA_PATH = Path(__file__).parent / "data"
@@ -15,15 +15,20 @@ def _hex_lines(b, n=32):
     ]
 
 
+def extract_text(filename):
+    with open(filename, "rb") as f:
+        tree = read_tree(f)
+        assert tree.root_text
+        return [(fmt, s) for fmt, s, _ in tree.root_text.formatted_lines()]
+
+
 def test_normal_ab():
-    with open(DATA_PATH / "Normal_AB.rm", "rb") as f:
-        lines = list(extract_text(f))
+    lines = extract_text(DATA_PATH / "Normal_AB.rm")
     assert lines == [(TextFormat.PLAIN, "AB")]
 
 
 def test_list():
-    with open(DATA_PATH / "Bold_Heading_Bullet_Normal.rm", "rb") as f:
-        lines = list(extract_text(f))
+    lines = extract_text(DATA_PATH / "Bold_Heading_Bullet_Normal.rm")
     assert lines == [
         (TextFormat.BOLD, "A\n"),
         (TextFormat.HEADING, "new line\n"),
@@ -42,43 +47,3 @@ def test_simple_text_document():
     write_blocks(output_buf, simple_text_document("AB", author_id))
 
     assert _hex_lines(output_buf.getvalue()) == _hex_lines(expected)
-
-
-def test_anchor_positions_1():
-    result = anchor_positions([
-        (TextFormat.PLAIN, "AB", [CrdtId(1, 10), CrdtId(1, 11)])
-    ], [CrdtId(1, 10)])
-
-    assert result == {
-        CrdtId(1, 10): 0,
-    }
-
-
-def test_anchor_positions_2():
-    result = anchor_positions([
-        (TextFormat.PLAIN, "AB\n", [CrdtId(1, 10), CrdtId(1, 11), CrdtId(1, 12)]),
-        (TextFormat.PLAIN, "CD\n", [CrdtId(1, 13), CrdtId(1, 14), CrdtId(1, 15)]),
-    ])
-
-    assert result == {
-        CrdtId(1, 10): 0,
-        CrdtId(1, 11): 0,
-        CrdtId(1, 12): 0,
-        CrdtId(1, 13): 30,
-        CrdtId(1, 14): 30,
-        CrdtId(1, 15): 30,
-    }
-
-
-def test_anchor_positions_heading_taller_than_plain():
-    result1 = anchor_positions([
-        (TextFormat.PLAIN, "AB\n", [CrdtId(1, 10), CrdtId(1, 11), CrdtId(1, 12)]),
-        (TextFormat.PLAIN, "CD\n", [CrdtId(1, 13), CrdtId(1, 14), CrdtId(1, 15)]),
-    ], [CrdtId(1, 13)])
-
-    result2 = anchor_positions([
-        (TextFormat.HEADING, "AB\n", [CrdtId(1, 10), CrdtId(1, 11), CrdtId(1, 12)]),
-        (TextFormat.PLAIN, "CD\n", [CrdtId(1, 13), CrdtId(1, 14), CrdtId(1, 15)]),
-    ], [CrdtId(1, 13)])
-
-    assert result2[CrdtId(1, 13)] > result1[CrdtId(1, 13)]

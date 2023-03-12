@@ -47,7 +47,7 @@ class TestBlock:
         s = stream(self.TEST_DATA)
         with s.read_block():
             pass  # not reading anything
-        assert "only read" in caplog.records[0].message
+        assert "not been read" in caplog.records[0].message
 
     def test_skips_to_end_of_block_if_not_all_read(self):
         s = stream(self.TEST_DATA)
@@ -116,7 +116,7 @@ class TestSubblock:
         s = stream(self.TEST_DATA)
         with s.read_subblock(5):
             pass  # not reading anything
-        assert "only read" in caplog.records[0].message
+        assert "not been read" in caplog.records[0].message
 
 
 def test_has_subblock_returns_False_with_bad_data():

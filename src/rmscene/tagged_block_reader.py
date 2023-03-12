@@ -68,13 +68,7 @@ class TaggedBlockReader:
     def read_id(self, index: int) -> CrdtId:
         """Read a tagged CRDT ID."""
         self.data.read_tag(index, TagType.ID)
-
-        # Based on ddvk's reader.go
-        # TODO: should be var unit?
-        part1 = self.data.read_uint8()
-        part2 = self.data.read_varuint()
-        # result = (part1 << 48) | part2
-        result = CrdtId(part1, part2)
+        result = self.data.read_crdt_id()
         return result
 
     def read_bool(self, index: int) -> bool:

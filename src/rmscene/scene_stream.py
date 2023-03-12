@@ -9,9 +9,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 import math
-from uuid import UUID
+from uuid import UUID, uuid4
 from dataclasses import dataclass, replace, KW_ONLY
-import enum
 import logging
 import typing as tp
 
@@ -512,92 +511,64 @@ class SceneTextItemBlock(SceneItemBlock):
         pass
 
 
-@dataclass
-class TextItem(CrdtSequenceItem[str]):
-    @classmethod
-    def from_stream(cls, stream: TaggedBlockReader) -> TextItem:
-        with stream.read_subblock(0):
-            item_id = stream.read_id(2)
-            left_id = stream.read_id(3)
-            right_id = stream.read_id(4)
-            deleted_length = stream.read_int(5)
+def text_item_from_stream(stream: TaggedBlockReader) -> CrdtSequenceItem[str]:
+    with stream.read_subblock(0):
+        item_id = stream.read_id(2)
+        left_id = stream.read_id(3)
+        right_id = stream.read_id(4)
+        deleted_length = stream.read_int(5)
 
-            if stream.has_subblock(6):
-                text = stream.read_string(6)
-            else:
-                text = ""
+        if stream.has_subblock(6):
+            text = stream.read_string(6)
+        else:
+            text = ""
 
-            return TextItem(item_id, left_id, right_id, deleted_length, text)
-
-    def to_stream(self, writer: TaggedBlockWriter):
-        with writer.write_subblock(0):
-            writer.write_id(2, self.item_id)
-            writer.write_id(3, self.left_id)
-            writer.write_id(4, self.right_id)
-            writer.write_int(5, self.deleted_length)
-
-            if self.value:
-                writer.write_string(6, self.value)
+    return CrdtSequenceItem(item_id, left_id, right_id, deleted_length, text)
 
 
-@enum.unique
-class TextFormat(enum.IntEnum):
-    """
-    Text format type.
-    """
+def text_item_to_stream(item: CrdtSequenceItem[str], writer: TaggedBlockWriter):
+    with writer.write_subblock(0):
+        writer.write_id(2, item.item_id)
+        writer.write_id(3, item.left_id)
+        writer.write_id(4, item.right_id)
+        writer.write_int(5, item.deleted_length)
 
-    PLAIN = 1
-    HEADING = 2
-    BOLD = 3
-    BULLET = 4
-    BULLET2 = 5
+        if item.value:
+            writer.write_string(6, item.value)
 
 
-@dataclass
-class TextFormatItem:
-    # identifier or timestamp?
-    item_id: CrdtId
+def text_format_from_stream(
+    stream: TaggedBlockReader,
+) -> LwwValue[tuple[CrdtId, si.TextFormat]]:
+    # These are character ids, but not with an initial tag like other ids have.
+    char_id = stream.data.read_crdt_id()
 
-    # Identifier for the character at start of formatting. This may be implicit,
-    # based on counting on from the identifier for the start of a span of text.
-    char_id: CrdtId
+    # This seems to be the item ID for this format data? It doesn't appear
+    # elsewhere in the file. Sometimes coincides with a character id but I don't
+    # think it is referring to it.
+    timestamp = stream.read_id(1)
 
-    format_type: TextFormat
+    with stream.read_subblock(2):
+        # XXX not sure what this is format?
+        c = stream.data.read_uint8()
+        assert c == 17
+        format_type = si.TextFormat(stream.data.read_uint8())
 
-    @classmethod
-    def from_stream(cls, stream: TaggedBlockReader) -> TextFormatItem:
-        # These are character ids, but not with an initial tag like other ids
-        # have?
-        a = stream.data.read_uint8()
-        b = stream.data.read_varuint()
-        char_id = CrdtId(a, b)
+    return LwwValue(timestamp, (char_id, format_type))
 
-        # This seems to be the item ID for this format data? It doesn't appear
-        # elsewhere in the file. Sometimes coincides with a character id but I
-        # don't think it is referring to it.
-        item_id = stream.read_id(1)
 
-        with stream.read_subblock(2):
-            # XXX not sure what this is format?
-            c = stream.data.read_uint8()
-            assert c == 17
-            format_type = TextFormat(stream.data.read_uint8())
+def text_format_to_stream(
+    value: LwwValue[tuple[CrdtId, si.TextFormat]], writer: TaggedBlockWriter
+):
+    char_id, format_type = value.value
 
-        return TextFormatItem(item_id, char_id, format_type)
-
-    def to_stream(self, writer: TaggedBlockWriter):
-        # These are character ids, but not with an initial tag like other ids
-        # have?
-        writer.data.write_uint8(self.char_id.part1)
-        writer.data.write_varuint(self.char_id.part2)
-
-        writer.write_id(1, self.item_id)
-
-        with writer.write_subblock(2):
-            # XXX not sure what this is format?
-            c = 17
-            writer.data.write_uint8(c)
-            writer.data.write_uint8(self.format_type)
+    writer.data.write_crdt_id(char_id)
+    writer.write_id(1, value.timestamp)
+    with writer.write_subblock(2):
+        # XXX not sure what this is format?
+        c = 17
+        writer.data.write_uint8(c)
+        writer.data.write_uint8(format_type)
 
 
 @dataclass
@@ -605,11 +576,7 @@ class RootTextBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x07
 
     block_id: CrdtId
-    text_items: list[TextItem]
-    text_formats: list[TextFormatItem]
-    pos_x: float
-    pos_y: float
-    width: float
+    value: si.Text
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> RootTextBlock:
@@ -626,7 +593,7 @@ class RootTextBlock(Block):
                 with stream.read_subblock(1):
                     num_subblocks = stream.data.read_varuint()
                     text_items = [
-                        TextItem.from_stream(stream) for _ in range(num_subblocks)
+                        text_item_from_stream(stream) for _ in range(num_subblocks)
                     ]
 
             # Formatting
@@ -634,7 +601,7 @@ class RootTextBlock(Block):
                 with stream.read_subblock(1):
                     num_subblocks = stream.data.read_varuint()
                     text_formats = [
-                        TextFormatItem.from_stream(stream) for _ in range(num_subblocks)
+                        text_format_from_stream(stream) for _ in range(num_subblocks)
                     ]
 
         # Last section
@@ -647,7 +614,14 @@ class RootTextBlock(Block):
         # "width" from ddvk
         width = stream.read_float(4)
 
-        return RootTextBlock(block_id, text_items, text_formats, pos_x, pos_y, width)
+        value = si.Text(
+            items=CrdtSequence(text_items),
+            formats=text_formats,
+            pos_x=pos_x,
+            pos_y=pos_y,
+            width=width
+        )
+        return RootTextBlock(block_id, value)
 
     def to_stream(self, writer: TaggedBlockWriter):
         _logger.debug("Writing %s", type(self).__name__)
@@ -656,26 +630,31 @@ class RootTextBlock(Block):
         with writer.write_subblock(2):
 
             # Text items
+            text_items = self.value.items.sequence_items()
             with writer.write_subblock(1):
                 with writer.write_subblock(1):
-                    writer.data.write_varuint(len(self.text_items))
-                    for item in self.text_items:
-                        item.to_stream(writer)
+                    writer.data.write_varuint(len(text_items))
+                    for item in text_items:
+                        text_item_to_stream(item, writer)
 
             # Formatting
+            text_formats = self.value.formats
             with writer.write_subblock(2):
                 with writer.write_subblock(1):
-                    writer.data.write_varuint(len(self.text_formats))
-                    for item in self.text_formats:
-                        item.to_stream(writer)
+                    writer.data.write_varuint(len(text_formats))
+                    for item in text_formats:
+                        text_format_to_stream(item, writer)
 
         # Last section
         with writer.write_subblock(3):
-            writer.data.write_float64(self.pos_x)
-            writer.data.write_float64(self.pos_y)
+            writer.data.write_float64(self.value.pos_x)
+            writer.data.write_float64(self.value.pos_y)
 
         # "width" from ddvk
-        writer.write_float(4, self.width)
+        writer.write_float(4, self.value.width)
+
+
+## Functions to read and write streams of blocks
 
 
 def _read_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
@@ -730,6 +709,7 @@ def write_blocks(
 
 
 def build_tree(tree: SceneTree, blocks: Iterable[Block]):
+    """Read `blocks` and add contents to `tree`."""
     for b in blocks:
         if isinstance(b, SceneTreeBlock):
             # XXX check node_id and is_update
@@ -764,8 +744,93 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
         elif isinstance(b, RootTextBlock):
             if tree.root_text is not None:
                 _logger.error(
-                    "Overwriting RootTextBlock\n  Old: %s\n  New: %s", tree.root_text, b
+                    "Overwriting root text\n  Old: %s\n  New: %s", tree.root_text, b.value
                 )
-            tree.root_text = b
+            tree.root_text = b.value
 
     pass
+
+
+def read_tree(data: tp.BinaryIO) -> SceneTree:
+    """
+    Parse reMarkable file and return `SceneTree`.
+
+    :param data: reMarkable file data.
+    """
+    tree = SceneTree()
+    build_tree(tree, read_blocks(data))
+    return tree
+
+
+def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
+    """Return the basic blocks to represent `text` as plain text.
+
+    TODO: replace this with a way to generate the tree with given text, and a
+    function to write a tree to blocks.
+
+    """
+
+    if author_uuid is None:
+        author_uuid = uuid4()
+
+    yield AuthorIdsBlock(author_uuids={1: author_uuid})
+
+    yield MigrationInfoBlock(migration_id=CrdtId(1, 1), is_device=True)
+
+    yield PageInfoBlock(loads_count=1,
+                        merges_count=0,
+                        text_chars_count=len(text) + 1,
+                        text_lines_count=text.count("\n") + 1)
+
+    yield SceneTreeBlock(tree_id=CrdtId(0, 11),
+                         node_id=CrdtId(0, 0),
+                         is_update=True,
+                         parent_id=CrdtId(0, 1))
+
+    yield RootTextBlock(
+        block_id=CrdtId(0, 0),
+        value=si.Text(
+            items=CrdtSequence([
+                CrdtSequenceItem(
+                    item_id=CrdtId(1, 16),
+                    left_id=CrdtId(0, 0),
+                    right_id=CrdtId(0, 0),
+                    deleted_length=0,
+                    value=text,
+                )
+            ]),
+            formats=[
+                LwwValue(
+                    timestamp=CrdtId(1, 15),
+                    value=(CrdtId(0, 0), si.TextFormat.PLAIN)
+                )
+            ],
+            pos_x=-468.0,
+            pos_y=234.0,
+            width=936.0,
+        )
+    )
+
+    yield TreeNodeBlock(
+        si.Group(
+            node_id=CrdtId(0, 1),
+        )
+    )
+
+    yield TreeNodeBlock(
+        si.Group(
+            node_id=CrdtId(0, 11),
+            label=LwwValue(timestamp=CrdtId(0, 12), value='Layer 1'),
+        )
+    )
+
+    yield SceneGroupItemBlock(
+        parent_id=CrdtId(0, 1),
+        item=CrdtSequenceItem(
+            item_id=CrdtId(0, 13),
+            left_id=CrdtId(0, 0),
+            right_id=CrdtId(0, 0),
+            deleted_length=0,
+            value=CrdtId(0, 11)
+        )
+    )

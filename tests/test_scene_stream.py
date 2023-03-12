@@ -6,6 +6,7 @@ from rmscene import read_blocks, write_blocks, LwwValue, TaggedBlockWriter, Tagg
 from rmscene.scene_stream import *
 from rmscene.tagged_block_common import HEADER_V6
 from rmscene.crdt_sequence import CrdtSequenceItem
+from rmscene.scene_items import TextFormat
 
 import logging
 logger = logging.getLogger(__name__)
@@ -70,25 +71,26 @@ def test_normal_ab():
         ),
         RootTextBlock(
             block_id=CrdtId(0, 0),
-            text_items=[
-                TextItem(
-                    item_id=CrdtId(1, 16),
-                    left_id=CrdtId(0, 0),
-                    right_id=CrdtId(0, 0),
-                    deleted_length=0,
-                    value="AB",
-                )
-            ],
-            text_formats=[
-                TextFormatItem(
-                    item_id=CrdtId(1, 15),
-                    char_id=CrdtId(0, 0),
-                    format_type=TextFormat.PLAIN,
-                )
-            ],
-            pos_x=-468.0,
-            pos_y=234.0,
-            width=936.0,
+            value=si.Text(
+                items=CrdtSequence([
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="AB",
+                    )
+                ]),
+                formats=[
+                    LwwValue(
+                        timestamp=CrdtId(1, 15),
+                        value=(CrdtId(0, 0), TextFormat.PLAIN),
+                    )
+                ],
+                pos_x=-468.0,
+                pos_y=234.0,
+                width=936.0,
+            )
         ),
         TreeNodeBlock(
             group=si.Group(node_id=CrdtId(0, 1)),
@@ -137,25 +139,26 @@ def test_read_glyph_range():
         ),
         RootTextBlock(
             block_id=CrdtId(0, 0),
-            text_items=[
-                TextItem(
-                    item_id=CrdtId(1, 16),
-                    left_id=CrdtId(0, 0),
-                    right_id=CrdtId(0, 0),
-                    deleted_length=0,
-                    value="AB",
-                )
-            ],
-            text_formats=[
-                TextFormatItem(
-                    item_id=CrdtId(1, 15),
-                    char_id=CrdtId(0, 0),
-                    format_type=TextFormat.PLAIN,
-                )
-            ],
-            pos_x=-468.0,
-            pos_y=234.0,
-            width=936.0,
+            value=si.Text(
+                items=CrdtSequence([
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="AB",
+                    )
+                ]),
+                formats=[
+                    LwwValue(
+                        timestamp=CrdtId(1, 15),
+                        value=(CrdtId(0, 0), TextFormat.PLAIN),
+                    )
+                ],
+                pos_x=-468.0,
+                pos_y=234.0,
+                width=936.0,
+            )
         ),
         TreeNodeBlock(
             group=si.Group(

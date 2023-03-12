@@ -49,14 +49,7 @@ class TaggedBlockWriter:
     def write_id(self, index: int, value: CrdtId):
         """Write a tagged CRDT ID."""
         self.data.write_tag(index, TagType.ID)
-
-        # Based on ddvk's reader.go
-        # TODO: should be var unit?
-        if value.part1 >= 2**8 or value.part2 >= 2**64:
-            raise ValueError("CrdtId too large: %s" % value)
-        self.data.write_uint8(value.part1)
-        self.data.write_varuint(value.part2)
-        # result = (part1 << 48) | part2
+        self.data.write_crdt_id(value)
 
     def write_bool(self, index: int, value: bool):
         """Write a tagged bool."""

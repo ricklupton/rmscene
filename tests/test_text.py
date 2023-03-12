@@ -1,5 +1,5 @@
 from rmscene.text import expand_text_item
-from rmscene import TextItem, CrdtId
+from rmscene import CrdtId, CrdtSequenceItem
 
 
 def cid(k):
@@ -9,7 +9,7 @@ def cid(k):
 
 def make_item(item_id, left_id, right_id, *args):
     "Shorthand for creating ids."
-    return TextItem(cid(item_id), cid(left_id), cid(right_id), *args)
+    return CrdtSequenceItem(cid(item_id), cid(left_id), cid(right_id), *args)
 
 
 def test_expand_text_1():

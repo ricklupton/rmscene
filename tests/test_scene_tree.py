@@ -214,19 +214,21 @@ def test_text_and_strokes():
         ),
         RootTextBlock(
             block_id=CrdtId(0, 0),
-            text_items=[
-                TextItem(
-                    item_id=CrdtId(1, 14),
-                    left_id=CrdtId(0, 0),
-                    right_id=CrdtId(0, 0),
-                    deleted_length=0,
-                    value="A",
-                )
-            ],
-            text_formats=[],
-            pos_x=-468.0,
-            pos_y=234.0,
-            width=936.0,
+            value=si.Text(
+                items=CrdtSequence([
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 14),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="A",
+                    )
+                ]),
+                formats=[],
+                pos_x=-468.0,
+                pos_y=234.0,
+                width=936.0,
+            )
         ),
         TreeNodeBlock(
             si.Group(node_id=CrdtId(0, 1)),
