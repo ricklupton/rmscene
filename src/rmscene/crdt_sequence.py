@@ -22,6 +22,15 @@ class CrdtSequenceItem(tp.Generic[_T]):
 
 
 class CrdtSequence(tp.Generic[_T]):
+    """Ordered CRDT Sequence container.
+
+    The Sequence contains `CrdtSequenceItem`s, each of which has an ID and
+    left/right IDs establishing a partial order.
+
+    Iterating through the `CrdtSequence` yields IDs following this order.
+
+    """
+
     def __init__(self, items=None):
         if items is None:
             items = []
@@ -39,22 +48,37 @@ class CrdtSequence(tp.Generic[_T]):
             ", ".join(str(i) for i in self._items.values())
         )
 
+    ## Access values, in order
+
     def __iter__(self) -> tp.Iterator[CrdtId]:
         """Return ids in order"""
         yield from toposort_items(self._items.values())
 
-    def items(self) -> Iterable[CrdtSequenceItem[_T]]:
-        """Iterate through CrdtSequenceItems."""
-        return self._items.values()
+    def keys(self) -> Iterable[CrdtId]:
+        """Return CrdtIds in order."""
+        return list(self)
 
     def values(self) -> Iterable[_T]:
-        """Iterate through stored values."""
+        """Iterate through stored values in order."""
         for item_id in self:
             yield self[item_id]
+
+    def items(self) -> Iterable[tuple[CrdtId, _T]]:
+        """Iterate through stored values in order."""
+        for item_id in self:
+            yield item_id, self[item_id]
 
     def __getitem__(self, key: CrdtId) -> _T:
         """Return item with key"""
         return self._items[key].value
+
+    ## Access SequenceItems
+
+    def sequence_items(self) -> Iterable[CrdtSequenceItem[_T]]:
+        """Iterate through CrdtSequenceItems."""
+        return self._items.values()
+
+    ## Modify sequence
 
     def add(self, item: CrdtSequenceItem[_T]):
         if item.item_id in self._items:

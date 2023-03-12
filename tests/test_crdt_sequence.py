@@ -79,5 +79,7 @@ def test_iterates_in_order():
     ]
 
     for test_items in (items, reversed(items)):
-        assert list(CrdtSequence(test_items).values()) == ["A", "B"]
-        assert list(CrdtSequence(test_items).items()) == [(cid(1), "A"), (cid(2), "B")]
+        seq = CrdtSequence(test_items)
+        assert list(seq.keys()) == [cid(1), cid(2)]
+        assert list(seq.values()) == ["A", "B"]
+        assert list(seq.items()) == list(zip(seq.keys(), seq.values()))
