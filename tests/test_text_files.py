@@ -19,7 +19,7 @@ def extract_text(filename):
     with open(filename, "rb") as f:
         tree = read_tree(f)
         assert tree.root_text
-        return [(fmt, s) for fmt, s, _ in tree.root_text.formatted_lines()]
+        return list(tree.root_text.formatted_lines())
 
 
 def test_normal_ab():

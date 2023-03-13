@@ -539,7 +539,7 @@ def text_item_to_stream(item: CrdtSequenceItem[str], writer: TaggedBlockWriter):
 
 def text_format_from_stream(
     stream: TaggedBlockReader,
-) -> LwwValue[tuple[CrdtId, si.TextFormat]]:
+) -> tuple[CrdtId, LwwValue[si.TextFormat]]:
     # These are character ids, but not with an initial tag like other ids have.
     char_id = stream.data.read_crdt_id()
 
@@ -554,13 +554,13 @@ def text_format_from_stream(
         assert c == 17
         format_type = si.TextFormat(stream.data.read_uint8())
 
-    return LwwValue(timestamp, (char_id, format_type))
+    return (char_id, LwwValue(timestamp, format_type))
 
 
 def text_format_to_stream(
-    value: LwwValue[tuple[CrdtId, si.TextFormat]], writer: TaggedBlockWriter
+    char_id: CrdtId, value: LwwValue[si.TextFormat], writer: TaggedBlockWriter
 ):
-    char_id, format_type = value.value
+    format_type = value.value
 
     writer.data.write_crdt_id(char_id)
     writer.write_id(1, value.timestamp)
@@ -600,9 +600,9 @@ class RootTextBlock(Block):
             with stream.read_subblock(2):
                 with stream.read_subblock(1):
                     num_subblocks = stream.data.read_varuint()
-                    text_formats = [
+                    text_formats = dict(
                         text_format_from_stream(stream) for _ in range(num_subblocks)
-                    ]
+                    )
 
         # Last section
         with stream.read_subblock(3):
@@ -642,8 +642,8 @@ class RootTextBlock(Block):
             with writer.write_subblock(2):
                 with writer.write_subblock(1):
                     writer.data.write_varuint(len(text_formats))
-                    for item in text_formats:
-                        text_format_to_stream(item, writer)
+                    for key, item in text_formats.items():
+                        text_format_to_stream(key, item, writer)
 
         # Last section
         with writer.write_subblock(3):
@@ -799,12 +799,9 @@ def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
                     value=text,
                 )
             ]),
-            formats=[
-                LwwValue(
-                    timestamp=CrdtId(1, 15),
-                    value=(CrdtId(0, 0), si.TextFormat.PLAIN)
-                )
-            ],
+            formats={
+                CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.TextFormat.PLAIN),
+            },
             pos_x=-468.0,
             pos_y=234.0,
             width=936.0,

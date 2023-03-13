@@ -81,12 +81,9 @@ def test_normal_ab():
                         value="AB",
                     )
                 ]),
-                formats=[
-                    LwwValue(
-                        timestamp=CrdtId(1, 15),
-                        value=(CrdtId(0, 0), TextFormat.PLAIN),
-                    )
-                ],
+                formats={
+                    CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.TextFormat.PLAIN),
+                },
                 pos_x=-468.0,
                 pos_y=234.0,
                 width=936.0,
@@ -149,12 +146,9 @@ def test_read_glyph_range():
                         value="AB",
                     )
                 ]),
-                formats=[
-                    LwwValue(
-                        timestamp=CrdtId(1, 15),
-                        value=(CrdtId(0, 0), TextFormat.PLAIN),
-                    )
-                ],
+                formats={
+                    CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.TextFormat.PLAIN),
+                },
                 pos_x=-468.0,
                 pos_y=234.0,
                 width=936.0,

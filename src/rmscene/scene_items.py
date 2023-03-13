@@ -167,7 +167,7 @@ class Text(SceneItem):
     """
 
     items: CrdtSequence[str]
-    formats: list[LwwValue[tuple[CrdtId, TextFormat]]]
+    formats: dict[CrdtId, LwwValue[TextFormat]]
     pos_x: float
     pos_y: float
     width: float
@@ -179,7 +179,7 @@ class Text(SceneItem):
 
         """
 
-        char_formats = {lww.value[0]: lww.value[1] for lww in self.formats}
+        char_formats = {k: lww.value for k, lww in self.formats.items()}
         if END_MARKER in char_formats:
             current_format = char_formats[END_MARKER]
         else:
