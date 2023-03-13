@@ -8,6 +8,19 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ## Changelog
 
+### v0.3.0
+
+- Introduce `CrdtSequence` type to handle the different places that CRDT
+  sequences are used, not just for text.
+- Introduce `scene_items` module with data structures representing the data,
+  independently from the `Block`s used to serialize them to `.rm` files.
+- Introduce a `SceneTree` structure which holds the `SceneItem`s in
+  groups/layers.
+- Move Text data from `RootTextBlock` to `scene_items.Text` class, which
+  includes methods for extracting lines of text and formatting.
+- Text lines now include the trailing newline character.
+- Read `GlyphRange` scene items, representing highlighted text in PDFs.
+
 ### v0.2.0
 
 - Try to be more robust to unexpected data introduced by newer reMarkable software versions.
