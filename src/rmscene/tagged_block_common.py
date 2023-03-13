@@ -260,7 +260,9 @@ class DataStream:
 
 _T = tp.TypeVar("_T")
 
-@dataclass
+# This makes sense to be frozen, since the value should not be changed without
+# updating the timestamp.
+@dataclass(eq=True, frozen=True)
 class LwwValue(tp.Generic[_T]):
     "Container for a last-write-wins value."
     timestamp: CrdtId
