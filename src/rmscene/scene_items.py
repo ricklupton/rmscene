@@ -6,9 +6,7 @@ import logging
 import typing as tp
 
 from .tagged_block_common import CrdtId, LwwValue
-from .tagged_block_reader import TaggedBlockReader
-from .tagged_block_writer import TaggedBlockWriter
-from .crdt_sequence import CrdtSequence, CrdtSequenceItem
+from .crdt_sequence import CrdtSequence
 from .text import expand_text_items
 
 
