@@ -1,8 +1,8 @@
 from uuid import UUID
 from io import BytesIO
 from pathlib import Path
-from rmscene.text import extract_text_lines, extract_text, simple_text_document
 from rmscene.scene_stream import *
+from rmscene.scene_items import Text, TextFormat
 
 
 DATA_PATH = Path(__file__).parent / "data"
@@ -15,19 +15,24 @@ def _hex_lines(b, n=32):
     ]
 
 
+def extract_text(filename):
+    with open(filename, "rb") as f:
+        tree = read_tree(f)
+        assert tree.root_text
+        return list(tree.root_text.formatted_lines())
+
+
 def test_normal_ab():
-    with open(DATA_PATH / "Normal_AB.rm", "rb") as f:
-        lines = list(extract_text(f))
+    lines = extract_text(DATA_PATH / "Normal_AB.rm")
     assert lines == [(TextFormat.PLAIN, "AB")]
 
 
 def test_list():
-    with open(DATA_PATH / "Bold_Heading_Bullet_Normal.rm", "rb") as f:
-        lines = list(extract_text(f))
+    lines = extract_text(DATA_PATH / "Bold_Heading_Bullet_Normal.rm")
     assert lines == [
-        (TextFormat.BOLD, "A"),
-        (TextFormat.HEADING, "new line"),
-        (TextFormat.BULLET, "B is a letter of the alphabet"),
+        (TextFormat.BOLD, "A\n"),
+        (TextFormat.HEADING, "new line\n"),
+        (TextFormat.BULLET, "B is a letter of the alphabet\n"),
         (TextFormat.PLAIN, "C"),
     ]
 

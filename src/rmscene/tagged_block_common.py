@@ -33,6 +33,16 @@ class UnexpectedBlockError(Exception):
     """Unexpected tag or index in block stream."""
 
 
+@dataclass(eq=True, order=True, frozen=True)
+class CrdtId:
+    "An identifier or timestamp."
+    part1: int
+    part2: int
+
+    def __repr__(self) -> str:
+        return f"CrdtId({self.part1}, {self.part2})"
+
+
 class DataStream:
     """Read basic values from a remarkable v6 file stream."""
 
@@ -190,6 +200,14 @@ class DataStream:
                 break
         return result
 
+    def read_crdt_id(self) -> CrdtId:
+        # Based on ddvk's reader.go
+        # TODO: should be var unit?
+        part1 = self.read_uint8()
+        part2 = self.read_varuint()
+        # result = (part1 << 48) | part2
+        return CrdtId(part1, part2)
+
     def write_bool(self, value: bool):
         """Write a bool to the data stream."""
         self._write_struct("?", value)
@@ -229,15 +247,15 @@ class DataStream:
                 break
         self.data.write(b)
 
-
-@dataclass(eq=True, order=True, frozen=True)
-class CrdtId:
-    "An identifier or timestamp."
-    part1: int
-    part2: int
-
-    def __repr__(self) -> str:
-        return f"CrdtId({self.part1}, {self.part2})"
+    def write_crdt_id(self, value: CrdtId):
+        """Write a `CrdtId` to the data stream."""
+        # Based on ddvk's reader.go
+        # TODO: should be var unit?
+        if value.part1 >= 2**8 or value.part2 >= 2**64:
+            raise ValueError("CrdtId too large: %s" % value)
+        self.write_uint8(value.part1)
+        self.write_varuint(value.part2)
+        # result = (part1 << 48) | part2
 
 
 _T = tp.TypeVar("_T")

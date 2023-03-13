@@ -103,6 +103,8 @@ def test_write_subblock_error_recovery():
         ("lww_float", LwwValue(CrdtId(1, 4), 8.0)),
         ("lww_id", LwwValue(CrdtId(1, 4), CrdtId(1, 5))),
         ("lww_string", LwwValue(CrdtId(1, 4), "hello")),
+        ("string", "abc"),
+        ("string", "a×"),
     ],
 )
 @pytest.mark.parametrize("index", [0, 3, 20])

@@ -5,6 +5,8 @@ from uuid import UUID
 from rmscene import read_blocks, write_blocks, LwwValue, TaggedBlockWriter, TaggedBlockReader
 from rmscene.scene_stream import *
 from rmscene.tagged_block_common import HEADER_V6
+from rmscene.crdt_sequence import CrdtSequenceItem
+from rmscene.scene_items import TextFormat
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,6 +22,12 @@ def _hex_lines(b, n=32):
     ]
 
 
+LINES_V2_FILES = [
+    "Lines_v2.rm",
+    "Wikipedia_highlighted_p2.rm",
+]
+
+
 @pytest.mark.parametrize(
     "test_file,line_version",
     [
@@ -28,6 +36,8 @@ def _hex_lines(b, n=32):
         ("Bold_Heading_Bullet_Normal.rm", 1),
         ("Lines_v2.rm", 2),
         ("Lines_v2_updated.rm", 2),  # extra 7fXXXX part of Line data was added
+        ("Wikipedia_highlighted_p1.rm", 2),
+        ("Wikipedia_highlighted_p2.rm", 2),
     ],
 )
 def test_full_roundtrip(test_file, line_version):
@@ -61,45 +71,51 @@ def test_normal_ab():
         ),
         RootTextBlock(
             block_id=CrdtId(0, 0),
-            text_items=[
-                TextItem(
-                    item_id=CrdtId(1, 16),
-                    left_id=CrdtId(0, 0),
-                    right_id=CrdtId(0, 0),
-                    deleted_length=0,
-                    text="AB",
-                )
-            ],
-            text_formats=[
-                TextFormatItem(
-                    item_id=CrdtId(1, 15),
-                    char_id=CrdtId(0, 0),
-                    format_type=TextFormat.PLAIN,
-                )
-            ],
-            pos_x=-468.0,
-            pos_y=234.0,
-            width=936.0,
+            value=si.Text(
+                items=CrdtSequence([
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="AB",
+                    )
+                ]),
+                formats={
+                    CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.TextFormat.PLAIN),
+                },
+                pos_x=-468.0,
+                pos_y=234.0,
+                width=936.0,
+            )
         ),
         TreeNodeBlock(
-            node_id=CrdtId(0, 1),
-            label=LwwValue(CrdtId(0, 0), ""),
-            visible=LwwValue(CrdtId(0, 0), True),
+            group=si.Group(node_id=CrdtId(0, 1)),
         ),
         TreeNodeBlock(
-            node_id=CrdtId(0, 11),
-            label=LwwValue(CrdtId(0, 12), "Layer 1"),
-            visible=LwwValue(CrdtId(0, 0), True),
+            group=si.Group(
+                node_id=CrdtId(0, 11),
+                label=LwwValue(CrdtId(0, 12), "Layer 1"),
+            ),
         ),
         SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),
-            item_id=CrdtId(0, 13),
-            left_id=CrdtId(0, 0),
-            right_id=CrdtId(0, 0),
-            deleted_length=0,
-            value=CrdtId(0, 11),
+            item=CrdtSequenceItem(
+                item_id=CrdtId(0, 13),
+                left_id=CrdtId(0, 0),
+                right_id=CrdtId(0, 0),
+                deleted_length=0,
+                value=CrdtId(0, 11),
+            )
         ),
     ]
+
+
+def test_read_glyph_range():
+    with open(DATA_PATH / "Wikipedia_highlighted_p1.rm", "rb") as f:
+        result = [block for block in read_blocks(f) if isinstance(block, SceneGlyphItemBlock)]
+
+    assert result[0].item.value.text == "The reMarkable uses electronic paper"
 
 
 @pytest.mark.parametrize(
@@ -120,39 +136,69 @@ def test_normal_ab():
         ),
         RootTextBlock(
             block_id=CrdtId(0, 0),
-            text_items=[
-                TextItem(
-                    item_id=CrdtId(1, 16),
-                    left_id=CrdtId(0, 0),
-                    right_id=CrdtId(0, 0),
-                    deleted_length=0,
-                    text="AB",
-                )
-            ],
-            text_formats=[
-                TextFormatItem(
-                    item_id=CrdtId(1, 15),
-                    char_id=CrdtId(0, 0),
-                    format_type=TextFormat.PLAIN,
-                )
-            ],
-            pos_x=-468.0,
-            pos_y=234.0,
-            width=936.0,
+            value=si.Text(
+                items=CrdtSequence([
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="AB",
+                    )
+                ]),
+                formats={
+                    CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.TextFormat.PLAIN),
+                },
+                pos_x=-468.0,
+                pos_y=234.0,
+                width=936.0,
+            )
         ),
         TreeNodeBlock(
-            node_id=CrdtId(0, 11),
-            label=LwwValue(CrdtId(0, 12), "Layer 1"),
-            visible=LwwValue(CrdtId(0, 0), True),
+            group=si.Group(
+                node_id=CrdtId(0, 11),
+                label=LwwValue(CrdtId(0, 12), "Layer 1"),
+            ),
         ),
         SceneGroupItemBlock(
             parent_id=CrdtId(0, 1),
-            item_id=CrdtId(0, 13),
-            left_id=CrdtId(0, 0),
-            right_id=CrdtId(0, 0),
-            deleted_length=0,
-            value=CrdtId(0, 11),
+            item=CrdtSequenceItem(
+                item_id=CrdtId(0, 13),
+                left_id=CrdtId(0, 0),
+                right_id=CrdtId(0, 0),
+                deleted_length=0,
+                value=CrdtId(0, 11),
+            )
         ),
+        SceneGlyphItemBlock(
+            parent_id=CrdtId(0, 11),
+            item=CrdtSequenceItem(
+                item_id=CrdtId(1, 17),
+                left_id=CrdtId(1, 16),
+                right_id=CrdtId(0, 0),
+                deleted_length=0,
+                value=si.GlyphRange(
+                    start=1536,
+                    length=23,
+                    text="display technology.[13]",
+                    color=si.PenColor.YELLOW,
+                    rectangles=[
+                        si.Rectangle(
+                            x=-809.061564750815,
+                            y=1724.1146737357485,
+                            w=333.5427440226558,
+                            h=56.30432956921868,
+                        ),
+                        si.Rectangle(
+                            x=-485.51105154941456,
+                            y=1730.4364894378523,
+                            w=58.22011730763188,
+                            h=33.42225280328421,
+                        ),
+                    ],
+                ),
+            ),
+        )
     ],
 )
 def test_blocks_roundtrip(block):
@@ -160,8 +206,9 @@ def test_blocks_roundtrip(block):
     writer = TaggedBlockWriter(buf)
     reader = TaggedBlockReader(buf)
 
-    # Mock header
-    with writer.write_block(4, 1, 1):
+    # Use 4 as a fallback -- it only matters for the SceneItem blocks
+    block_type = getattr(block, "BLOCK_TYPE", 4)
+    with writer.write_block(block_type, 1, 1):
         block.to_stream(writer)
 
     buf.seek(0)

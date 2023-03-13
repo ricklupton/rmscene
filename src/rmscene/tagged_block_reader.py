@@ -68,13 +68,7 @@ class TaggedBlockReader:
     def read_id(self, index: int) -> CrdtId:
         """Read a tagged CRDT ID."""
         self.data.read_tag(index, TagType.ID)
-
-        # Based on ddvk's reader.go
-        # TODO: should be var unit?
-        part1 = self.data.read_uint8()
-        part2 = self.data.read_varuint()
-        # result = (part1 << 48) | part2
-        result = CrdtId(part1, part2)
+        result = self.data.read_crdt_id()
         return result
 
     def read_bool(self, index: int) -> bool:
@@ -255,5 +249,9 @@ class TaggedBlockReader:
             is_ascii = self.data.read_bool()
             assert is_ascii == 1
             assert string_length + 2 <= block_info.size
-            string = self.data.read_bytes(string_length).decode()
+            b = self.data.read_bytes(string_length)
+            string = b.decode()
+            if len(b) != len(string):
+                _logger.debug("read_string: decoded %r (%d) to %r (%d)",
+                              b, len(b), string, len(string))
             return string

@@ -47,7 +47,7 @@ class TestBlock:
         s = stream(self.TEST_DATA)
         with s.read_block():
             pass  # not reading anything
-        assert "only read" in caplog.records[0].message
+        assert "not been read" in caplog.records[0].message
 
     def test_skips_to_end_of_block_if_not_all_read(self):
         s = stream(self.TEST_DATA)
@@ -116,7 +116,7 @@ class TestSubblock:
         s = stream(self.TEST_DATA)
         with s.read_subblock(5):
             pass  # not reading anything
-        assert "only read" in caplog.records[0].message
+        assert "not been read" in caplog.records[0].message
 
 
 def test_has_subblock_returns_False_with_bad_data():
@@ -147,3 +147,15 @@ def test_extract_lww_string():
     lww = s.read_lww_string(1)
     assert lww.timestamp == CrdtId(1, 1)
     assert lww.value == "abc"
+
+
+def test_read_string_ascii():
+    s = stream("1c05000000" "0301616263")
+    result = s.read_string(1)
+    assert result == "abc"
+
+
+def test_read_string_utf():
+    s = stream("1c05000000" "030161c397")
+    result = s.read_string(1)
+    assert result == "a×"
