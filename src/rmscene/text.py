@@ -33,9 +33,13 @@ def expand_text_item(item: CrdtSequenceItem[str]) -> Iterable[CrdtSequenceItem[s
         chars = [""] * item.deleted_length
         deleted_length = 1
     else:
-        assert len(item.value) > 0
+        # Actually the value can be empty
+        # assert len(item.value) > 0
         chars = item.value
         deleted_length = 0
+
+    if not chars:
+        return
 
     item_id = item.item_id
     left_id = item.left_id
