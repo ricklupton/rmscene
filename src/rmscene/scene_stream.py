@@ -552,7 +552,14 @@ def text_format_from_stream(
         # XXX not sure what this is format?
         c = stream.data.read_uint8()
         assert c == 17
-        format_type = si.TextFormat(stream.data.read_uint8())
+        format_code = stream.data.read_uint8()
+        try:
+            format_type = si.TextFormat(format_code)
+        except ValueError:
+            _logger.warning("Unrecognised text format code %d.", format_code)
+            _logger.debug("Unrecognised text format code %d at position %d.",
+                          format_code, stream.data.tell())
+            format_type = si.TextFormat.PLAIN  # fallback
 
     return (char_id, LwwValue(timestamp, format_type))
 
