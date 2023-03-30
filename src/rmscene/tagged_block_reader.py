@@ -201,6 +201,8 @@ class TaggedBlockReader:
             _logger.debug(
                 "Excess bytes:\n %s",
                 "\n".join(excess[i : i + 32].hex() for i in range(0, len(excess), 32)),
+                stack_info=True,
+                stacklevel=4,
             )
 
     ## Higher level constructs
