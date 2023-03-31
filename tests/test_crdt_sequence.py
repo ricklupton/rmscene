@@ -83,3 +83,75 @@ def test_iterates_in_order():
         assert list(seq.keys()) == [cid(1), cid(2)]
         assert list(seq.values()) == ["A", "B"]
         assert list(seq.items()) == list(zip(seq.keys(), seq.values()))
+
+
+from hypothesis import given, note, strategies as st
+from hypothesis.stateful import Bundle, RuleBasedStateMachine, rule, precondition, invariant
+
+
+class CrdtSequenceComparison(RuleBasedStateMachine):
+    """State machine that adds and deletes text in the sequence"""
+    def __init__(self):
+        super().__init__()
+        # All items, even deleted ones
+        self.items: dict[CrdtId, CrdtSequenceItem] = {}
+        # List of items corresponding to string
+        self.string_items: list[CrdtSequenceItem] = []
+        self.string = ""
+        self.last_id = 1
+
+    # keys = Bundle("keys")
+    # values = Bundle("values")
+
+    # @rule(target=keys, k=st.binary())
+    # def add_key(self, k):
+    #     return k
+
+    @rule(data=st.data(), c=st.characters())
+    def add_char(self, data, c):
+        i = data.draw(st.integers(min_value=0, max_value=len(self.string)))
+        new_item = CrdtSequenceItem(
+            item_id=cid(self.last_id),
+            left_id=self.string_items[i-1].item_id if i >= 1 else cid(0),
+            right_id=self.string_items[i].item_id if i < len(self.string_items) else cid(0),
+            deleted_length=0,
+            value=c
+        )
+        note(f"new_item: {new_item}")
+        self.last_id += 1
+        self.string = self.string[:i] + c + self.string[i:]
+        self.string_items = self.string_items[:i] + [new_item] + self.string_items[i:]
+        self.items[new_item.item_id] = new_item
+
+    @rule(data=st.data())
+    def add_empty_item(self, data):
+        i = data.draw(st.integers(min_value=0, max_value=len(self.string)))
+        new_item = CrdtSequenceItem(
+            item_id=cid(self.last_id),
+            left_id=self.string_items[i-1].item_id if i >= 1 else cid(0),
+            right_id=self.string_items[i].item_id if i < len(self.string_items) else cid(0),
+            deleted_length=0,
+            value=""
+        )
+        note(f"new_item: {new_item}")
+        self.last_id += 1
+        self.items[new_item.item_id] = new_item
+
+    @precondition(lambda self: len(self.string) > 0)
+    @rule(data=st.data())
+    def delete_char(self, data):
+        i = data.draw(st.integers(min_value=0, max_value=len(self.string) - 1))
+        item_id = self.string_items[i].item_id
+        note(f"deleting_item: {item_id}")
+        self.string = self.string[:i] + self.string[i+1:]
+        self.string_items = self.string_items[:i] + self.string_items[i+1:]
+        self.items[item_id].value = ""
+        self.items[item_id].deleted_length = 1
+
+    @invariant()
+    def values_agree(self):
+        seq = CrdtSequence(self.items.values())
+        assert "".join(seq.values()) == self.string
+
+
+TestCrdtSequenceComparison = CrdtSequenceComparison.TestCase
