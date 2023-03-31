@@ -44,6 +44,8 @@ def test_simple_text_document():
 
     output_buf = BytesIO()
     author_id = UUID('495ba59f-c943-2b5c-b455-3682f6948906')
-    write_blocks(output_buf, simple_text_document("AB", author_id))
+    write_blocks(
+        output_buf, simple_text_document("AB", author_id), options={"version": "3.0"}
+    )
 
     assert _hex_lines(output_buf.getvalue()) == _hex_lines(expected)

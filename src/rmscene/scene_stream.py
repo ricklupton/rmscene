@@ -14,6 +14,8 @@ from dataclasses import dataclass, replace, KW_ONLY
 import logging
 import typing as tp
 
+from packaging.version import Version
+
 from .tagged_block_common import CrdtId, LwwValue
 from .tagged_block_reader import TaggedBlockReader
 from .tagged_block_writer import TaggedBlockWriter
@@ -480,8 +482,8 @@ class SceneLineItemBlock(SceneItemBlock):
 
     def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
         """Return (min_version, current_version) to use when writing."""
-        ver = writer.options.get("line_version", 2)
-        return (ver, ver)
+        version = writer.options.get("version", Version("9999"))
+        return (2, 2) if (version > Version("3.0")) else (1, 1)
 
     @classmethod
     def value_from_stream(cls, reader: TaggedBlockReader) -> si.Line:
@@ -492,8 +494,9 @@ class SceneLineItemBlock(SceneItemBlock):
 
     def value_to_stream(self, writer: TaggedBlockWriter, value: si.Line):
         # XXX make sure this version ends up in block header
-        version = writer.options.get("line_version", 2)
-        line_to_stream(value, writer, version=version)
+        version = writer.options.get("version", Version("9999"))
+        line_version = 2 if (version > Version("3.0")) else 1
+        line_to_stream(value, writer, version=line_version)
 
 
 # XXX missing "PathItemBlock"? with ITEM_TYPE 0x04
@@ -709,6 +712,8 @@ def write_blocks(
     """
     Write blocks to file.
     """
+    if options is not None and "version" in options:
+        options["version"] = Version(options["version"])
     stream = TaggedBlockWriter(data, options=options)
     stream.write_header()
     for block in blocks:

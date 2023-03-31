@@ -29,24 +29,26 @@ LINES_V2_FILES = [
 
 
 @pytest.mark.parametrize(
-    "test_file,line_version",
+    "test_file,version",
     [
-        ("Normal_AB.rm", 1),
-        ("Normal_A_stroke_2_layers.rm", 1),
-        ("Bold_Heading_Bullet_Normal.rm", 1),
-        ("Lines_v2.rm", 2),
-        ("Lines_v2_updated.rm", 2),  # extra 7fXXXX part of Line data was added
-        ("Wikipedia_highlighted_p1.rm", 2),
-        ("Wikipedia_highlighted_p2.rm", 2),
+        ("Normal_AB.rm", "3.0"),
+        ("Normal_A_stroke_2_layers.rm", "3.0"),
+        # Something inconsistent with min_version for SceneLineItemBlock?
+        # ("Normal_A_stroke_2_layers_v3.2.2.rm", "3.2.2"),
+        ("Bold_Heading_Bullet_Normal.rm", "3.0"),
+        ("Lines_v2.rm", "3.1"),
+        ("Lines_v2_updated.rm", "3.2"),  # extra 7fXXXX part of Line data was added
+        ("Wikipedia_highlighted_p1.rm", "3.1"),
+        ("Wikipedia_highlighted_p2.rm", "3.1"),
     ],
 )
-def test_full_roundtrip(test_file, line_version):
+def test_full_roundtrip(test_file, version):
     with open(DATA_PATH / test_file, "rb") as f:
         data = f.read()
 
     input_buf = BytesIO(data)
     output_buf = BytesIO()
-    options = {"line_version": line_version}
+    options = {"version": version}
 
     write_blocks(output_buf, read_blocks(input_buf), options)
 
@@ -225,7 +227,7 @@ def test_write_blocks():
     ]
 
     buf = BytesIO()
-    write_blocks(buf, blocks)
+    write_blocks(buf, blocks, options={"version": "3.1"})
 
     assert buf.getvalue()[:43] == b"reMarkable .lines file, version=6          "
     assert buf.getvalue()[43:].hex() == "05000000000101001f01012101"
