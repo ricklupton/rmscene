@@ -100,6 +100,7 @@ class MigrationInfoBlock(Block):
 
     migration_id: CrdtId
     is_device: bool
+    _unknown: bool = False
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> MigrationInfoBlock:
@@ -107,12 +108,19 @@ class MigrationInfoBlock(Block):
         _logger.debug("Reading %s", cls.__name__)
         migration_id = stream.read_id(1)
         is_device = stream.read_bool(2)
-        return MigrationInfoBlock(migration_id, is_device)
+        if stream.bytes_remaining_in_block():
+            unknown = stream.read_bool(3)
+        else:
+            unknown = False
+        return MigrationInfoBlock(migration_id, is_device, unknown)
 
     def to_stream(self, writer: TaggedBlockWriter):
         _logger.debug("Writing %s", type(self).__name__)
+        version = writer.options.get("version", Version("9.9.9"))
         writer.write_id(1, self.migration_id)
         writer.write_bool(2, self.is_device)
+        if version >= Version("3.2.2"):
+            writer.write_bool(3, self._unknown)
 
 
 @dataclass
@@ -172,6 +180,7 @@ class PageInfoBlock(Block):
     merges_count: int
     text_chars_count: int
     text_lines_count: int
+    _unknown: int = 0
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> PageInfoBlock:
@@ -183,6 +192,8 @@ class PageInfoBlock(Block):
             text_chars_count=stream.read_int(3),
             text_lines_count=stream.read_int(4),
         )
+        if stream.bytes_remaining_in_block():
+            info._unknown = stream.read_int(5)
         return info
 
     def to_stream(self, writer: TaggedBlockWriter):
@@ -191,6 +202,9 @@ class PageInfoBlock(Block):
         writer.write_int(2, self.merges_count)
         writer.write_int(3, self.text_chars_count)
         writer.write_int(4, self.text_lines_count)
+        version = writer.options.get("version", Version("9999"))
+        if version >= Version("3.2.2"):
+            writer.write_int(5, self._unknown)
 
 
 @dataclass
