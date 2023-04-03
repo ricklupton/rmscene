@@ -10,14 +10,26 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+Breaking changes:
+
+- Rename `scene_items.TextFormat` to `ParagraphStyle` to better describe its
+  meaning, now that we have inline bold/italic text styles.
+- Remove methods from `scene_items.Text` object; use `text.TextDocument`
+  instead.
+
+Other changes:
+
 - Allow empty text items and unknown text formats without throwing exceptions.
 - When extra data is present in the file, log the unrecognised bytes at DEBUG
-  logging level along with the call stack, to make it easier to figure out where the code needs to be modified to read new data.
+  logging level along with the call stack, to make it easier to figure out where
+  the code needs to be modified to read new data.
 - Writer: experimental change to emulate different reMarkable software versions
   by passing `{"version": "3.2.2"}` options to `write_blocks`. This allows us to
   continue to test round-trip reading and writing of old test files as new data
   values are added.
 - Parse new data values in PageInfoBlock and MigrationInfoBlock.
+- Parse text formatting information (bold and italic) introduced in reMarkable
+  software version 3.3.
 
 ### v0.3.0
 

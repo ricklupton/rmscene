@@ -224,7 +224,7 @@ def test_text_and_strokes():
                         value="A",
                     )
                 ]),
-                formats={},
+                styles={},
                 pos_x=-468.0,
                 pos_y=234.0,
                 width=936.0,

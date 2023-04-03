@@ -174,4 +174,15 @@ class TaggedBlockWriter:
             is_ascii = True  # XXX not sure if this is right meaning?
             self.data.write_varuint(bytes_length)
             self.data.write_bool(is_ascii)
-            self.data.write_bytes(value.encode())
+            self.data.write_bytes(b)
+
+    def write_string_with_format(self, index: int, text: str, fmt: int):
+        """Write a string block with formatting."""
+        with self.write_subblock(index):
+            b = text.encode()
+            bytes_length = len(b)
+            is_ascii = True  # XXX not sure if this is right meaning?
+            self.data.write_varuint(bytes_length)
+            self.data.write_bool(is_ascii)
+            self.data.write_bytes(b)
+            self.write_int(2, fmt)

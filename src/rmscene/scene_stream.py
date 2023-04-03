@@ -528,7 +528,7 @@ class SceneTextItemBlock(SceneItemBlock):
         pass
 
 
-def text_item_from_stream(stream: TaggedBlockReader) -> CrdtSequenceItem[str]:
+def text_item_from_stream(stream: TaggedBlockReader) -> CrdtSequenceItem[str | int]:
     with stream.read_subblock(0):
         item_id = stream.read_id(2)
         left_id = stream.read_id(3)
@@ -536,14 +536,22 @@ def text_item_from_stream(stream: TaggedBlockReader) -> CrdtSequenceItem[str]:
         deleted_length = stream.read_int(5)
 
         if stream.has_subblock(6):
-            text = stream.read_string(6)
+            text, fmt = stream.read_string_with_format(6)
+            # It seems that formats are stored on empty strings, so it's one or the other
+            if fmt is not None:
+                if text:
+                    _logger.error("Unhandled combined text and format: %s, %s",
+                                  text, fmt)
+                value = fmt
+            else:
+                value = text
         else:
-            text = ""
+            value = ""
 
-    return CrdtSequenceItem(item_id, left_id, right_id, deleted_length, text)
+    return CrdtSequenceItem(item_id, left_id, right_id, deleted_length, value)
 
 
-def text_item_to_stream(item: CrdtSequenceItem[str], writer: TaggedBlockWriter):
+def text_item_to_stream(item: CrdtSequenceItem[str | int], writer: TaggedBlockWriter):
     with writer.write_subblock(0):
         writer.write_id(2, item.item_id)
         writer.write_id(3, item.left_id)
@@ -551,12 +559,15 @@ def text_item_to_stream(item: CrdtSequenceItem[str], writer: TaggedBlockWriter):
         writer.write_int(5, item.deleted_length)
 
         if item.value:
-            writer.write_string(6, item.value)
+            if isinstance(item.value, str):
+                writer.write_string(6, item.value)
+            elif isinstance(item.value, int):
+                writer.write_string_with_format(6, "", item.value)
 
 
 def text_format_from_stream(
     stream: TaggedBlockReader,
-) -> tuple[CrdtId, LwwValue[si.TextFormat]]:
+) -> tuple[CrdtId, LwwValue[si.ParagraphStyle]]:
     # These are character ids, but not with an initial tag like other ids have.
     char_id = stream.data.read_crdt_id()
 
@@ -571,18 +582,18 @@ def text_format_from_stream(
         assert c == 17
         format_code = stream.data.read_uint8()
         try:
-            format_type = si.TextFormat(format_code)
+            format_type = si.ParagraphStyle(format_code)
         except ValueError:
             _logger.warning("Unrecognised text format code %d.", format_code)
             _logger.debug("Unrecognised text format code %d at position %d.",
                           format_code, stream.data.tell())
-            format_type = si.TextFormat.PLAIN  # fallback
+            format_type = si.ParagraphStyle.PLAIN  # fallback
 
     return (char_id, LwwValue(timestamp, format_type))
 
 
 def text_format_to_stream(
-    char_id: CrdtId, value: LwwValue[si.TextFormat], writer: TaggedBlockWriter
+    char_id: CrdtId, value: LwwValue[si.ParagraphStyle], writer: TaggedBlockWriter
 ):
     format_type = value.value
 
@@ -640,7 +651,7 @@ class RootTextBlock(Block):
 
         value = si.Text(
             items=CrdtSequence(text_items),
-            formats=text_formats,
+            styles=text_formats,
             pos_x=pos_x,
             pos_y=pos_y,
             width=width
@@ -662,7 +673,7 @@ class RootTextBlock(Block):
                         text_item_to_stream(item, writer)
 
             # Formatting
-            text_formats = self.value.formats
+            text_formats = self.value.styles
             with writer.write_subblock(2):
                 with writer.write_subblock(1):
                     writer.data.write_varuint(len(text_formats))
@@ -825,8 +836,8 @@ def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
                     value=text,
                 )
             ]),
-            formats={
-                CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.TextFormat.PLAIN),
+            styles={
+                CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN),
             },
             pos_x=-468.0,
             pos_y=234.0,

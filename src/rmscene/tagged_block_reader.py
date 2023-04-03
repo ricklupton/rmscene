@@ -257,3 +257,25 @@ class TaggedBlockReader:
                 _logger.debug("read_string: decoded %r (%d) to %r (%d)",
                               b, len(b), string, len(string))
             return string
+
+    def read_string_with_format(self, index: int) -> tuple[str, tp.Optional[int]]:
+        """Read a string block with formatting."""
+        with self.read_subblock(index) as block_info:
+            string_length = self.data.read_varuint()
+            # XXX not sure if this is right meaning?
+            is_ascii = self.data.read_bool()
+            assert is_ascii == 1
+            assert string_length + 2 <= block_info.size
+            b = self.data.read_bytes(string_length)
+            string = b.decode()
+            if len(b) != len(string):
+                _logger.debug("read_string: decoded %r (%d) to %r (%d)",
+                              b, len(b), string, len(string))
+
+            if self.data.check_tag(2, TagType.Byte4):
+                # We have a format code
+                fmt = self.read_int(2)
+            else:
+                fmt = None
+
+            return string, fmt

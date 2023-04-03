@@ -133,11 +133,12 @@ class Line(SceneItem):
 
 
 @enum.unique
-class TextFormat(enum.IntEnum):
+class ParagraphStyle(enum.IntEnum):
     """
-    Text format type.
+    Text paragraph style.
     """
 
+    BASIC = 0
     PLAIN = 1
     HEADING = 2
     BOLD = 3
@@ -156,63 +157,22 @@ class Text(SceneItem):
     to its first character; subsequent characters implicitly have sequential
     ids.
 
-    `formats` are LWW values representing a mapping of character IDs to
-    `TextFormat` values. These formats apply to each line of text (until the
+    When formatting is present, some of `items` have a value of an integer
+    formatting code instead of a string.
+
+    `styles` are LWW values representing a mapping of character IDs to
+    `ParagraphStyle` values. These formats apply to each line of text (until the
     next newline).
 
     `pos_x`, `pos_y` and `width` are dimensions for the text block.
 
     """
 
-    items: CrdtSequence[str]
-    formats: dict[CrdtId, LwwValue[TextFormat]]
+    items: CrdtSequence[str | int]
+    styles: dict[CrdtId, LwwValue[ParagraphStyle]]
     pos_x: float
     pos_y: float
     width: float
-
-    def formatted_lines_with_ids(self) -> tp.Iterator[tuple[TextFormat, str, list[CrdtId]]]:
-        """Extract lines of text with associated formatting and char ids.
-
-        Returns (format, line, char_ids) tuples.
-
-        """
-
-        char_formats = {k: lww.value for k, lww in self.formats.items()}
-        if END_MARKER in char_formats:
-            current_format = char_formats[END_MARKER]
-        else:
-            current_format = TextFormat.PLAIN
-
-        # Expand from strings to characters
-        char_items = CrdtSequence(expand_text_items(self.items.sequence_items()))
-
-        current_line = ""
-        current_ids = []
-        for k in char_items:
-            char = char_items[k]
-            assert len(char) <= 1
-            current_line += char
-            current_ids += [k]
-            if char == "\n":
-                yield (current_format, current_line, current_ids)
-                current_format = TextFormat.PLAIN
-                current_line = ""
-                current_ids = []
-            if k in char_formats:
-                current_format = char_formats[k]
-                if char != "\n":
-                    _logger.warning("format does not apply to whole line")
-
-        yield (current_format, current_line, current_ids)
-
-    def formatted_lines(self) -> tp.Iterator[tuple[TextFormat, str]]:
-        """Extract lines of text with associated formatting.
-
-        Returns (format, line) tuples.
-
-        """
-        for fmt, s, _ in self.formatted_lines_with_ids():
-            yield (fmt, s)
 
 
 ## Glyph range
