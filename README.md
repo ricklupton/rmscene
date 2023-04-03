@@ -8,6 +8,17 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ## Changelog
 
+### Unreleased
+
+- Allow empty text items and unknown text formats without throwing exceptions.
+- When extra data is present in the file, log the unrecognised bytes at DEBUG
+  logging level along with the call stack, to make it easier to figure out where the code needs to be modified to read new data.
+- Writer: experimental change to emulate different reMarkable software versions
+  by passing `{"version": "3.2.2"}` options to `write_blocks`. This allows us to
+  continue to test round-trip reading and writing of old test files as new data
+  values are added.
+- Parse new data values in PageInfoBlock and MigrationInfoBlock.
+
 ### v0.3.0
 
 - Introduce `CrdtSequence` type to handle the different places that CRDT
