@@ -8,7 +8,7 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ## Changelog
 
-### Unreleased
+### v0.4.0
 
 Breaking changes:
 
@@ -16,6 +16,14 @@ Breaking changes:
   meaning, now that we have inline bold/italic text styles.
 - Remove methods from `scene_items.Text` object; use `text.TextDocument`
   instead.
+- Writer: experimental change to emulate different reMarkable software versions
+  by passing `{"version": "3.2.2"}` options to `write_blocks`. This allows us to
+  continue to test round-trip reading and writing of old test files as new data
+  values are added. Replaces `"line_version"` option.
+  
+New features:
+- Parse text formatting information (bold and italic) introduced in reMarkable
+  software version 3.3.
 
 Other changes:
 
@@ -23,13 +31,8 @@ Other changes:
 - When extra data is present in the file, log the unrecognised bytes at DEBUG
   logging level along with the call stack, to make it easier to figure out where
   the code needs to be modified to read new data.
-- Writer: experimental change to emulate different reMarkable software versions
-  by passing `{"version": "3.2.2"}` options to `write_blocks`. This allows us to
-  continue to test round-trip reading and writing of old test files as new data
-  values are added.
-- Parse new data values in PageInfoBlock and MigrationInfoBlock.
-- Parse text formatting information (bold and italic) introduced in reMarkable
-  software version 3.3.
+- Parse new data values (with unknown meaning) in PageInfoBlock and
+  MigrationInfoBlock.
 
 ### v0.3.0
 
