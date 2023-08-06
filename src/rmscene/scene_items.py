@@ -200,7 +200,7 @@ class GlyphRange(SceneItem):
 
     `rectangles` represent the locations of the highlight.
     """
-    start: Optional[int]
+    start: tp.Optional[int]
     length: int
     text: str
     color: PenColor
