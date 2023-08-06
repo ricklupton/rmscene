@@ -417,21 +417,33 @@ class SceneItemBlock(Block):
 
 
 def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
-    start = stream.read_int(2)
-    length = stream.read_int(3)
-    color_id = stream.read_int(4)  # ddvk has this as a byte?
-    color = si.PenColor(color_id)
-    text = stream.read_string(5)
+    version = stream.current_block.current_version
 
-    # Note: the decoded text length is not always the same as the length in the
-    # glyph range...
-    if len(text) != length:
-        _logger.debug(
-            "GlyphRange text length %d != length value %d: %r",
-            len(text),
-            length,
-            text,
-        )
+    match version:
+        case 0:
+            start = stream.read_int(2)
+            length = stream.read_int(3)
+            color_id = stream.read_int(4)
+            color = si.PenColor(color_id)
+            text = stream.read_string(5)
+
+            # Note: the decoded text length is not always the same as the length in the
+            # glyph range...
+            if len(text) != length:
+                _logger.debug(
+                    "GlyphRange text length %d != length value %d: %r",
+                    len(text),
+                    length,
+                    text,
+                )
+        case 1:
+            color_id = stream.read_int(4)
+            color = si.PenColor(color_id)
+            text = stream.read_string(5)
+            length = len(text)
+            start = -1
+        case other:
+            _logger.warning("Unsupported version %d for GlyphRange", version)
 
     with stream.read_subblock(6):
         num_rects = stream.data.read_varuint()
@@ -441,7 +453,6 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
         ]
 
     return si.GlyphRange(start, length, text, color, rectangles)
-
 
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
     stream.write_int(2, item.start)
