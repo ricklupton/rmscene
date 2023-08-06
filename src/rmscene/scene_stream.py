@@ -441,7 +441,7 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
             color = si.PenColor(color_id)
             text = stream.read_string(5)
             length = len(text)
-            start = -1
+            start = None
         case other:
             _logger.warning("Unsupported version %d for GlyphRange", version)
 
