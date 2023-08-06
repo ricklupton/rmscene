@@ -454,6 +454,7 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
 
     return si.GlyphRange(start, length, text, color, rectangles)
 
+
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
     stream.write_int(2, item.start)
     stream.write_int(3, item.length)
