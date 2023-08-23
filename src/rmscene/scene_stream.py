@@ -417,33 +417,27 @@ class SceneItemBlock(Block):
 
 
 def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
-    version = stream.current_block.current_version
+    length = None
+    try:
+        start = stream.read_int(2)
+        length = stream.read_int(3)
+    except UnexpectedBlockError:
+        start = None
 
-    match version:
-        case 0:
-            start = stream.read_int(2)
-            length = stream.read_int(3)
-            color_id = stream.read_int(4)
-            color = si.PenColor(color_id)
-            text = stream.read_string(5)
+    color_id = stream.read_int(4)
+    color = si.PenColor(color_id)
+    text = stream.read_string(5)
+    length = length or len(text)
 
-            # Note: the decoded text length is not always the same as the length in the
-            # glyph range...
-            if len(text) != length:
-                _logger.debug(
-                    "GlyphRange text length %d != length value %d: %r",
-                    len(text),
-                    length,
-                    text,
-                )
-        case 1:
-            color_id = stream.read_int(4)
-            color = si.PenColor(color_id)
-            text = stream.read_string(5)
-            length = len(text)
-            start = None
-        case other:
-            _logger.warning("Unsupported version %d for GlyphRange", version)
+    # Note: the decoded text length is not always the same as the length in the
+    # glyph range...
+    if len(text) != length:
+        _logger.debug(
+            "GlyphRange text length %d != length value %d: %r",
+            len(text),
+            length,
+            text,
+        )
 
     with stream.read_subblock(6):
         num_rects = stream.data.read_varuint()
