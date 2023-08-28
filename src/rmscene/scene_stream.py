@@ -461,8 +461,6 @@ class SceneGlyphItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x03
     ITEM_TYPE: tp.ClassVar = 0x01
 
-    value: tp.Optional[si.GlyphRange]
-
     @classmethod
     def value_from_stream(cls, reader: TaggedBlockReader) -> si.GlyphRange:
         value = glyph_range_from_stream(reader)
@@ -475,8 +473,6 @@ class SceneGlyphItemBlock(SceneItemBlock):
 class SceneGroupItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x04
     ITEM_TYPE: tp.ClassVar = 0x02
-
-    value: tp.Optional[CrdtId]
 
     @classmethod
     def value_from_stream(cls, reader: TaggedBlockReader) -> CrdtId:
@@ -491,8 +487,6 @@ class SceneGroupItemBlock(SceneItemBlock):
 class SceneLineItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x05
     ITEM_TYPE: tp.ClassVar = 0x03
-
-    value: tp.Optional[si.Line]
 
     def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
         """Return (min_version, current_version) to use when writing."""
