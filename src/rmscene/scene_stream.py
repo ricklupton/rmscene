@@ -7,7 +7,7 @@ With help from ddvk's v6 reader, and enum values from remt.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 import math
 from uuid import UUID, uuid4
 from dataclasses import dataclass, replace, KW_ONLY
@@ -686,7 +686,7 @@ class RootTextBlock(Block):
 ## Functions to read and write streams of blocks
 
 
-def _read_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
+def _read_blocks(stream: TaggedBlockReader) -> Iterator[Block]:
     """
     Parse blocks from reMarkable v6 file.
     """
@@ -708,7 +708,7 @@ def _read_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
                 stream.data.read_bytes(block_info.size)
 
 
-def read_blocks(data: tp.BinaryIO) -> Iterable[Block]:
+def read_blocks(data: tp.BinaryIO) -> Iterator[Block]:
     """
     Parse reMarkable file and return iterator of document items.
 
@@ -793,7 +793,7 @@ def read_tree(data: tp.BinaryIO) -> SceneTree:
     return tree
 
 
-def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
+def simple_text_document(text: str, author_uuid=None) -> Iterator[Block]:
     """Return the basic blocks to represent `text` as plain text.
 
     TODO: replace this with a way to generate the tree with given text, and a
