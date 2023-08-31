@@ -534,8 +534,9 @@ def text_item_from_stream(stream: TaggedBlockReader) -> CrdtSequenceItem[str | i
             # It seems that formats are stored on empty strings, so it's one or the other
             if fmt is not None:
                 if text:
-                    _logger.error("Unhandled combined text and format: %s, %s",
-                                  text, fmt)
+                    _logger.error(
+                        "Unhandled combined text and format: %s, %s", text, fmt
+                    )
                 value = fmt
             else:
                 value = text
@@ -579,8 +580,11 @@ def text_format_from_stream(
             format_type = si.ParagraphStyle(format_code)
         except ValueError:
             _logger.warning("Unrecognised text format code %d.", format_code)
-            _logger.debug("Unrecognised text format code %d at position %d.",
-                          format_code, stream.data.tell())
+            _logger.debug(
+                "Unrecognised text format code %d at position %d.",
+                format_code,
+                stream.data.tell(),
+            )
             format_type = si.ParagraphStyle.PLAIN  # fallback
 
     return (char_id, LwwValue(timestamp, format_type))
@@ -648,7 +652,7 @@ class RootTextBlock(Block):
             styles=text_formats,
             pos_x=pos_x,
             pos_y=pos_y,
-            width=width
+            width=width,
         )
         return RootTextBlock(block_id, value)
 
@@ -775,7 +779,9 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
         elif isinstance(b, RootTextBlock):
             if tree.root_text is not None:
                 _logger.error(
-                    "Overwriting root text\n  Old: %s\n  New: %s", tree.root_text, b.value
+                    "Overwriting root text\n  Old: %s\n  New: %s",
+                    tree.root_text,
+                    b.value,
                 )
             tree.root_text = b.value
 
@@ -808,35 +814,43 @@ def simple_text_document(text: str, author_uuid=None) -> Iterator[Block]:
 
     yield MigrationInfoBlock(migration_id=CrdtId(1, 1), is_device=True)
 
-    yield PageInfoBlock(loads_count=1,
-                        merges_count=0,
-                        text_chars_count=len(text) + 1,
-                        text_lines_count=text.count("\n") + 1)
+    yield PageInfoBlock(
+        loads_count=1,
+        merges_count=0,
+        text_chars_count=len(text) + 1,
+        text_lines_count=text.count("\n") + 1,
+    )
 
-    yield SceneTreeBlock(tree_id=CrdtId(0, 11),
-                         node_id=CrdtId(0, 0),
-                         is_update=True,
-                         parent_id=CrdtId(0, 1))
+    yield SceneTreeBlock(
+        tree_id=CrdtId(0, 11),
+        node_id=CrdtId(0, 0),
+        is_update=True,
+        parent_id=CrdtId(0, 1),
+    )
 
     yield RootTextBlock(
         block_id=CrdtId(0, 0),
         value=si.Text(
-            items=CrdtSequence([
-                CrdtSequenceItem(
-                    item_id=CrdtId(1, 16),
-                    left_id=CrdtId(0, 0),
-                    right_id=CrdtId(0, 0),
-                    deleted_length=0,
-                    value=text,
-                )
-            ]),
+            items=CrdtSequence(
+                [
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value=text,
+                    )
+                ]
+            ),
             styles={
-                CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN),
+                CrdtId(0, 0): LwwValue(
+                    timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN
+                ),
             },
             pos_x=-468.0,
             pos_y=234.0,
             width=936.0,
-        )
+        ),
     )
 
     yield TreeNodeBlock(
@@ -848,7 +862,7 @@ def simple_text_document(text: str, author_uuid=None) -> Iterator[Block]:
     yield TreeNodeBlock(
         si.Group(
             node_id=CrdtId(0, 11),
-            label=LwwValue(timestamp=CrdtId(0, 12), value='Layer 1'),
+            label=LwwValue(timestamp=CrdtId(0, 12), value="Layer 1"),
         )
     )
 
@@ -859,6 +873,6 @@ def simple_text_document(text: str, author_uuid=None) -> Iterator[Block]:
             left_id=CrdtId(0, 0),
             right_id=CrdtId(0, 0),
             deleted_length=0,
-            value=CrdtId(0, 11)
-        )
+            value=CrdtId(0, 11),
+        ),
     )
