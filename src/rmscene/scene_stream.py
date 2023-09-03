@@ -369,6 +369,13 @@ class SceneItemBlock(Block):
         right_id = stream.read_id(4)
         deleted_length = stream.read_int(5)
 
+        if stream.bytes_remaining_in_block() == 0:
+            return subclass(
+                parent_id,
+                CrdtSequenceItem(item_id, left_id, right_id, deleted_length, None),
+                extra_data=b""
+            )
+
         if stream.has_subblock(6):
             with stream.read_subblock(6) as block_info:
                 item_type = stream.data.read_uint8()
