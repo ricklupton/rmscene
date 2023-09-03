@@ -16,7 +16,7 @@ import typing as tp
 
 from packaging.version import Version
 
-from .tagged_block_common import CrdtId, LwwValue
+from .tagged_block_common import CrdtId, LwwValue, UnexpectedBlockError
 from .tagged_block_reader import TaggedBlockReader
 from .tagged_block_writer import TaggedBlockWriter
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
