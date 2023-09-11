@@ -443,6 +443,32 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
     return si.GlyphRange(start, length, text, color, rectangles)
 
 
+class SceneWIPItemBlock(Block):
+    """Parsing code works, purpose of the block is unknown."""
+    BLOCK_TYPE: tp.ClassVar = 0x0D
+
+    @classmethod
+    def from_stream(cls, reader: TaggedBlockReader) -> tp.Any:
+        if reader.has_subblock(1):
+            with reader.read_subblock(1):
+                b1id1 = reader.read_id(1)
+                b1id2 = reader.read_id(2)
+
+        if reader.has_subblock(2):
+            with reader.read_subblock(2):
+                b2id1 = reader.read_id(1)
+                b2unknown = reader.read_byte(2)
+
+        if reader.has_subblock(3):
+            with reader.read_subblock(3):
+                b3id1 = reader.read_id(1)
+                b3unknown = reader.read_byte(2)
+
+    @classmethod
+    def to_stream(cls, writer: TaggedBlockWriter, value):
+        raise NotImplementedError()
+
+
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
     stream.write_int(2, item.start)
     stream.write_int(3, item.length)
