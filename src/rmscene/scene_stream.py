@@ -465,7 +465,7 @@ class SceneWIPItemBlock(Block):
                 b3unknown = reader.read_byte(2)
 
     @classmethod
-    def to_stream(cls, writer: TaggedBlockWriter, value):
+    def to_stream(cls, writer: TaggedBlockWriter):
         raise NotImplementedError()
 
 
