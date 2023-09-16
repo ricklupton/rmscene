@@ -18,6 +18,8 @@ New features:
 Other changes:
 - The `value` attribute of scene item blocks, which was not being used, has been
   removed.
+- Check more carefully for sub-blocks
+  ([#17](https://github.com/ricklupton/rmscene/issues/17#issuecomment-1701071477)).
 
 ### v0.4.0
 

@@ -175,6 +175,12 @@ class TaggedBlockReader:
 
     def has_subblock(self, index: int) -> bool:
         """Check if a subblock with the given index is next."""
+        # It's possible that if we are at the end of the block, the next bytes
+        # (the size of the next block) could happen to match the tag and index
+        # of what we are looking for -- so check explicitly for end of block.
+        if self.current_block:
+            if self.bytes_remaining_in_block() <= 0:
+                return False
         return self.data.check_tag(index, TagType.Length4)
 
     def _check_position(self, block_info: BlockInfo):

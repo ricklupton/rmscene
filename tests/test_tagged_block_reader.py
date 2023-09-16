@@ -159,3 +159,21 @@ def test_read_string_utf():
     s = stream("1c05000000" "030161c397")
     result = s.read_string(1)
     assert result == "a×"
+
+
+def test_has_subblock_checks_for_end_of_block():
+    # See https://github.com/ricklupton/rmscene/issues/17#issuecomment-1701071477
+    #
+    # Construct some potentially confusing data -- the 0x2c is the start of the
+    # next block, but if we don't take care, `has_subblock(2)` could see it as a
+    # subblock instead.
+    data_hex = """
+    03000000 00010103
+    1f 0219
+    2c000000 00010100
+    """
+
+    s = stream(data_hex)
+    with s.read_block():
+        assert s.read_id(1)
+        assert s.has_subblock(2) == False
