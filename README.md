@@ -8,6 +8,17 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ## Changelog
 
+### Unreleased
+
+New features:
+- Improved error recovery. An error during parsing, or an unknown block type,
+  results in an `UnreadableBlock` containing the data that could not be read, so
+  that parsing of other blocks can continue.
+
+Other changes:
+- The `value` attribute of scene item blocks, which was not being used, has been
+  removed.
+
 ### v0.4.0
 
 Breaking changes:

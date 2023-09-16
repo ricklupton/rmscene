@@ -17,7 +17,7 @@ import typing as tp
 from packaging.version import Version
 
 from .tagged_block_common import CrdtId, LwwValue
-from .tagged_block_reader import TaggedBlockReader
+from .tagged_block_reader import TaggedBlockReader, MainBlockInfo
 from .tagged_block_writer import TaggedBlockWriter
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 from .scene_tree import SceneTree
@@ -43,6 +43,16 @@ class Block(ABC):
         """Return (min_version, current_version) to use when writing."""
         return (1, 1)
 
+    def get_block_type(self) -> int:
+        """Return block type for this block.
+
+        By default, returns the block's BLOCK_TYPE attribute, but this method
+        can be overriden if a single block subclass can handle multiple block
+        types.
+
+        """
+        return self.BLOCK_TYPE
+
     @classmethod
     def lookup(cls, block_type: int) -> tp.Optional[tp.Type[Block]]:
         if getattr(cls, "BLOCK_TYPE", None) == block_type:
@@ -52,14 +62,41 @@ class Block(ABC):
                 return match
         return None
 
+    def write(self, writer: TaggedBlockWriter):
+        """Write the block header and content to the stream."""
+        min_version, current_version = self.version_info(writer)
+        with writer.write_block(self.get_block_type(), min_version, current_version):
+            self.to_stream(writer)
+
     @classmethod
     @abstractmethod
     def from_stream(cls, reader: TaggedBlockReader) -> Block:
+        """Read content of block from stream."""
         raise NotImplementedError()
 
     @abstractmethod
     def to_stream(self, writer: TaggedBlockWriter):
+        """Write content of block to stream."""
         raise NotImplementedError()
+
+
+@dataclass
+class UnreadableBlock(Block):
+    """Represent a block which could not be read for some reason."""
+
+    error: str
+    data: bytes
+    info: MainBlockInfo
+
+    def get_block_type(self) -> int:
+        return self.info.block_type
+
+    @classmethod
+    def from_stream(cls, reader: TaggedBlockReader) -> Block:
+        raise NotImplementedError()
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.data.write_bytes(self.data)
 
 
 @dataclass
@@ -702,14 +739,21 @@ def _read_blocks(stream: TaggedBlockReader) -> Iterator[Block]:
 
             block_type = Block.lookup(block_info.block_type)
             if block_type:
-                yield block_type.from_stream(stream)
+                try:
+                    yield block_type.from_stream(stream)
+                except Exception as e:
+                    _logger.warning("Error reading block: %s", e)
+                    stream.data.data.seek(block_info.offset)
+                    data = stream.data.read_bytes(block_info.size)
+                    yield UnreadableBlock(str(e), data, block_info)
             else:
-                _logger.error(
-                    "Unknown block type %s. Skipping %d bytes.",
-                    block_info.block_type,
-                    block_info.size,
+                msg = (
+                    f"Unknown block type {block_info.block_type}. "
+                    f"Skipping {block_info.size} bytes."
                 )
-                stream.data.read_bytes(block_info.size)
+                _logger.warning(msg)
+                data = stream.data.read_bytes(block_info.size)
+                yield UnreadableBlock(msg, data, block_info)
 
 
 def read_blocks(data: tp.BinaryIO) -> Iterator[Block]:
@@ -723,12 +767,6 @@ def read_blocks(data: tp.BinaryIO) -> Iterator[Block]:
     yield from _read_blocks(stream)
 
 
-def _write_block(writer: TaggedBlockWriter, block: Block):
-    min_version, current_version = block.version_info(writer)
-    with writer.write_block(block.BLOCK_TYPE, min_version, current_version):
-        block.to_stream(writer)
-
-
 def write_blocks(
     data: tp.BinaryIO, blocks: Iterable[Block], options: tp.Optional[dict] = None
 ):
@@ -740,7 +778,7 @@ def write_blocks(
     stream = TaggedBlockWriter(data, options=options)
     stream.write_header()
     for block in blocks:
-        _write_block(stream, block)
+        block.write(stream)
 
 
 def build_tree(tree: SceneTree, blocks: Iterable[Block]):
