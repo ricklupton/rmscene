@@ -2,13 +2,21 @@ import pytest
 from io import BytesIO
 from pathlib import Path
 from uuid import UUID
-from rmscene import read_blocks, write_blocks, LwwValue, TaggedBlockWriter, TaggedBlockReader
+from rmscene import (
+    read_blocks,
+    write_blocks,
+    LwwValue,
+    TaggedBlockWriter,
+    TaggedBlockReader,
+)
 from rmscene.scene_stream import *
 from rmscene.tagged_block_common import HEADER_V6
+from rmscene.tagged_block_reader import MainBlockInfo
 from rmscene.crdt_sequence import CrdtSequenceItem
 from rmscene.scene_items import ParagraphStyle
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,10 +24,7 @@ DATA_PATH = Path(__file__).parent / "data"
 
 
 def _hex_lines(b, n=32):
-    return [
-        b[i*n:(i+1)*n].hex()
-        for i in range(len(b) // n + 1)
-    ]
+    return [b[i * n : (i + 1) * n].hex() for i in range(len(b) // n + 1)]
 
 
 LINES_V2_FILES = [
@@ -80,22 +85,26 @@ def test_normal_ab():
         RootTextBlock(
             block_id=CrdtId(0, 0),
             value=si.Text(
-                items=CrdtSequence([
-                    CrdtSequenceItem(
-                        item_id=CrdtId(1, 16),
-                        left_id=CrdtId(0, 0),
-                        right_id=CrdtId(0, 0),
-                        deleted_length=0,
-                        value="AB",
-                    )
-                ]),
+                items=CrdtSequence(
+                    [
+                        CrdtSequenceItem(
+                            item_id=CrdtId(1, 16),
+                            left_id=CrdtId(0, 0),
+                            right_id=CrdtId(0, 0),
+                            deleted_length=0,
+                            value="AB",
+                        )
+                    ]
+                ),
                 styles={
-                    CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN),
+                    CrdtId(0, 0): LwwValue(
+                        timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN
+                    ),
                 },
                 pos_x=-468.0,
                 pos_y=234.0,
                 width=936.0,
-            )
+            ),
         ),
         TreeNodeBlock(
             group=si.Group(node_id=CrdtId(0, 1)),
@@ -114,14 +123,16 @@ def test_normal_ab():
                 right_id=CrdtId(0, 0),
                 deleted_length=0,
                 value=CrdtId(0, 11),
-            )
+            ),
         ),
     ]
 
 
 def test_read_glyph_range():
     with open(DATA_PATH / "Wikipedia_highlighted_p1.rm", "rb") as f:
-        result = [block for block in read_blocks(f) if isinstance(block, SceneGlyphItemBlock)]
+        result = [
+            block for block in read_blocks(f) if isinstance(block, SceneGlyphItemBlock)
+        ]
 
     assert result[0].item.value.text == "The reMarkable uses electronic paper"
 
@@ -130,8 +141,12 @@ def test_read_glyph_range():
     "block",
     [
         AuthorIdsBlock(author_uuids={1: UUID("495ba59f-c943-2b5c-b455-3682f6948906")}),
-        AuthorIdsBlock(author_uuids={1: UUID("495ba59f-c943-2b5c-b455-3682f6948906"),
-                                     2: UUID("cd83324a-917f-11ed-bb7b-3c0754484e34")}),
+        AuthorIdsBlock(
+            author_uuids={
+                1: UUID("495ba59f-c943-2b5c-b455-3682f6948906"),
+                2: UUID("cd83324a-917f-11ed-bb7b-3c0754484e34"),
+            }
+        ),
         MigrationInfoBlock(migration_id=CrdtId(1, 1), is_device=True),
         PageInfoBlock(
             loads_count=3, merges_count=2, text_chars_count=3, text_lines_count=1
@@ -145,22 +160,26 @@ def test_read_glyph_range():
         RootTextBlock(
             block_id=CrdtId(0, 0),
             value=si.Text(
-                items=CrdtSequence([
-                    CrdtSequenceItem(
-                        item_id=CrdtId(1, 16),
-                        left_id=CrdtId(0, 0),
-                        right_id=CrdtId(0, 0),
-                        deleted_length=0,
-                        value="AB",
-                    )
-                ]),
+                items=CrdtSequence(
+                    [
+                        CrdtSequenceItem(
+                            item_id=CrdtId(1, 16),
+                            left_id=CrdtId(0, 0),
+                            right_id=CrdtId(0, 0),
+                            deleted_length=0,
+                            value="AB",
+                        )
+                    ]
+                ),
                 styles={
-                    CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN),
+                    CrdtId(0, 0): LwwValue(
+                        timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN
+                    ),
                 },
                 pos_x=-468.0,
                 pos_y=234.0,
                 width=936.0,
-            )
+            ),
         ),
         TreeNodeBlock(
             group=si.Group(
@@ -176,7 +195,7 @@ def test_read_glyph_range():
                 right_id=CrdtId(0, 0),
                 deleted_length=0,
                 value=CrdtId(0, 11),
-            )
+            ),
         ),
         SceneGlyphItemBlock(
             parent_id=CrdtId(0, 11),
@@ -206,7 +225,7 @@ def test_read_glyph_range():
                     ],
                 ),
             ),
-        )
+        ),
     ],
 )
 def test_blocks_roundtrip(block):
@@ -261,10 +280,46 @@ def test_blocks_keep_unknown_data():
        7f 010f
     """
     buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
-    reader = TaggedBlockReader(buf)
     block = next(read_blocks(buf))
     assert isinstance(block, SceneLineItemBlock)
     assert block.extra_data == bytes.fromhex("7f 010f")
+
+
+def test_error_in_block_contained():
+    # First block will cause a parsing error at `0xff`. Second block should
+    # still be parsed.
+    data_hex = """
+    06000000 00010103
+    1f 0219
+    aa bbcc
+    05000000 00010100
+    1f 0219
+    21 01
+    """
+    buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
+    blocks = list(read_blocks(buf))
+    assert blocks == [
+        UnreadableBlock(
+            error="Bad tag type 0xA at position 58",
+            data=bytes.fromhex("1f0219aabbcc"),
+            info=MainBlockInfo(
+                offset=51,
+                size=6,
+                extra_data=b"",
+                block_type=3,
+                min_version=1,
+                current_version=1,
+            ),
+        ),
+        MigrationInfoBlock(migration_id=CrdtId(0x02, 0x19), is_device=True),
+    ]
+
+    # Check all data is preserved
+    buf2 = BytesIO()
+    # Version 3 to be consistent with the input data used here
+    write_blocks(buf2, blocks, options={"version": "3.0"})
+
+    assert buf2.getvalue() == buf.getvalue()
 
 
 from hypothesis import given, strategies as st
@@ -272,21 +327,22 @@ from hypothesis import given, strategies as st
 
 crdt_id_strategy = st.builds(
     CrdtId,
-    st.integers(min_value=0, max_value=2**8-1),
-    st.integers(min_value=0, max_value=2**64-1),
+    st.integers(min_value=0, max_value=2**8 - 1),
+    st.integers(min_value=0, max_value=2**64 - 1),
 )
 st.register_type_strategy(CrdtId, crdt_id_strategy)
 
 author_ids_block_strategy = st.builds(
     AuthorIdsBlock,
-    st.dictionaries(st.integers(min_value=0, max_value=65535), st.uuids())
+    st.dictionaries(st.integers(min_value=0, max_value=65535), st.uuids()),
 )
 
-block_strategy = st.one_of([
-    author_ids_block_strategy,
-    st.builds(MigrationInfoBlock),
-])
-
+block_strategy = st.one_of(
+    [
+        author_ids_block_strategy,
+        st.builds(MigrationInfoBlock),
+    ]
+)
 
 
 @given(block_strategy)

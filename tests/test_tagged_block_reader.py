@@ -131,18 +131,43 @@ def test_has_subblock_returns_False_at_end_of_file():
     assert s.has_subblock(2) == False
 
 
-def test_extract_int():
+def test_has_subblock_checks_for_end_of_block():
+    # See https://github.com/ricklupton/rmscene/issues/17#issuecomment-1701071477
+    #
+    # Construct some potentially confusing data -- the 0x2c is the start of the
+    # next block, but if we don't take care, `has_subblock(2)` could see it as a
+    # subblock instead.
+    data_hex = """
+    03000000 00010103
+    1f 0219
+    2c000000 00010100
+    """
+
+    s = stream(data_hex)
+    with s.read_block():
+        assert s.read_id(1)
+        assert s.has_subblock(2) == False
+
+
+def test_read_int():
     s = stream("34abcd0000")
     assert s.read_int(3) == 0xCDAB
 
 
-def test_extract_int_wrong_index():
+def test_read_int_wrong_index():
     s = stream("34abcd0000")
     with pytest.raises(UnexpectedBlockError):
         s.read_int(2)
 
 
-def test_extract_lww_string():
+def test_read_int_default_value():
+    s = stream("34abcd0000")
+    assert s.read_int_optional(2, -1) == -1
+    assert s.read_int_optional(3) == 0xCDAB
+    assert s.read_int_optional(4) == None
+
+
+def test_read_lww_string():
     s = stream("1c0d000000" "1f0101" "2c05000000" "0301616263")
     lww = s.read_lww_string(1)
     assert lww.timestamp == CrdtId(1, 1)

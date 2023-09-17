@@ -7,7 +7,7 @@ With help from ddvk's v6 reader, and enum values from remt.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 import math
 from uuid import UUID, uuid4
 from dataclasses import dataclass, replace, KW_ONLY
@@ -17,7 +17,7 @@ import typing as tp
 from packaging.version import Version
 
 from .tagged_block_common import CrdtId, LwwValue, UnexpectedBlockError
-from .tagged_block_reader import TaggedBlockReader
+from .tagged_block_reader import TaggedBlockReader, MainBlockInfo
 from .tagged_block_writer import TaggedBlockWriter
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 from .scene_tree import SceneTree
@@ -43,6 +43,16 @@ class Block(ABC):
         """Return (min_version, current_version) to use when writing."""
         return (1, 1)
 
+    def get_block_type(self) -> int:
+        """Return block type for this block.
+
+        By default, returns the block's BLOCK_TYPE attribute, but this method
+        can be overriden if a single block subclass can handle multiple block
+        types.
+
+        """
+        return self.BLOCK_TYPE
+
     @classmethod
     def lookup(cls, block_type: int) -> tp.Optional[tp.Type[Block]]:
         if getattr(cls, "BLOCK_TYPE", None) == block_type:
@@ -52,14 +62,41 @@ class Block(ABC):
                 return match
         return None
 
+    def write(self, writer: TaggedBlockWriter):
+        """Write the block header and content to the stream."""
+        min_version, current_version = self.version_info(writer)
+        with writer.write_block(self.get_block_type(), min_version, current_version):
+            self.to_stream(writer)
+
     @classmethod
     @abstractmethod
     def from_stream(cls, reader: TaggedBlockReader) -> Block:
+        """Read content of block from stream."""
         raise NotImplementedError()
 
     @abstractmethod
     def to_stream(self, writer: TaggedBlockWriter):
+        """Write content of block to stream."""
         raise NotImplementedError()
+
+
+@dataclass
+class UnreadableBlock(Block):
+    """Represent a block which could not be read for some reason."""
+
+    error: str
+    data: bytes
+    info: MainBlockInfo
+
+    def get_block_type(self) -> int:
+        return self.info.block_type
+
+    @classmethod
+    def from_stream(cls, reader: TaggedBlockReader) -> Block:
+        raise NotImplementedError()
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.data.write_bytes(self.data)
 
 
 @dataclass
@@ -467,8 +504,6 @@ class SceneGlyphItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x03
     ITEM_TYPE: tp.ClassVar = 0x01
 
-    value: tp.Optional[si.GlyphRange]
-
     @classmethod
     def value_from_stream(cls, reader: TaggedBlockReader) -> si.GlyphRange:
         value = glyph_range_from_stream(reader)
@@ -481,8 +516,6 @@ class SceneGlyphItemBlock(SceneItemBlock):
 class SceneGroupItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x04
     ITEM_TYPE: tp.ClassVar = 0x02
-
-    value: tp.Optional[CrdtId]
 
     @classmethod
     def value_from_stream(cls, reader: TaggedBlockReader) -> CrdtId:
@@ -497,8 +530,6 @@ class SceneGroupItemBlock(SceneItemBlock):
 class SceneLineItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x05
     ITEM_TYPE: tp.ClassVar = 0x03
-
-    value: tp.Optional[si.Line]
 
     def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
         """Return (min_version, current_version) to use when writing."""
@@ -546,8 +577,9 @@ def text_item_from_stream(stream: TaggedBlockReader) -> CrdtSequenceItem[str | i
             # It seems that formats are stored on empty strings, so it's one or the other
             if fmt is not None:
                 if text:
-                    _logger.error("Unhandled combined text and format: %s, %s",
-                                  text, fmt)
+                    _logger.error(
+                        "Unhandled combined text and format: %s, %s", text, fmt
+                    )
                 value = fmt
             else:
                 value = text
@@ -591,8 +623,11 @@ def text_format_from_stream(
             format_type = si.ParagraphStyle(format_code)
         except ValueError:
             _logger.warning("Unrecognised text format code %d.", format_code)
-            _logger.debug("Unrecognised text format code %d at position %d.",
-                          format_code, stream.data.tell())
+            _logger.debug(
+                "Unrecognised text format code %d at position %d.",
+                format_code,
+                stream.data.tell(),
+            )
             format_type = si.ParagraphStyle.PLAIN  # fallback
 
     return (char_id, LwwValue(timestamp, format_type))
@@ -660,7 +695,7 @@ class RootTextBlock(Block):
             styles=text_formats,
             pos_x=pos_x,
             pos_y=pos_y,
-            width=width
+            width=width,
         )
         return RootTextBlock(block_id, value)
 
@@ -698,7 +733,7 @@ class RootTextBlock(Block):
 ## Functions to read and write streams of blocks
 
 
-def _read_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
+def _read_blocks(stream: TaggedBlockReader) -> Iterator[Block]:
     """
     Parse blocks from reMarkable v6 file.
     """
@@ -710,17 +745,24 @@ def _read_blocks(stream: TaggedBlockReader) -> Iterable[Block]:
 
             block_type = Block.lookup(block_info.block_type)
             if block_type:
-                yield block_type.from_stream(stream)
+                try:
+                    yield block_type.from_stream(stream)
+                except Exception as e:
+                    _logger.warning("Error reading block: %s", e)
+                    stream.data.data.seek(block_info.offset)
+                    data = stream.data.read_bytes(block_info.size)
+                    yield UnreadableBlock(str(e), data, block_info)
             else:
-                _logger.error(
-                    "Unknown block type %s. Skipping %d bytes.",
-                    block_info.block_type,
-                    block_info.size,
+                msg = (
+                    f"Unknown block type {block_info.block_type}. "
+                    f"Skipping {block_info.size} bytes."
                 )
-                stream.data.read_bytes(block_info.size)
+                _logger.warning(msg)
+                data = stream.data.read_bytes(block_info.size)
+                yield UnreadableBlock(msg, data, block_info)
 
 
-def read_blocks(data: tp.BinaryIO) -> Iterable[Block]:
+def read_blocks(data: tp.BinaryIO) -> Iterator[Block]:
     """
     Parse reMarkable file and return iterator of document items.
 
@@ -729,12 +771,6 @@ def read_blocks(data: tp.BinaryIO) -> Iterable[Block]:
     stream = TaggedBlockReader(data)
     stream.read_header()
     yield from _read_blocks(stream)
-
-
-def _write_block(writer: TaggedBlockWriter, block: Block):
-    min_version, current_version = block.version_info(writer)
-    with writer.write_block(block.BLOCK_TYPE, min_version, current_version):
-        block.to_stream(writer)
 
 
 def write_blocks(
@@ -748,7 +784,7 @@ def write_blocks(
     stream = TaggedBlockWriter(data, options=options)
     stream.write_header()
     for block in blocks:
-        _write_block(stream, block)
+        block.write(stream)
 
 
 def build_tree(tree: SceneTree, blocks: Iterable[Block]):
@@ -787,7 +823,9 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
         elif isinstance(b, RootTextBlock):
             if tree.root_text is not None:
                 _logger.error(
-                    "Overwriting root text\n  Old: %s\n  New: %s", tree.root_text, b.value
+                    "Overwriting root text\n  Old: %s\n  New: %s",
+                    tree.root_text,
+                    b.value,
                 )
             tree.root_text = b.value
 
@@ -805,7 +843,7 @@ def read_tree(data: tp.BinaryIO) -> SceneTree:
     return tree
 
 
-def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
+def simple_text_document(text: str, author_uuid=None) -> Iterator[Block]:
     """Return the basic blocks to represent `text` as plain text.
 
     TODO: replace this with a way to generate the tree with given text, and a
@@ -820,35 +858,43 @@ def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
 
     yield MigrationInfoBlock(migration_id=CrdtId(1, 1), is_device=True)
 
-    yield PageInfoBlock(loads_count=1,
-                        merges_count=0,
-                        text_chars_count=len(text) + 1,
-                        text_lines_count=text.count("\n") + 1)
+    yield PageInfoBlock(
+        loads_count=1,
+        merges_count=0,
+        text_chars_count=len(text) + 1,
+        text_lines_count=text.count("\n") + 1,
+    )
 
-    yield SceneTreeBlock(tree_id=CrdtId(0, 11),
-                         node_id=CrdtId(0, 0),
-                         is_update=True,
-                         parent_id=CrdtId(0, 1))
+    yield SceneTreeBlock(
+        tree_id=CrdtId(0, 11),
+        node_id=CrdtId(0, 0),
+        is_update=True,
+        parent_id=CrdtId(0, 1),
+    )
 
     yield RootTextBlock(
         block_id=CrdtId(0, 0),
         value=si.Text(
-            items=CrdtSequence([
-                CrdtSequenceItem(
-                    item_id=CrdtId(1, 16),
-                    left_id=CrdtId(0, 0),
-                    right_id=CrdtId(0, 0),
-                    deleted_length=0,
-                    value=text,
-                )
-            ]),
+            items=CrdtSequence(
+                [
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value=text,
+                    )
+                ]
+            ),
             styles={
-                CrdtId(0, 0): LwwValue(timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN),
+                CrdtId(0, 0): LwwValue(
+                    timestamp=CrdtId(1, 15), value=si.ParagraphStyle.PLAIN
+                ),
             },
             pos_x=-468.0,
             pos_y=234.0,
             width=936.0,
-        )
+        ),
     )
 
     yield TreeNodeBlock(
@@ -860,7 +906,7 @@ def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
     yield TreeNodeBlock(
         si.Group(
             node_id=CrdtId(0, 11),
-            label=LwwValue(timestamp=CrdtId(0, 12), value='Layer 1'),
+            label=LwwValue(timestamp=CrdtId(0, 12), value="Layer 1"),
         )
     )
 
@@ -871,6 +917,6 @@ def simple_text_document(text: str, author_uuid=None) -> Iterable[Block]:
             left_id=CrdtId(0, 0),
             right_id=CrdtId(0, 0),
             deleted_length=0,
-            value=CrdtId(0, 11)
-        )
+            value=CrdtId(0, 11),
+        ),
     )
