@@ -131,36 +131,6 @@ def test_has_subblock_returns_False_at_end_of_file():
     assert s.has_subblock(2) == False
 
 
-def test_extract_int():
-    s = stream("34abcd0000")
-    assert s.read_int(3) == 0xCDAB
-
-
-def test_extract_int_wrong_index():
-    s = stream("34abcd0000")
-    with pytest.raises(UnexpectedBlockError):
-        s.read_int(2)
-
-
-def test_extract_lww_string():
-    s = stream("1c0d000000" "1f0101" "2c05000000" "0301616263")
-    lww = s.read_lww_string(1)
-    assert lww.timestamp == CrdtId(1, 1)
-    assert lww.value == "abc"
-
-
-def test_read_string_ascii():
-    s = stream("1c05000000" "0301616263")
-    result = s.read_string(1)
-    assert result == "abc"
-
-
-def test_read_string_utf():
-    s = stream("1c05000000" "030161c397")
-    result = s.read_string(1)
-    assert result == "a×"
-
-
 def test_has_subblock_checks_for_end_of_block():
     # See https://github.com/ricklupton/rmscene/issues/17#issuecomment-1701071477
     #
@@ -177,3 +147,33 @@ def test_has_subblock_checks_for_end_of_block():
     with s.read_block():
         assert s.read_id(1)
         assert s.has_subblock(2) == False
+
+
+def test_read_int():
+    s = stream("34abcd0000")
+    assert s.read_int(3) == 0xCDAB
+
+
+def test_read_int_wrong_index():
+    s = stream("34abcd0000")
+    with pytest.raises(UnexpectedBlockError):
+        s.read_int(2)
+
+
+def test_read_lww_string():
+    s = stream("1c0d000000" "1f0101" "2c05000000" "0301616263")
+    lww = s.read_lww_string(1)
+    assert lww.timestamp == CrdtId(1, 1)
+    assert lww.value == "abc"
+
+
+def test_read_string_ascii():
+    s = stream("1c05000000" "0301616263")
+    result = s.read_string(1)
+    assert result == "abc"
+
+
+def test_read_string_utf():
+    s = stream("1c05000000" "030161c397")
+    result = s.read_string(1)
+    assert result == "a×"
