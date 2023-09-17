@@ -160,6 +160,13 @@ def test_read_int_wrong_index():
         s.read_int(2)
 
 
+def test_read_int_default_value():
+    s = stream("34abcd0000")
+    assert s.read_int_optional(2, -1) == -1
+    assert s.read_int_optional(3) == 0xCDAB
+    assert s.read_int_optional(4) == None
+
+
 def test_read_lww_string():
     s = stream("1c0d000000" "1f0101" "2c05000000" "0301616263")
     lww = s.read_lww_string(1)

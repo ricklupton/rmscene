@@ -13,7 +13,13 @@ from dataclasses import dataclass, KW_ONLY
 import logging
 import typing as tp
 
-from .tagged_block_common import DataStream, TagType, CrdtId, UnexpectedBlockError, LwwValue
+from .tagged_block_common import (
+    DataStream,
+    TagType,
+    CrdtId,
+    UnexpectedBlockError,
+    LwwValue,
+)
 
 
 _logger = logging.getLogger(__name__)
@@ -102,6 +108,50 @@ class TaggedBlockReader:
         result = self.data.read_float64()
         return result
 
+    ## Read simple values -- optional variants
+
+    def _read_optional(self, func, index, default):
+        try:
+            return func(index)
+        except (UnexpectedBlockError, EOFError):
+            return default
+
+    def read_id_optional(
+        self, index: int, default: tp.Optional[CrdtId] = None
+    ) -> tp.Optional[CrdtId]:
+        """Read a tagged CRDT ID, return `default` if not present."""
+        return self._read_optional(self.read_int, index, default)
+
+    def read_bool_optional(
+        self, index: int, default: tp.Optional[bool] = None
+    ) -> tp.Optional[bool]:
+        """Read a tagged bool, return `default` if not present."""
+        return self._read_optional(self.read_bool, index, default)
+
+    def read_byte_optional(
+        self, index: int, default: tp.Optional[int] = None
+    ) -> tp.Optional[int]:
+        """Read a tagged byte as an unsigned integer, return `default` if not present."""
+        return self._read_optional(self.read_byte, index, default)
+
+    def read_int_optional(
+        self, index: int, default: tp.Optional[int] = None
+    ) -> tp.Optional[int]:
+        """Read a tagged 4-byte unsigned integer, return `default` if not present."""
+        return self._read_optional(self.read_int, index, default)
+
+    def read_float_optional(
+        self, index: int, default: tp.Optional[float] = None
+    ) -> tp.Optional[float]:
+        """Read a tagged 4-byte float, return `default` if not present."""
+        return self._read_optional(self.read_float, index, default)
+
+    def read_double_optional(
+        self, index: int, default: tp.Optional[float] = None
+    ) -> tp.Optional[float]:
+        return self._read_optional(self.read_double, index, default)
+        """Read a tagged 8-byte double, return `default` if not present."""
+
     ## Blocks
 
     @contextmanager
@@ -129,7 +179,9 @@ class TaggedBlockReader:
         min_version = self.data.read_uint8()
         current_version = self.data.read_uint8()
         block_type = self.data.read_uint8()
-        _logger.debug("Block header: %d %d %d", min_version, current_version, block_type)
+        _logger.debug(
+            "Block header: %d %d %d", min_version, current_version, block_type
+        )
         assert unknown == 0
         assert current_version >= 0
         assert min_version >= 0
@@ -260,8 +312,13 @@ class TaggedBlockReader:
             b = self.data.read_bytes(string_length)
             string = b.decode()
             if len(b) != len(string):
-                _logger.debug("read_string: decoded %r (%d) to %r (%d)",
-                              b, len(b), string, len(string))
+                _logger.debug(
+                    "read_string: decoded %r (%d) to %r (%d)",
+                    b,
+                    len(b),
+                    string,
+                    len(string),
+                )
             return string
 
     def read_string_with_format(self, index: int) -> tuple[str, tp.Optional[int]]:
@@ -275,8 +332,13 @@ class TaggedBlockReader:
             b = self.data.read_bytes(string_length)
             string = b.decode()
             if len(b) != len(string):
-                _logger.debug("read_string: decoded %r (%d) to %r (%d)",
-                              b, len(b), string, len(string))
+                _logger.debug(
+                    "read_string: decoded %r (%d) to %r (%d)",
+                    b,
+                    len(b),
+                    string,
+                    len(string),
+                )
 
             if self.data.check_tag(2, TagType.Byte4):
                 # We have a format code
