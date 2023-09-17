@@ -188,7 +188,19 @@ class Rectangle:
 
 @dataclass
 class GlyphRange(SceneItem):
-    start: int
+    """Highlighted text
+
+    `start` is only available in SceneGlyphItemBlock version=0, prior to ReMarkable v3.6
+
+    `length` is the length of the text
+
+    `text` is the highlighted text itself
+
+    `color` represents the highlight color
+
+    `rectangles` represent the locations of the highlight.
+    """
+    start: tp.Optional[int]
     length: int
     text: str
     color: PenColor

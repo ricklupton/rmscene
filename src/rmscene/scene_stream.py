@@ -16,7 +16,7 @@ import typing as tp
 
 from packaging.version import Version
 
-from .tagged_block_common import CrdtId, LwwValue
+from .tagged_block_common import CrdtId, LwwValue, UnexpectedBlockError
 from .tagged_block_reader import TaggedBlockReader, MainBlockInfo
 from .tagged_block_writer import TaggedBlockWriter
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
@@ -454,11 +454,17 @@ class SceneItemBlock(Block):
 
 
 def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
-    start = stream.read_int(2)
-    length = stream.read_int(3)
-    color_id = stream.read_int(4)  # ddvk has this as a byte?
+    length = None
+    try:
+        start = stream.read_int(2)
+        length = stream.read_int(3)
+    except UnexpectedBlockError:
+        start = None
+
+    color_id = stream.read_int(4)
     color = si.PenColor(color_id)
     text = stream.read_string(5)
+    length = length or len(text)
 
     # Note: the decoded text length is not always the same as the length in the
     # glyph range...
