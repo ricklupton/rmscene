@@ -454,17 +454,16 @@ class SceneItemBlock(Block):
 
 
 def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
-    length = None
-    try:
-        start = stream.read_int(2)
-        length = stream.read_int(3)
-    except UnexpectedBlockError:
-        start = None
+    # Since reMarkable version 3.6, the start and length are optional
+    start = stream.read_int_optional(2)
+    length = stream.read_int_optional(3)
 
     color_id = stream.read_int(4)
     color = si.PenColor(color_id)
     text = stream.read_string(5)
-    length = length or len(text)
+
+    if length is None:
+        length = len(text)
 
     # Note: the decoded text length is not always the same as the length in the
     # glyph range...
@@ -487,8 +486,9 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
 
 
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
-    stream.write_int(2, item.start)
-    stream.write_int(3, item.length)
+    if item.start is not None:
+        stream.write_int(2, item.start)
+        stream.write_int(3, item.length)
     stream.write_int(4, item.color)
     stream.write_string(5, item.text)
     with stream.write_subblock(6):

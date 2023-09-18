@@ -120,7 +120,7 @@ class TaggedBlockReader:
         self, index: int, default: tp.Optional[CrdtId] = None
     ) -> tp.Optional[CrdtId]:
         """Read a tagged CRDT ID, return `default` if not present."""
-        return self._read_optional(self.read_int, index, default)
+        return self._read_optional(self.read_id, index, default)
 
     def read_bool_optional(
         self, index: int, default: tp.Optional[bool] = None
@@ -149,8 +149,8 @@ class TaggedBlockReader:
     def read_double_optional(
         self, index: int, default: tp.Optional[float] = None
     ) -> tp.Optional[float]:
-        return self._read_optional(self.read_double, index, default)
         """Read a tagged 8-byte double, return `default` if not present."""
+        return self._read_optional(self.read_double, index, default)
 
     ## Blocks
 
