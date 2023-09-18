@@ -17,7 +17,7 @@ from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 _logger = logging.getLogger(__name__)
 
 
-def expand_text_item(item: CrdtSequenceItem[str | int]) -> Iterable[CrdtSequenceItem[str] | CrdtSequenceItem[int]]:
+def expand_text_item(item: CrdtSequenceItem[str | int]) -> Iterable[CrdtSequenceItem[str | int]]:
     """Expand TextItem into single-character TextItems.
 
     Text is stored as strings in TextItems, each with an associated ID for the
@@ -56,7 +56,7 @@ def expand_text_item(item: CrdtSequenceItem[str | int]) -> Iterable[CrdtSequence
     yield CrdtSequenceItem(item_id, left_id, item.right_id, deleted_length, chars[-1])
 
 
-def expand_text_items(items: Iterable[CrdtSequenceItem[str | int]]) -> Iterable[CrdtSequenceItem[str] | CrdtSequenceItem[int]]:
+def expand_text_items(items: Iterable[CrdtSequenceItem[str | int]]) -> Iterable[CrdtSequenceItem[str | int]]:
     """Expand a sequence of TextItems into single-character TextItems."""
     for item in items:
         yield from expand_text_item(item)
@@ -148,7 +148,8 @@ class TextDocument:
                         if span_type is not span_end_codes[char]:
                             _logger.error("Unexpected end of span at %s: got %s, expected %s",
                                           k, span_end_codes[char], span_type)
-                        stack[-1][1].append(span_type(nested))
+                        if span_type is not None:
+                            stack[-1][1].append(span_type(nested))
                     else:
                         _logger.warning("Unknown format code %d at %s!", char, k)
                 elif char == "\n":
