@@ -14,6 +14,8 @@ New features:
 - Improved error recovery. An error during parsing, or an unknown block type,
   results in an `UnreadableBlock` containing the data that could not be read, so
   that parsing of other blocks can continue.
+- Compatible with new reMarkable software version 3.6 format for highlighted
+  text ([#15](https://github.com/ricklupton/rmscene/pull/15/))
 
 Other changes:
 - The `value` attribute of scene item blocks, which was not being used, has been
@@ -73,3 +75,7 @@ Other changes:
 ## Acknowledgements
 
 https://github.com/ddvk/reader helped a lot in figuring out the structure and meaning of the files.
+
+Contributors:
+- [@Azeirah](https://github.com/Azeirah) -- code and reporting issues
+- [@dotlambda](https://github.com/dotlambda) -- packaging
