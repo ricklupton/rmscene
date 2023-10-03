@@ -17,7 +17,9 @@ from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 _logger = logging.getLogger(__name__)
 
 
-def expand_text_item(item: CrdtSequenceItem[str | int]) -> Iterable[CrdtSequenceItem[str | int]]:
+def expand_text_item(
+    item: CrdtSequenceItem[str | int],
+) -> tp.Iterator[CrdtSequenceItem[str | int]]:
     """Expand TextItem into single-character TextItems.
 
     Text is stored as strings in TextItems, each with an associated ID for the
@@ -56,7 +58,9 @@ def expand_text_item(item: CrdtSequenceItem[str | int]) -> Iterable[CrdtSequence
     yield CrdtSequenceItem(item_id, left_id, item.right_id, deleted_length, chars[-1])
 
 
-def expand_text_items(items: Iterable[CrdtSequenceItem[str | int]]) -> Iterable[CrdtSequenceItem[str | int]]:
+def expand_text_items(
+    items: Iterable[CrdtSequenceItem[str | int]],
+) -> tp.Iterator[CrdtSequenceItem[str | int]]:
     """Expand a sequence of TextItems into single-character TextItems."""
     for item in items:
         yield from expand_text_item(item)
@@ -74,6 +78,7 @@ class CrdtStr:
 @dataclass
 class TextSpan:
     """Base class for text spans with formatting."""
+
     contents: list[tp.Union["TextSpan", CrdtStr]]
 
 
@@ -88,6 +93,7 @@ class ItalicSpan(TextSpan):
 @dataclass
 class Paragraph:
     """Paragraph of text."""
+
     contents: list[TextSpan]
     start_id: CrdtId
     style: LwwValue[si.ParagraphStyle]
@@ -98,7 +104,6 @@ class Paragraph:
 
 @dataclass
 class TextDocument:
-
     contents: list[Paragraph]
 
     @classmethod
@@ -146,8 +151,12 @@ class TextDocument:
                     elif char in span_end_codes:
                         span_type, nested = stack.pop()
                         if span_type is not span_end_codes[char]:
-                            _logger.error("Unexpected end of span at %s: got %s, expected %s",
-                                          k, span_end_codes[char], span_type)
+                            _logger.error(
+                                "Unexpected end of span at %s: got %s, expected %s",
+                                k,
+                                span_end_codes[char],
+                                span_type,
+                            )
                         if span_type is not None:
                             stack[-1][1].append(span_type(nested))
                     else:
@@ -172,7 +181,9 @@ class TextDocument:
 
         paragraphs = []
         while keys:
-            style = text.styles.get(last_linebreak, LwwValue(CrdtId(0, 0), si.ParagraphStyle.PLAIN))
+            style = text.styles.get(
+                last_linebreak, LwwValue(CrdtId(0, 0), si.ParagraphStyle.PLAIN)
+            )
             contents = parse_paragraph_contents()
             p = Paragraph(contents, last_linebreak, style)
             paragraphs += [p]

@@ -10,7 +10,10 @@ from dataclasses import dataclass
 from .tagged_block_common import CrdtId
 
 
-_T = tp.TypeVar("_T")
+# If the type constraint is for a CrdtSequenceItem[Superclass], then a
+# CrdtSequenceItem[Subclass] would do, so it is covariant.
+
+_T = tp.TypeVar("_T", covariant=True)
 
 
 @dataclass
@@ -22,7 +25,11 @@ class CrdtSequenceItem(tp.Generic[_T]):
     value: _T
 
 
-class CrdtSequence(tp.Generic[_T]):
+# As a mutable container, CrdtSequence is invariant.
+_Ti = tp.TypeVar("_Ti", covariant=False)
+
+
+class CrdtSequence(tp.Generic[_Ti]):
     """Ordered CRDT Sequence container.
 
     The Sequence contains `CrdtSequenceItem`s, each of which has an ID and
@@ -57,27 +64,27 @@ class CrdtSequence(tp.Generic[_T]):
         """Return CrdtIds in order."""
         return list(self)
 
-    def values(self) -> list[_T]:
+    def values(self) -> list[_Ti]:
         """Return list of sorted values."""
         return [self[item_id] for item_id in self]
 
-    def items(self) -> Iterable[tuple[CrdtId, _T]]:
+    def items(self) -> Iterable[tuple[CrdtId, _Ti]]:
         """Return list of sorted key, value pairs."""
         return [(item_id, self[item_id]) for item_id in self]
 
-    def __getitem__(self, key: CrdtId) -> _T:
+    def __getitem__(self, key: CrdtId) -> _Ti:
         """Return item with key"""
         return self._items[key].value
 
     ## Access SequenceItems
 
-    def sequence_items(self) -> list[CrdtSequenceItem[_T]]:
+    def sequence_items(self) -> list[CrdtSequenceItem[_Ti]]:
         """Iterate through CrdtSequenceItems."""
         return list(self._items.values())
 
     ## Modify sequence
 
-    def add(self, item: CrdtSequenceItem[_T]):
+    def add(self, item: CrdtSequenceItem[_Ti]):
         if item.item_id in self._items:
             raise ValueError("Already have item %s" % item.item_id)
         self._items[item.item_id] = item
