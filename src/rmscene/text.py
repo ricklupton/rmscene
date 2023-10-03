@@ -68,35 +68,31 @@ def expand_text_items(
 
 @dataclass
 class CrdtStr:
+    """String with CrdtIds for chars and optional properties.
+
+    The properties apply to the whole `CrdtStr`. Use a list of
+    `CrdtStr`s to represent a sequence of spans of text with different
+    properties.
+
+    """
+
     s: str = ""
     i: list[CrdtId] = field(default_factory=list)
+    properties: dict = field(default_factory=dict)
 
     def __str__(self):
         return self.s
 
 
 @dataclass
-class TextSpan:
-    """Base class for text spans with formatting."""
-
-    contents: list[tp.Union["TextSpan", CrdtStr]]
-
-
-class BoldSpan(TextSpan):
-    pass
-
-
-class ItalicSpan(TextSpan):
-    pass
-
-
-@dataclass
 class Paragraph:
     """Paragraph of text."""
 
-    contents: list[TextSpan]
+    contents: list[CrdtStr]
     start_id: CrdtId
-    style: LwwValue[si.ParagraphStyle]
+    style: LwwValue[si.ParagraphStyle] = field(
+        default_factory=lambda: LwwValue(CrdtId(0, 0), si.ParagraphStyle.PLAIN)
+    )
 
     def __str__(self):
         return "".join(str(s) for s in self.contents)
@@ -120,78 +116,53 @@ class TextDocument:
         # Expand from strings to characters
         char_items = CrdtSequence(expand_text_items(text.items.sequence_items()))
         keys = list(char_items)
-        last_linebreak = si.END_MARKER
+        properties = {"font-weight": "normal", "font-style": "normal"}
 
-        span_start_codes = {
-            1: BoldSpan,
-            3: ItalicSpan,
-        }
-        span_end_codes = {
-            2: BoldSpan,
-            4: ItalicSpan,
-        }
+        def handle_formatting_code(code):
+            if code == 1:
+                properties["font-weight"] = "bold"
+            elif code == 2:
+                properties["font-weight"] = "normal"
+            if code == 3:
+                properties["font-style"] = "italic"
+            elif code == 4:
+                properties["font-style"] = "normal"
+            else:
+                _logger.warning("Unknown formatting code in text: %d", code)
+            return properties
 
         def parse_paragraph_contents():
-            nonlocal last_linebreak
-            stack = [(None, [])]
-            k = None
-            done = False
+            if keys and char_items[keys[0]] == "\n":
+                start_id = keys.pop(0)
+            else:
+                start_id = si.END_MARKER
+            contents = []
             while keys:
-                # If we've seen a newline character, only interested in
-                # span-closing format codes.
-                if done and char_items[keys[0]] not in (2, 4):
-                    break
-
-                k = keys.pop(0)
-                char = char_items[k]
+                char = char_items[keys[0]]
                 if isinstance(char, int):
-                    if char in span_start_codes:
-                        span_type = span_start_codes[char]
-                        stack.append((span_type, []))
-                    elif char in span_end_codes:
-                        span_type, nested = stack.pop()
-                        if span_type is not span_end_codes[char]:
-                            _logger.error(
-                                "Unexpected end of span at %s: got %s, expected %s",
-                                k,
-                                span_end_codes[char],
-                                span_type,
-                            )
-                        if span_type is not None:
-                            stack[-1][1].append(span_type(nested))
-                    else:
-                        _logger.warning("Unknown format code %d at %s!", char, k)
+                    handle_formatting_code(char)
                 elif char == "\n":
                     # End of paragraph
-                    done = True
-                    last_linebreak = k
+                    break
                 else:
                     assert len(char) <= 1
-                    _, contents = stack[-1]
-                    if not contents or not isinstance(contents[-1], CrdtStr):
-                        contents += [CrdtStr()]
+                    # Start a new string if text properties have changed
+                    if not contents or contents[-1].properties != properties:
+                        contents += [CrdtStr(properties=properties.copy())]
                     contents[-1].s += char
-                    contents[-1].i += [k]
+                    contents[-1].i += [keys[0]]
+                keys.pop(0)
 
-            if len(stack) > 1:
-                _logger.error("Unbalanced stack! %s", stack)
-
-            _, contents = stack[-1]
-            return contents
+            return start_id, contents
 
         paragraphs = []
         while keys:
-            style = text.styles.get(
-                last_linebreak, LwwValue(CrdtId(0, 0), si.ParagraphStyle.PLAIN)
-            )
-            contents = parse_paragraph_contents()
-            p = Paragraph(contents, last_linebreak, style)
+            start_id, contents = parse_paragraph_contents()
+            if start_id in text.styles:
+                p = Paragraph(contents, start_id, text.styles[start_id])
+            else:
+                p = Paragraph(contents, start_id)
             paragraphs += [p]
 
         doc = cls(paragraphs)
         return doc
-
-        # if k in char_formats:
-        #     current_format = char_formats[k]
-        #     if char != "\n":
-        #         _logger.warning("format does not apply to whole line")

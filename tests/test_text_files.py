@@ -3,16 +3,13 @@ from io import BytesIO
 from pathlib import Path
 from rmscene.scene_stream import *
 from rmscene.scene_items import Text, ParagraphStyle
-from rmscene.text import TextDocument, CrdtStr, BoldSpan, ItalicSpan
+from rmscene.text import TextDocument, CrdtStr
 
 DATA_PATH = Path(__file__).parent / "data"
 
 
 def _hex_lines(b, n=32):
-    return [
-        b[i*n:(i+1)*n].hex()
-        for i in range(len(b) // n + 1)
-    ]
+    return [b[i * n : (i + 1) * n].hex() for i in range(len(b) // n + 1)]
 
 
 def extract_doc(filename):
@@ -23,16 +20,21 @@ def extract_doc(filename):
         return doc
 
 
-def strip_ids(x):
-    if isinstance(x, CrdtStr):
-        return x.s
-    else:
-        return type(x)([strip_ids(y) for y in x.contents])
+def show_str_formatting(x):
+    # Basic logic -- could be smarter about removing adjacent
+    # unnecessary opening/closing tags
+    s = x.s
+    if x.properties.get("font-weight") == "bold":
+        s = f"<b>{s}</b>"
+    if x.properties.get("font-style") == "italic":
+        s = f"<i>{s}</i>"
+    return s
 
 
 def formatted_lines(doc):
     return [
-        (p.style.value, str(p)) for p in doc.contents
+        (p.style.value, "".join(show_str_formatting(s) for s in p.contents))
+        for p in doc.contents
     ]
 
 
@@ -59,20 +61,22 @@ def test_list():
 
 def test_inline_formats():
     doc = extract_doc(DATA_PATH / "Normal_A_stroke_2_layers_v3.3.2.rm")
-    lines = [
-        (p.style.value, [strip_ids(x) for x in p.contents])
-        for p in doc.contents
-    ]
+    lines = formatted_lines(doc)
     assert lines == [
-        (ParagraphStyle.PLAIN, ["A"]),
-        (ParagraphStyle.PLAIN, ["v3.2.2"]),
-        (ParagraphStyle.PLAIN, ["Normal ", BoldSpan(["bold"]), " ", ItalicSpan(["italic"])]),
-        (ParagraphStyle.PLAIN, [BoldSpan(["Bold"]), " ", ItalicSpan(["italic"]), " normal"]),
-        (ParagraphStyle.BOLD, ["Bold line"]),
-        (ParagraphStyle.PLAIN, ["Normal line"]),
-        (ParagraphStyle.HEADING, ["Heading line"]),
+        (ParagraphStyle.PLAIN, "A"),
+        (ParagraphStyle.PLAIN, "v3.2.2"),
+        (
+            ParagraphStyle.PLAIN,
+            "Normal <b>bold</b> <i>italic</i>",
+        ),
+        (
+            ParagraphStyle.PLAIN,
+            "<b>Bold</b> <i>italic</i> normal",
+        ),
+        (ParagraphStyle.BOLD, "Bold line"),
+        (ParagraphStyle.PLAIN, "Normal line"),
+        (ParagraphStyle.HEADING, "Heading line"),
     ]
-
 
 
 def test_simple_text_document():
@@ -81,7 +85,7 @@ def test_simple_text_document():
         expected = f.read()
 
     output_buf = BytesIO()
-    author_id = UUID('495ba59f-c943-2b5c-b455-3682f6948906')
+    author_id = UUID("495ba59f-c943-2b5c-b455-3682f6948906")
     write_blocks(
         output_buf, simple_text_document("AB", author_id), options={"version": "3.0"}
     )
