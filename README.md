@@ -10,6 +10,8 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+### v0.5.0
+
 Breaking changes:
 - The `start` property of `GlyphRange` items is now optional
   ([#15](https://github.com/ricklupton/rmscene/pull/15/)).
