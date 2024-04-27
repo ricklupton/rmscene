@@ -439,6 +439,8 @@ class SceneItemBlock(Block):
             subclass = SceneLineItemBlock
         elif block_type == SceneTextItemBlock.BLOCK_TYPE:
             subclass = SceneTextItemBlock
+        elif block_type == SceneTombstoneItemBlock.BLOCK_TYPE:
+            subclass = SceneTombstoneItemBlock
         else:
             raise ValueError(
                 "unknown scene type %d in %s" % (block_type, stream.current_block)
@@ -542,6 +544,17 @@ def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
             stream.data.write_float64(rect.y)
             stream.data.write_float64(rect.w)
             stream.data.write_float64(rect.h)
+
+
+class SceneTombstoneItemBlock(SceneItemBlock):
+    BLOCK_TYPE: tp.ClassVar = 0x08
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader):
+        pass
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value):
+        pass
 
 
 class SceneGlyphItemBlock(SceneItemBlock):
