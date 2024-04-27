@@ -217,7 +217,7 @@ class PageInfoBlock(Block):
     merges_count: int
     text_chars_count: int
     text_lines_count: int
-    _unknown: int = 0
+    type_folio_use_count: int = 0
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> PageInfoBlock:
@@ -230,7 +230,7 @@ class PageInfoBlock(Block):
             text_lines_count=stream.read_int(4),
         )
         if stream.bytes_remaining_in_block():
-            info._unknown = stream.read_int(5)
+            info.type_folio_use_count = stream.read_int(5)
         return info
 
     def to_stream(self, writer: TaggedBlockWriter):
@@ -241,7 +241,7 @@ class PageInfoBlock(Block):
         writer.write_int(4, self.text_lines_count)
         version = writer.options.get("version", Version("9999"))
         if version >= Version("3.2.2"):
-            writer.write_int(5, self._unknown)
+            writer.write_int(5, self.type_folio_use_count)
 
 
 @dataclass
