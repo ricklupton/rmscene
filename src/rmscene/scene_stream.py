@@ -104,9 +104,7 @@ class SceneInfo(Block):
     BLOCK_TYPE: tp.ClassVar = 0x0D
 
     current_layer: LwwValue[CrdtId]
-
     background_visible: LwwValue[bool]
-
     root_document_visible: LwwValue[bool]
 
     @classmethod
