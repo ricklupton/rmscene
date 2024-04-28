@@ -103,44 +103,26 @@ class UnreadableBlock(Block):
 class SceneInfo(Block):
     BLOCK_TYPE: tp.ClassVar = 0x0D
 
-    current_layer_timestamp: CrdtId
-    current_layer: CrdtId
+    current_layer: LwwValue[CrdtId]
 
-    background_visible_timestamp: CrdtId
-    background_visible: bool
+    background_visible: LwwValue[bool]
 
-    root_document_visible_timestamp: CrdtId
-    root_document_visible: bool
+    root_document_visible: LwwValue[bool]
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
-        with stream.read_subblock(1):
-            current_layer_timestamp = stream.read_id(1)
-            current_layer = stream.read_id(2)
-        with stream.read_subblock(2):
-            background_visible_timestamp = stream.read_id(1)
-            background_visible = stream.read_bool(2)
-        with stream.read_subblock(3):
-            root_document_visible_timestamp = stream.read_id(1)
-            root_document_visible = stream.read_bool(2)
+        current_layer = stream.read_lww_id(1)
+        background_visible = stream.read_lww_bool(2)
+        root_document_visible = stream.read_lww_bool(3)
 
-        return SceneInfo(current_layer_timestamp=current_layer_timestamp,
-                         current_layer=current_layer,
-                         background_visible_timestamp=background_visible_timestamp,
+        return SceneInfo(current_layer=current_layer,
                          background_visible=background_visible,
-                         root_document_visible_timestamp=root_document_visible_timestamp,
                          root_document_visible=root_document_visible)
 
     def to_stream(self, writer: TaggedBlockWriter):
-        with writer.write_subblock(1):
-            writer.data.write_crdt_id(self.current_layer_timestamp)
-            writer.data.write_crdt_id(self.current_layer)
-        with writer.write_subblock(2):
-            writer.data.write_crdt_id(self.background_visible_timestamp)
-            writer.data.write_bool(self.background_visible)
-        with writer.write_subblock(3):
-            writer.data.write_crdt_id(self.root_document_visible_timestamp)
-            writer.data.write_bool(self.root_document_visible)
+        writer.write_lww_id(1, self.current_layer)
+        writer.write_lww_bool(2, self.background_visible)
+        writer.write_lww_bool(3, self.root_document_visible)
 
 
 @dataclass
