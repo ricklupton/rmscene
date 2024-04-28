@@ -399,7 +399,12 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     # XXX unused
     timestamp = stream.read_id(6)
 
-    return si.Line(color, tool, points, thickness_scale, starting_length)
+    if stream.bytes_remaining_in_block() >= 3:
+        move_id = stream.read_id(7)
+    else:
+        move_id = None
+
+    return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
 
 
 def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
@@ -415,6 +420,8 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     # XXX didn't save
     timestamp = CrdtId(0, 1)
     writer.write_id(6, timestamp)
+    if line.move_id is not None:
+        writer.write_id(7, line.move_id)
 
 
 @dataclass
