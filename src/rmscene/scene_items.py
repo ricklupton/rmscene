@@ -127,7 +127,7 @@ class Line(SceneItem):
     points: list[Point]
     thickness_scale: float
     starting_length: float
-    move_id: CrdtId
+    move_id: tp.Optional[CrdtId] = None
 
 
 ## Text

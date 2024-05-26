@@ -103,6 +103,10 @@ class UnreadableBlock(Block):
 class SceneInfo(Block):
     BLOCK_TYPE: tp.ClassVar = 0x0D
 
+    def version_info(self, _) -> tuple[int, int]:
+        """Return (min_version, current_version) to use when writing."""
+        return (0, 1)
+
     current_layer: LwwValue[CrdtId]
     background_visible: LwwValue[bool]
     root_document_visible: LwwValue[bool]
@@ -187,6 +191,12 @@ class MigrationInfoBlock(Block):
 @dataclass
 class TreeNodeBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x02
+
+    def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
+        """Return (min_version, current_version) to use when writing."""
+        version = writer.options.get("version", Version("9999"))
+        # XXX this is a guess about which version this changed in
+        return (1, 2) if (version >= Version("3.4")) else (1, 1)
 
     group: si.Group
 
