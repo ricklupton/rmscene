@@ -100,6 +100,34 @@ class UnreadableBlock(Block):
 
 
 @dataclass
+class SceneInfo(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x0D
+
+    def version_info(self, _) -> tuple[int, int]:
+        """Return (min_version, current_version) to use when writing."""
+        return (0, 1)
+
+    current_layer: LwwValue[CrdtId]
+    background_visible: LwwValue[bool]
+    root_document_visible: LwwValue[bool]
+
+    @classmethod
+    def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
+        current_layer = stream.read_lww_id(1)
+        background_visible = stream.read_lww_bool(2)
+        root_document_visible = stream.read_lww_bool(3)
+
+        return SceneInfo(current_layer=current_layer,
+                         background_visible=background_visible,
+                         root_document_visible=root_document_visible)
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        writer.write_lww_id(1, self.current_layer)
+        writer.write_lww_bool(2, self.background_visible)
+        writer.write_lww_bool(3, self.root_document_visible)
+
+
+@dataclass
 class AuthorIdsBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x09
 
@@ -164,6 +192,12 @@ class MigrationInfoBlock(Block):
 class TreeNodeBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x02
 
+    def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
+        """Return (min_version, current_version) to use when writing."""
+        version = writer.options.get("version", Version("9999"))
+        # XXX this is a guess about which version this changed in
+        return (1, 2) if (version >= Version("3.4")) else (1, 1)
+
     group: si.Group
 
     @classmethod
@@ -217,7 +251,7 @@ class PageInfoBlock(Block):
     merges_count: int
     text_chars_count: int
     text_lines_count: int
-    _unknown: int = 0
+    type_folio_use_count: int = 0
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> PageInfoBlock:
@@ -230,7 +264,7 @@ class PageInfoBlock(Block):
             text_lines_count=stream.read_int(4),
         )
         if stream.bytes_remaining_in_block():
-            info._unknown = stream.read_int(5)
+            info.type_folio_use_count = stream.read_int(5)
         return info
 
     def to_stream(self, writer: TaggedBlockWriter):
@@ -241,7 +275,7 @@ class PageInfoBlock(Block):
         writer.write_int(4, self.text_lines_count)
         version = writer.options.get("version", Version("9999"))
         if version >= Version("3.2.2"):
-            writer.write_int(5, self._unknown)
+            writer.write_int(5, self.type_folio_use_count)
 
 
 @dataclass
@@ -355,7 +389,12 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     # XXX unused
     timestamp = stream.read_id(6)
 
-    return si.Line(color, tool, points, thickness_scale, starting_length)
+    if stream.bytes_remaining_in_block() >= 3:
+        move_id = stream.read_id(7)
+    else:
+        move_id = None
+
+    return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
 
 
 def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
@@ -371,6 +410,8 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     # XXX didn't save
     timestamp = CrdtId(0, 1)
     writer.write_id(6, timestamp)
+    if line.move_id is not None:
+        writer.write_id(7, line.move_id)
 
 
 @dataclass
@@ -395,6 +436,8 @@ class SceneItemBlock(Block):
             subclass = SceneLineItemBlock
         elif block_type == SceneTextItemBlock.BLOCK_TYPE:
             subclass = SceneTextItemBlock
+        elif block_type == SceneTombstoneItemBlock.BLOCK_TYPE:
+            subclass = SceneTombstoneItemBlock
         else:
             raise ValueError(
                 "unknown scene type %d in %s" % (block_type, stream.current_block)
@@ -498,6 +541,17 @@ def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
             stream.data.write_float64(rect.y)
             stream.data.write_float64(rect.w)
             stream.data.write_float64(rect.h)
+
+
+class SceneTombstoneItemBlock(SceneItemBlock):
+    BLOCK_TYPE: tp.ClassVar = 0x08
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader):
+        pass
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value):
+        pass
 
 
 class SceneGlyphItemBlock(SceneItemBlock):

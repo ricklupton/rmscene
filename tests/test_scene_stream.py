@@ -45,6 +45,7 @@ LINES_V2_FILES = [
         ("Lines_v2_updated.rm", "3.2"),  # extra 7fXXXX part of Line data was added
         ("Wikipedia_highlighted_p1.rm", "3.1"),
         ("Wikipedia_highlighted_p2.rm", "3.1"),
+        ("With_SceneInfo_Block.rm", "3.4"),  # XXX version?
     ],
 )
 def test_full_roundtrip(test_file, version):
@@ -259,15 +260,17 @@ def test_write_blocks():
 
 
 def test_blocks_keep_unknown_data():
-    # The "7f 010f" is new, unknown data
+    # The "8f 010f" is represents new, unknown data -- note that this might need
+    # to be changed in future if the next id starts to actually be used in a
+    # future update!
     data_hex = """
-    56000000 00020205
+    59000000 00020205
     1f 0219
     2f 021e
     3f 0000
     4f 0000
     54 0000 0000
-    6c 4000 0000
+    6c 4300 0000
        03
        14 0f000000
        24 00000000
@@ -278,11 +281,12 @@ def test_blocks_keep_unknown_data():
           83c2622d 30c30000 08000000
        6f 0001
        7f 010f
+       8f 0101
     """
     buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
     block = next(read_blocks(buf))
     assert isinstance(block, SceneLineItemBlock)
-    assert block.extra_data == bytes.fromhex("7f 010f")
+    assert block.extra_data == bytes.fromhex("8f 0101")
 
 
 def test_error_in_block_contained():
