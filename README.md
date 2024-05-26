@@ -10,9 +10,15 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+New features:
+
+- Add support for new blocks: `0x0D` (SceneInfo) and `0x08` (SceneTombstoneItemBlock) ([#24](https://github.com/ricklupton/rmscene/pull/24/))
+- Add support for `move_id` field on some SceneLineItems ([#24](https://github.com/ricklupton/rmscene/pull/24/))
+
 ### v0.5.0
 
 Breaking changes:
+
 - The `start` property of `GlyphRange` items is now optional
   ([#15](https://github.com/ricklupton/rmscene/pull/15/)).
 - The representation of formatted text spans has changed. Rather than
@@ -22,6 +28,7 @@ Breaking changes:
   the resulting data structure.
 
 New features:
+
 - Improved error recovery. An error during parsing, or an unknown block type,
   results in an `UnreadableBlock` containing the data that could not be read, so
   that parsing of other blocks can continue.
@@ -33,6 +40,7 @@ New features:
   in the block.
   
 Other changes and fixes:
+
 - The `value` attribute of scene item blocks, which was not being used, has been
   removed.
 - Check more carefully for sub-blocks
@@ -53,6 +61,7 @@ Breaking changes:
   values are added. Replaces `"line_version"` option.
   
 New features:
+
 - Parse text formatting information (bold and italic) introduced in reMarkable
   software version 3.3.
 
@@ -90,8 +99,9 @@ Other changes:
 
 ## Acknowledgements
 
-https://github.com/ddvk/reader helped a lot in figuring out the structure and meaning of the files.
+https://github.com/ddvk/reader helped a lot in figuring out the structure and meaning of the files.  [@adq](https://github.com/adq) discovered a means to get debug output (see [issue 25](https://github.com/ricklupton/rmscene/issues/25)) which is very helpful for understanding the format.
 
 Contributors:
 - [@Azeirah](https://github.com/Azeirah) -- code and reporting issues
+- [@adq](https://github.com/adq) -- code and reporting issues
 - [@dotlambda](https://github.com/dotlambda) -- packaging
