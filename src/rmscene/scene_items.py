@@ -146,6 +146,7 @@ class ParagraphStyle(enum.IntEnum):
     BULLET = 4
     BULLET2 = 5
     CHECKBOX = 6
+    CHECKBOX_CHECKED = 7
 
 
 END_MARKER = CrdtId(0, 0)
