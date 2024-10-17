@@ -6,22 +6,22 @@ With help from ddvk's v6 reader, and enum values from remt.
 
 from __future__ import annotations
 
+import logging
+import math
+import typing as tp
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
-import math
+from dataclasses import KW_ONLY, dataclass, replace
 from uuid import UUID, uuid4
-from dataclasses import dataclass, replace, KW_ONLY
-import logging
-import typing as tp
 
 from packaging.version import Version
 
-from .tagged_block_common import CrdtId, LwwValue, UnexpectedBlockError
-from .tagged_block_reader import TaggedBlockReader, MainBlockInfo
-from .tagged_block_writer import TaggedBlockWriter
+from . import scene_items as si
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 from .scene_tree import SceneTree
-from . import scene_items as si
+from .tagged_block_common import CrdtId, LwwValue, TagType, UnexpectedBlockError
+from .tagged_block_reader import MainBlockInfo, TaggedBlockReader
+from .tagged_block_writer import TaggedBlockWriter
 
 _logger = logging.getLogger(__name__)
 
@@ -390,7 +390,12 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     timestamp = stream.read_id(6)
 
     if stream.bytes_remaining_in_block() >= 3:
-        move_id = stream.read_id(7)
+        try:
+            move_id = stream.read_id(7)
+        except UnexpectedBlockError as _:
+            # This part seems to be related to the shader tool.
+            stream.data.read_tag(8, TagType.Byte4)
+            move_id = stream.data.read_crdt_id()
     else:
         move_id = None
 
