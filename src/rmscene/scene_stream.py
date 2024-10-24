@@ -393,9 +393,7 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
         try:
             move_id = stream.read_id(7)
         except UnexpectedBlockError as _:
-            # This part seems to be related to the shader tool.
-            stream.data.read_tag(8, TagType.Byte4)
-            move_id = stream.data.read_crdt_id()
+            move_id = None
     else:
         move_id = None
 
