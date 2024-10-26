@@ -83,6 +83,8 @@ class PenColor(enum.IntEnum):
     GREEN_2 = 10
     CYAN = 11
     MAGENTA = 12
+    
+    YELLOW_2 = 13
 
 
 @enum.unique
