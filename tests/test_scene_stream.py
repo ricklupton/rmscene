@@ -46,6 +46,7 @@ LINES_V2_FILES = [
         ("Wikipedia_highlighted_p1.rm", "3.1"),
         ("Wikipedia_highlighted_p2.rm", "3.1"),
         ("With_SceneInfo_Block.rm", "3.4"),  # XXX version?
+        ("Color_and_tool_v3.14.4.rm", "3.14"),
     ],
 )
 def test_full_roundtrip(test_file, version):
