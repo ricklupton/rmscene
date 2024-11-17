@@ -14,6 +14,7 @@ New features:
 
 - Add support for new blocks: `0x0D` (SceneInfo) and `0x08` (SceneTombstoneItemBlock) ([#24](https://github.com/ricklupton/rmscene/pull/24/))
 - Add support for `move_id` field on some SceneLineItems ([#24](https://github.com/ricklupton/rmscene/pull/24/))
+- Add support for new pen types and colours ([#31](https://github.com/ricklupton/rmscene/pull/31))
 
 ### v0.5.0
 
@@ -105,3 +106,4 @@ Contributors:
 - [@Azeirah](https://github.com/Azeirah) -- code and reporting issues
 - [@adq](https://github.com/adq) -- code and reporting issues
 - [@dotlambda](https://github.com/dotlambda) -- packaging
+- [@ChenghaoMou](https://github.com/ChenghaoMou)
