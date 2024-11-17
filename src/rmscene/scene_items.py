@@ -1,14 +1,13 @@
 """Data structures for the contents of a scene."""
 
-from dataclasses import dataclass, field
 import enum
 import logging
 import typing as tp
+from dataclasses import dataclass, field
 
-from .tagged_block_common import CrdtId, LwwValue
 from .crdt_sequence import CrdtSequence
+from .tagged_block_common import CrdtId, LwwValue
 from .text import expand_text_items
-
 
 _logger = logging.getLogger(__name__)
 
@@ -76,6 +75,17 @@ class PenColor(enum.IntEnum):
 
     GRAY_OVERLAP = 8
 
+    # All highlight colors share the same value.
+    # There is also yet unknown extra data in the block
+    # that might contain additional color information.
+    HIGHLIGHT = 9
+
+    GREEN_2 = 10
+    CYAN = 11
+    MAGENTA = 12
+    
+    YELLOW_2 = 13
+
 
 @enum.unique
 class Pen(enum.IntEnum):
@@ -104,6 +114,7 @@ class Pen(enum.IntEnum):
     PAINTBRUSH_2 = 12
     PENCIL_1 = 1
     PENCIL_2 = 14
+    SHADER = 23
 
     @classmethod
     def is_highlighter(cls, value: int) -> bool:
