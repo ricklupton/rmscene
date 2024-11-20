@@ -71,6 +71,17 @@ def test_unknown_id():
     assert result1 == [cid(28), cid(31), cid(33), cid(15)]
 
 
+def test_unknown_id_at_right():
+    items = [
+        make_item(14, 0, 0, 0, "A"),
+        make_item(19, 14, 15, 0, "V"),
+        # item 15 is not defined -- this shouldn't happen, as there should be a
+        # tombstone, but don't want to raise errors in this case
+    ]
+    result = list(CrdtSequence(items))
+    assert result == [cid(14), cid(19)]
+
+
 def test_iterates_in_order():
     # Order should be "AB"
     items = [

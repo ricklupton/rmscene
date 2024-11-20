@@ -2,12 +2,15 @@
 
 """
 
+import logging
 import typing as tp
 from typing import Iterable
 from collections import defaultdict
 from dataclasses import dataclass
 
 from .tagged_block_common import CrdtId
+
+_logger = logging.getLogger(__name__)
 
 
 # If the type constraint is for a CrdtSequenceItem[Superclass], then a
@@ -108,7 +111,9 @@ def toposort_items(items: Iterable[CrdtSequenceItem]) -> Iterable[CrdtId]:
 
     def _side_id(item, side):
         side_id = getattr(item, f"{side}_id")
-        if side_id == END_MARKER:
+        if side_id == END_MARKER or side_id not in item_dict:
+            if side_id != END_MARKER:
+                _logger.debug("Ignoring unknown %s_id %s of %s", side, side_id, item)
             return "__start" if side == "left" else "__end"
         else:
             return side_id
