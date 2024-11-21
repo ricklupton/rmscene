@@ -235,16 +235,13 @@ def test_blocks_roundtrip(block):
     writer = TaggedBlockWriter(buf)
     reader = TaggedBlockReader(buf)
 
-    # Use 4 as a fallback -- it only matters for the SceneItem blocks
-    block_type = getattr(block, "BLOCK_TYPE", 4)
-    with writer.write_block(block_type, 1, 1):
-        block.to_stream(writer)
-
+    block.write(writer)
     buf.seek(0)
     logger.info("After writing block %s", type(block))
     logger.info("Buffer: %s", buf.getvalue().hex())
-    with reader.read_block():
-        block2 = block.from_stream(reader)
+
+    block2 = Block.read(reader)
+
     assert block2 == block
 
 
@@ -260,7 +257,28 @@ def test_write_blocks():
     assert buf.getvalue()[43:].hex() == "05000000000101001f01012101"
 
 
-def test_blocks_keep_unknown_data():
+def test_blocks_keep_unknown_data_in_main_block():
+    # The "E1 FF" is represents new, unknown data -- note that this might need
+    # to be changed in future if the next id starts to actually be used in a
+    # future update!
+    data_hex = """
+    21000000 0000010D
+    1C 06000000
+       1F 0000
+       2F 0000
+    2C 05000000
+       1F 0000 21 01
+    3C 05000000
+       1F 0000 21 01
+    E1 FF
+    """
+    buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
+    block = next(read_blocks(buf))
+    assert isinstance(block, SceneInfo)
+    assert block.extra_data == bytes.fromhex("E1 FF")
+
+
+def test_blocks_keep_unknown_data_in_value_subblock():
     # The "8f 010f" is represents new, unknown data -- note that this might need
     # to be changed in future if the next id starts to actually be used in a
     # future update!
@@ -287,7 +305,7 @@ def test_blocks_keep_unknown_data():
     buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
     block = next(read_blocks(buf))
     assert isinstance(block, SceneLineItemBlock)
-    assert block.extra_data == bytes.fromhex("8f 0101")
+    assert block.extra_value_data == bytes.fromhex("8f 0101")
 
 
 def test_error_in_block_contained():
@@ -340,6 +358,7 @@ st.register_type_strategy(CrdtId, crdt_id_strategy)
 author_ids_block_strategy = st.builds(
     AuthorIdsBlock,
     st.dictionaries(st.integers(min_value=0, max_value=65535), st.uuids()),
+    extra_data=st.binary()
 )
 
 block_strategy = st.one_of(
@@ -356,15 +375,11 @@ def test_blocks_roundtrip_2(block):
     writer = TaggedBlockWriter(buf)
     reader = TaggedBlockReader(buf)
 
-    # Mock header
-    with writer.write_block(4, 1, 1):
-        block.to_stream(writer)
-
+    block.write(writer)
     buf.seek(0)
     logger.info("After writing block %s", type(block))
     logger.info("Buffer: %s", buf.getvalue().hex())
-    with reader.read_block():
-        block2 = block.from_stream(reader)
+    block2 = Block.read(reader)
     assert block2 == block
 
 
