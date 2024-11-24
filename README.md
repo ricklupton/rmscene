@@ -12,6 +12,7 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 Fixes:
 - Fix AssertionError when some ids are missing in a `CrdtSequence` ([#36](https://github.com/ricklupton/rmscene/pull/36))
+- Fix ValueError when the node_id is missing in a `SceneGroupItemBlock` ([#16](https://github.com/ricklupton/rmscene/issues/16)) 
 
 ### v0.6.0
 
