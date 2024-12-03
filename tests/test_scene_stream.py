@@ -33,21 +33,22 @@ LINES_V2_FILES = [
 ]
 
 
-@pytest.mark.parametrize(
-    "test_file,version",
-    [
-        ("Normal_AB.rm", "3.0"),
-        ("Normal_A_stroke_2_layers.rm", "3.0"),
-        ("Normal_A_stroke_2_layers_v3.2.2.rm", "3.2.2"),
-        ("Normal_A_stroke_2_layers_v3.3.2.rm", "3.3.2"),
-        ("Bold_Heading_Bullet_Normal.rm", "3.0"),
-        ("Lines_v2.rm", "3.1"),
-        ("Lines_v2_updated.rm", "3.2"),  # extra 7fXXXX part of Line data was added
-        ("Wikipedia_highlighted_p1.rm", "3.1"),
-        ("Wikipedia_highlighted_p2.rm", "3.1"),
-        ("With_SceneInfo_Block.rm", "3.4"),  # XXX version?
-    ],
-)
+TEST_FILES_AND_VERSIONS = [
+    ("Normal_AB.rm", "3.0"),
+    ("Normal_A_stroke_2_layers.rm", "3.0"),
+    ("Normal_A_stroke_2_layers_v3.2.2.rm", "3.2.2"),
+    ("Normal_A_stroke_2_layers_v3.3.2.rm", "3.3.2"),
+    ("Bold_Heading_Bullet_Normal.rm", "3.0"),
+    ("Lines_v2.rm", "3.1"),
+    ("Lines_v2_updated.rm", "3.2"),  # extra 7fXXXX part of Line data was added
+    ("Wikipedia_highlighted_p1.rm", "3.1"),
+    ("Wikipedia_highlighted_p2.rm", "3.1"),
+    ("With_SceneInfo_Block.rm", "3.4"),  # XXX version?
+    ("Color_and_tool_v3.14.4.rm", "3.14"),
+]
+
+
+@pytest.mark.parametrize("test_file,version", TEST_FILES_AND_VERSIONS)
 def test_full_roundtrip(test_file, version):
     with open(DATA_PATH / test_file, "rb") as f:
         data = f.read()
@@ -65,6 +66,28 @@ def test_full_roundtrip(test_file, version):
     write_blocks(output_buf, read_blocks(input_buf), options)
 
     assert _hex_lines(input_buf.getvalue()) == _hex_lines(output_buf.getvalue())
+
+
+# FIXME: remove xfail when parsing updated
+
+TEST_FILES_FOR_FULL_PARSING = [
+    pytest.param(
+        filename,
+        marks=pytest.mark.xfail if filename == "Color_and_tool_v3.14.4.rm" else [],
+    )
+    for filename, _ in TEST_FILES_AND_VERSIONS
+]
+
+
+@pytest.mark.parametrize("test_file", TEST_FILES_FOR_FULL_PARSING)
+def test_files_fully_parsed(test_file):
+    with open(DATA_PATH / test_file, "rb") as f:
+        result = list(read_blocks(f))
+
+    # Check none of the blocks were unreadable and do not have extra data
+    for block in result:
+        assert not isinstance(block, UnreadableBlock)
+        assert not block.extra_data
 
 
 def test_normal_ab():
@@ -234,16 +257,13 @@ def test_blocks_roundtrip(block):
     writer = TaggedBlockWriter(buf)
     reader = TaggedBlockReader(buf)
 
-    # Use 4 as a fallback -- it only matters for the SceneItem blocks
-    block_type = getattr(block, "BLOCK_TYPE", 4)
-    with writer.write_block(block_type, 1, 1):
-        block.to_stream(writer)
-
+    block.write(writer)
     buf.seek(0)
     logger.info("After writing block %s", type(block))
     logger.info("Buffer: %s", buf.getvalue().hex())
-    with reader.read_block():
-        block2 = block.from_stream(reader)
+
+    block2 = Block.read(reader)
+
     assert block2 == block
 
 
@@ -259,7 +279,28 @@ def test_write_blocks():
     assert buf.getvalue()[43:].hex() == "05000000000101001f01012101"
 
 
-def test_blocks_keep_unknown_data():
+def test_blocks_keep_unknown_data_in_main_block():
+    # The "E1 FF" is represents new, unknown data -- note that this might need
+    # to be changed in future if the next id starts to actually be used in a
+    # future update!
+    data_hex = """
+    21000000 0000010D
+    1C 06000000
+       1F 0000
+       2F 0000
+    2C 05000000
+       1F 0000 21 01
+    3C 05000000
+       1F 0000 21 01
+    E1 FF
+    """
+    buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
+    block = next(read_blocks(buf))
+    assert isinstance(block, SceneInfo)
+    assert block.extra_data == bytes.fromhex("E1 FF")
+
+
+def test_blocks_keep_unknown_data_in_value_subblock():
     # The "8f 010f" is represents new, unknown data -- note that this might need
     # to be changed in future if the next id starts to actually be used in a
     # future update!
@@ -286,7 +327,7 @@ def test_blocks_keep_unknown_data():
     buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
     block = next(read_blocks(buf))
     assert isinstance(block, SceneLineItemBlock)
-    assert block.extra_data == bytes.fromhex("8f 0101")
+    assert block.extra_value_data == bytes.fromhex("8f 0101")
 
 
 def test_error_in_block_contained():
@@ -339,6 +380,7 @@ st.register_type_strategy(CrdtId, crdt_id_strategy)
 author_ids_block_strategy = st.builds(
     AuthorIdsBlock,
     st.dictionaries(st.integers(min_value=0, max_value=65535), st.uuids()),
+    extra_data=st.binary(),
 )
 
 block_strategy = st.one_of(
@@ -355,15 +397,11 @@ def test_blocks_roundtrip_2(block):
     writer = TaggedBlockWriter(buf)
     reader = TaggedBlockReader(buf)
 
-    # Mock header
-    with writer.write_block(4, 1, 1):
-        block.to_stream(writer)
-
+    block.write(writer)
     buf.seek(0)
     logger.info("After writing block %s", type(block))
     logger.info("Buffer: %s", buf.getvalue().hex())
-    with reader.read_block():
-        block2 = block.from_stream(reader)
+    block2 = Block.read(reader)
     assert block2 == block
 
 

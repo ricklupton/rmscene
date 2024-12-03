@@ -62,11 +62,44 @@ class Block(ABC):
                 return match
         return None
 
+    @classmethod
+    def read(self, reader: TaggedBlockReader) -> Optional[Block]:
+        """
+        Maybe parse a block from the reader stream.
+        """
+        with reader.read_block() as block_info:
+            if block_info is None:
+                return
+
+            block_type = Block.lookup(block_info.block_type)
+            if block_type:
+                try:
+                    block = block_type.from_stream(reader)
+                except Exception as e:
+                    _logger.warning("Error reading block: %s", e)
+                    reader.data.data.seek(block_info.offset)
+                    data = reader.data.read_bytes(block_info.size)
+                    block = UnreadableBlock(str(e), data, block_info)
+            else:
+                msg = (
+                    f"Unknown block type {block_info.block_type}. "
+                    f"Skipping {block_info.size} bytes."
+                )
+                _logger.warning(msg)
+                data = reader.data.read_bytes(block_info.size)
+                block = UnreadableBlock(msg, data, block_info)
+
+        # Keep any unparsed extra data
+        block.extra_data = block_info.extra_data
+        return block
+
     def write(self, writer: TaggedBlockWriter):
         """Write the block header and content to the stream."""
         min_version, current_version = self.version_info(writer)
         with writer.write_block(self.get_block_type(), min_version, current_version):
             self.to_stream(writer)
+            # Write any leftover extra data that wasn't parsed
+            writer.data.write_bytes(self.extra_data)
 
     @classmethod
     @abstractmethod
@@ -421,6 +454,7 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
 class SceneItemBlock(Block):
     parent_id: CrdtId
     item: CrdtSequenceItem
+    extra_value_data: bytes = b""
 
     ITEM_TYPE: tp.ClassVar[int] = 0
 
@@ -457,16 +491,16 @@ class SceneItemBlock(Block):
                 item_type = stream.data.read_uint8()
                 assert item_type == subclass.ITEM_TYPE
                 value = subclass.value_from_stream(stream)
-            # Keep known extra data
-            extra_data = block_info.extra_data
+            # Keep known extra data from within the value subblock
+            extra_value_data = block_info.extra_data
         else:
             value = None
-            extra_data = b""
+            extra_value_data = b""
 
         return subclass(
             parent_id,
             CrdtSequenceItem(item_id, left_id, right_id, deleted_length, value),
-            extra_data=extra_data,
+            extra_value_data=extra_value_data,
         )
 
     def to_stream(self, writer: TaggedBlockWriter):
@@ -482,7 +516,7 @@ class SceneItemBlock(Block):
                 writer.data.write_uint8(self.ITEM_TYPE)
                 self.value_to_stream(writer, self.item.value)
 
-                writer.data.write_bytes(self.extra_data)
+                writer.data.write_bytes(self.extra_value_data)
 
     @classmethod
     @abstractmethod
@@ -795,28 +829,12 @@ def _read_blocks(stream: TaggedBlockReader) -> Iterator[Block]:
     Parse blocks from reMarkable v6 file.
     """
     while True:
-        with stream.read_block() as block_info:
-            if block_info is None:
-                # no more blocks
-                return
-
-            block_type = Block.lookup(block_info.block_type)
-            if block_type:
-                try:
-                    yield block_type.from_stream(stream)
-                except Exception as e:
-                    _logger.warning("Error reading block: %s", e)
-                    stream.data.data.seek(block_info.offset)
-                    data = stream.data.read_bytes(block_info.size)
-                    yield UnreadableBlock(str(e), data, block_info)
-            else:
-                msg = (
-                    f"Unknown block type {block_info.block_type}. "
-                    f"Skipping {block_info.size} bytes."
-                )
-                _logger.warning(msg)
-                data = stream.data.read_bytes(block_info.size)
-                yield UnreadableBlock(msg, data, block_info)
+        maybe_block = Block.read(stream)
+        if maybe_block:
+            yield maybe_block
+        else:
+            # no more blocks
+            return
 
 
 def read_blocks(data: tp.BinaryIO) -> Iterator[Block]:
