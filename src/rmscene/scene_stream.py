@@ -886,6 +886,8 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
         elif isinstance(b, SceneGroupItemBlock):
             # Add this entry to children of parent_id
             node_id = b.item.value
+            if node_id is None:
+                continue
             if node_id not in tree:
                 raise ValueError(
                     "Node does not exist for SceneGroupItemBlock: %s" % node_id
