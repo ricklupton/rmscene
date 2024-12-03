@@ -110,3 +110,6 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository-url: https://test.pypi.org/legacy/
+        # Don't fail when this is another push to the same version. If we put
+        # the git hash in the version string, this could be removed.
+        skip-existing: true

@@ -11,7 +11,9 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 ### Unreleased
 
 Fixes:
+
 - Fix AssertionError when some ids are missing in a `CrdtSequence` ([#36](https://github.com/ricklupton/rmscene/pull/36))
+- Store any unparsed data in blocks as raw bytes to allow for round-trip saving of files written in a newer format than the parsing code knows about.
 
 ### v0.6.0
 
