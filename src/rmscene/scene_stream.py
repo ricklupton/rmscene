@@ -6,12 +6,14 @@ With help from ddvk's v6 reader, and enum values from remt.
 
 from __future__ import annotations
 
+import io
 import logging
 import math
 import typing as tp
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import KW_ONLY, dataclass, replace
+from typing import Optional
 from uuid import UUID, uuid4
 
 from packaging.version import Version
@@ -430,6 +432,35 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     else:
         move_id = None
 
+    if stream.bytes_remaining_in_block() >= 6:
+        # ? not sure what this is, seems fixed x84x01
+        unk = stream.data.read_bytes(2)
+        if unk != b"\x84\x01":
+            # reset to before the unknown bytes just in case
+            stream.data.data.seek(-2, io.SEEK_CUR)
+        else:
+            b = stream.data.read_uint8()
+            g = stream.data.read_uint8()
+            r = stream.data.read_uint8()
+            a = stream.data.read_uint8()
+
+            color = {
+                (255, 237, 117, 255): si.PenColor.HIGHLIGHT_YELLOW,
+                (190, 234, 254, 255): si.PenColor.HIGHLIGHT_BLUE,
+                (242, 158, 255, 255): si.PenColor.HIGHLIGHT_PINK,
+                (255, 195, 140, 255): si.PenColor.HIGHLIGHT_ORANGE,
+                (172, 255, 133, 255): si.PenColor.HIGHLIGHT_GREEN,
+                (199, 199, 198, 255): si.PenColor.HIGHLIGHT_GRAY,
+                (33, 30, 28, 64): si.PenColor.SHADER_GRAY,
+                (254, 178, 0, 115): si.PenColor.SHADER_ORANGE,
+                (192, 127, 210, 128): si.PenColor.SHADER_MAGENTA,
+                (48, 74, 224, 77): si.PenColor.SHADER_BLUE,
+                (194, 49, 50, 102): si.PenColor.SHADER_RED,
+                (145, 218, 113, 128): si.PenColor.SHADER_GREEN,
+                (250, 231, 25, 115): si.PenColor.SHADER_YELLOW,
+                (116, 210, 232, 102): si.PenColor.SHADER_CYAN,
+            }.get((r, g, b, a), color)
+
     return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
 
 
@@ -492,6 +523,7 @@ class SceneItemBlock(Block):
                 assert item_type == subclass.ITEM_TYPE
                 value = subclass.value_from_stream(stream)
             # Keep known extra data from within the value subblock
+
             extra_value_data = block_info.extra_data
         else:
             value = None

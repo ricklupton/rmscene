@@ -76,8 +76,7 @@ class PenColor(enum.IntEnum):
     GRAY_OVERLAP = 8
 
     # All highlight colors share the same value.
-    # There is also yet unknown extra data in the block
-    # that might contain additional color information.
+    # This is a placeholder
     HIGHLIGHT = 9
 
     GREEN_2 = 10
@@ -85,6 +84,24 @@ class PenColor(enum.IntEnum):
     MAGENTA = 12
     
     YELLOW_2 = 13
+
+    # HIGHLIGHT enumerated
+    HIGHLIGHT_YELLOW = 14
+    HIGHLIGHT_BLUE = 15
+    HIGHLIGHT_PINK = 16
+    HIGHLIGHT_ORANGE = 17
+    HIGHLIGHT_GREEN = 18
+    HIGHLIGHT_GRAY = 19
+
+    # SHADER enumerated
+    SHADER_GRAY = 20
+    SHADER_ORANGE = 21
+    SHADER_MAGENTA = 22
+    SHADER_BLUE = 23
+    SHADER_RED = 24
+    SHADER_GREEN = 25
+    SHADER_YELLOW = 26
+    SHADER_CYAN = 27
 
 
 @enum.unique
