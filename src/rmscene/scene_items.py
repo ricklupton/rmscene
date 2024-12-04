@@ -103,6 +103,24 @@ class PenColor(enum.IntEnum):
     SHADER_YELLOW = 26
     SHADER_CYAN = 27
 
+# colors hardcoded in rm files
+HIGHLIGHT_COLORMAP = {
+    (255, 237, 117, 255): PenColor.HIGHLIGHT_YELLOW,
+    (190, 234, 254, 255): PenColor.HIGHLIGHT_BLUE,
+    (242, 158, 255, 255): PenColor.HIGHLIGHT_PINK,
+    (255, 195, 140, 255): PenColor.HIGHLIGHT_ORANGE,
+    (172, 255, 133, 255): PenColor.HIGHLIGHT_GREEN,
+    (199, 199, 198, 255): PenColor.HIGHLIGHT_GRAY,
+    (33, 30, 28, 64): PenColor.SHADER_GRAY,
+    (254, 178, 0, 115): PenColor.SHADER_ORANGE,
+    (192, 127, 210, 128): PenColor.SHADER_MAGENTA,
+    (48, 74, 224, 77): PenColor.SHADER_BLUE,
+    (194, 49, 50, 102): PenColor.SHADER_RED,
+    (145, 218, 113, 128): PenColor.SHADER_GREEN,
+    (250, 231, 25, 115): PenColor.SHADER_YELLOW,
+    (116, 210, 232, 102): PenColor.SHADER_CYAN,
+}
+
 
 @enum.unique
 class Pen(enum.IntEnum):
