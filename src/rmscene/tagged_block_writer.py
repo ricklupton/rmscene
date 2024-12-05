@@ -186,3 +186,9 @@ class TaggedBlockWriter:
             self.data.write_bool(is_ascii)
             self.data.write_bytes(b)
             self.write_int(2, fmt)
+
+    def write_int_pair(self, index: int, value: tuple[int, int]):
+        """Read a sub block containing two uint32"""
+        with self.write_subblock(index):
+            self.data.write_uint32(value[0])
+            self.data.write_uint32(value[1])

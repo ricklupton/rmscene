@@ -10,6 +10,10 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+New feature:
+
+- Add support for `paper_size` field on some SceneInfo
+
 ### v0.6.1
 
 Fixes:
