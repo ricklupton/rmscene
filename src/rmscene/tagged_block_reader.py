@@ -347,3 +347,10 @@ class TaggedBlockReader:
                 fmt = None
 
             return string, fmt
+
+    def read_int_pair(self, index: int) -> tp.Optional[tuple[int, int]]:
+        """Read a sub block containing two uint32"""
+        with self.read_subblock(index):
+            first = self.data.read_uint32()
+            second = self.data.read_uint32()
+            return first, second
