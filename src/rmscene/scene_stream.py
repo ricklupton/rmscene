@@ -466,6 +466,14 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     writer.write_id(6, timestamp)
     if line.move_id is not None:
         writer.write_id(7, line.move_id)
+    
+    if line.color in si.HARDCODED_COLORMAP.values():
+        rgba = [key for key, value in si.HARDCODED_COLORMAP.items() if value == line.color][0]
+        writer.data.write_bytes(b"\x84\x01")
+        writer.data.write_uint8(rgba[2])
+        writer.data.write_uint8(rgba[1])
+        writer.data.write_uint8(rgba[0])
+        writer.data.write_uint8(rgba[3])
 
 
 @dataclass
