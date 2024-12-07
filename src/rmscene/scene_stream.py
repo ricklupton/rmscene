@@ -432,17 +432,21 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     else:
         move_id = None
 
+    # This is for the color information (highlight & shader)
     if stream.bytes_remaining_in_block() >= 6:
-        # ? not sure what this is, seems fixed x84x01
+        # not sure what this is, seems fixed x84x01
         unk = stream.data.read_bytes(2)
-        if unk != b"\x84\x01":
-            stream.data.data.seek(-2, io.SEEK_CUR)
+        b = stream.data.read_uint8()
+        g = stream.data.read_uint8()
+        r = stream.data.read_uint8()
+        a = stream.data.read_uint8()
+        rgba = (r, g, b, a)
+        
+        if unk != b"\x84\x01" or rgba not in si.HARDCODED_COLORMAP:
+            _logger.warning(f"Unhandled color {rgba} with prefix {unk}")
+            stream.data.data.seek(-6, io.SEEK_CUR)
         else:
-            b = stream.data.read_uint8()
-            g = stream.data.read_uint8()
-            r = stream.data.read_uint8()
-            a = stream.data.read_uint8()
-            color = si.HIGHLIGHT_COLORMAP.get((r, g, b, a), color)
+            color = si.HARDCODED_COLORMAP[rgba]
 
     return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
 

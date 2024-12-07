@@ -76,7 +76,7 @@ class PenColor(enum.IntEnum):
     GRAY_OVERLAP = 8
 
     # All highlight colors share the same value.
-    # This is a placeholder
+    # This is a placeholder, see HIGHLIGHT_COLORMAP for details.
     HIGHLIGHT = 9
 
     GREEN_2 = 10
@@ -103,8 +103,8 @@ class PenColor(enum.IntEnum):
     SHADER_YELLOW = 26
     SHADER_CYAN = 27
 
-# colors hardcoded in rm files
-HIGHLIGHT_COLORMAP = {
+# colors hardcoded in rm files for highlight and shader
+HARDCODED_COLORMAP = {
     (255, 237, 117, 255): PenColor.HIGHLIGHT_YELLOW,
     (190, 234, 254, 255): PenColor.HIGHLIGHT_BLUE,
     (242, 158, 255, 255): PenColor.HIGHLIGHT_PINK,
