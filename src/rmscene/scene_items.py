@@ -76,8 +76,7 @@ class PenColor(enum.IntEnum):
     GRAY_OVERLAP = 8
 
     # All highlight colors share the same value.
-    # There is also yet unknown extra data in the block
-    # that might contain additional color information.
+    # This is a placeholder, see the colormap below for details.
     HIGHLIGHT = 9
 
     GREEN_2 = 10
@@ -85,6 +84,42 @@ class PenColor(enum.IntEnum):
     MAGENTA = 12
     
     YELLOW_2 = 13
+
+    # HIGHLIGHT enumerated
+    HIGHLIGHT_YELLOW = 14
+    HIGHLIGHT_BLUE = 15
+    HIGHLIGHT_PINK = 16
+    HIGHLIGHT_ORANGE = 17
+    HIGHLIGHT_GREEN = 18
+    HIGHLIGHT_GRAY = 19
+
+    # SHADER enumerated
+    SHADER_GRAY = 20
+    SHADER_ORANGE = 21
+    SHADER_MAGENTA = 22
+    SHADER_BLUE = 23
+    SHADER_RED = 24
+    SHADER_GREEN = 25
+    SHADER_YELLOW = 26
+    SHADER_CYAN = 27
+
+# colors hardcoded in rm files for highlight and shader
+HARDCODED_COLORMAP = {
+    (255, 237, 117, 255): PenColor.HIGHLIGHT_YELLOW,
+    (190, 234, 254, 255): PenColor.HIGHLIGHT_BLUE,
+    (242, 158, 255, 255): PenColor.HIGHLIGHT_PINK,
+    (255, 195, 140, 255): PenColor.HIGHLIGHT_ORANGE,
+    (172, 255, 133, 255): PenColor.HIGHLIGHT_GREEN,
+    (199, 199, 198, 255): PenColor.HIGHLIGHT_GRAY,
+    (33, 30, 28, 64): PenColor.SHADER_GRAY,
+    (254, 178, 0, 115): PenColor.SHADER_ORANGE,
+    (192, 127, 210, 128): PenColor.SHADER_MAGENTA,
+    (48, 74, 224, 77): PenColor.SHADER_BLUE,
+    (194, 49, 50, 102): PenColor.SHADER_RED,
+    (145, 218, 113, 128): PenColor.SHADER_GREEN,
+    (250, 231, 25, 115): PenColor.SHADER_YELLOW,
+    (116, 210, 232, 102): PenColor.SHADER_CYAN,
+}
 
 
 @enum.unique

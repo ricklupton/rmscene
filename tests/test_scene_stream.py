@@ -45,6 +45,7 @@ TEST_FILES_AND_VERSIONS = [
     ("Wikipedia_highlighted_p2.rm", "3.1"),
     ("With_SceneInfo_Block.rm", "3.4"),  # XXX version?
     ("Color_and_tool_v3.14.4.rm", "3.14"),
+    ("More_color_highlight_shader_v3.15.4.2.rm", "3.15"),
 ]
 
 

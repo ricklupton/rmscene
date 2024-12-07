@@ -6,12 +6,14 @@ With help from ddvk's v6 reader, and enum values from remt.
 
 from __future__ import annotations
 
+import io
 import logging
 import math
 import typing as tp
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import KW_ONLY, dataclass, replace
+from typing import Optional
 from uuid import UUID, uuid4
 
 from packaging.version import Version
@@ -430,6 +432,22 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     else:
         move_id = None
 
+    # This is for the color information (highlight & shader)
+    if stream.bytes_remaining_in_block() >= 6:
+        # not sure what this is, seems fixed x84x01
+        unk = stream.data.read_bytes(2)
+        b = stream.data.read_uint8()
+        g = stream.data.read_uint8()
+        r = stream.data.read_uint8()
+        a = stream.data.read_uint8()
+        rgba = (r, g, b, a)
+        
+        if unk != b"\x84\x01" or rgba not in si.HARDCODED_COLORMAP:
+            _logger.warning(f"Unhandled color {rgba} with prefix {unk}")
+            stream.data.data.seek(-6, io.SEEK_CUR)
+        else:
+            color = si.HARDCODED_COLORMAP[rgba]
+
     return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
 
 
@@ -448,6 +466,14 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     writer.write_id(6, timestamp)
     if line.move_id is not None:
         writer.write_id(7, line.move_id)
+    
+    if line.color in si.HARDCODED_COLORMAP.values():
+        rgba = [key for key, value in si.HARDCODED_COLORMAP.items() if value == line.color][0]
+        writer.data.write_bytes(b"\x84\x01")
+        writer.data.write_uint8(rgba[2])
+        writer.data.write_uint8(rgba[1])
+        writer.data.write_uint8(rgba[0])
+        writer.data.write_uint8(rgba[3])
 
 
 @dataclass
@@ -492,6 +518,7 @@ class SceneItemBlock(Block):
                 assert item_type == subclass.ITEM_TYPE
                 value = subclass.value_from_stream(stream)
             # Keep known extra data from within the value subblock
+
             extra_value_data = block_info.extra_data
         else:
             value = None
