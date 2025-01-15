@@ -260,6 +260,7 @@ class DataStream:
 
 _T = tp.TypeVar("_T")
 
+
 # This makes sense to be frozen, since the value should not be changed without
 # updating the timestamp.
 @dataclass(eq=True, frozen=True)
