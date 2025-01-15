@@ -232,6 +232,7 @@ def test_read_glyph_range():
                     start=1536,
                     length=23,
                     text="display technology.[13]",
+                    rgba_color=None,
                     color=si.PenColor.YELLOW,
                     rectangles=[
                         si.Rectangle(
