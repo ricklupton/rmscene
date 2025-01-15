@@ -457,7 +457,16 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     else:
         move_id = None
 
-    return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
+    if color_id == si.PenColor.HIGHLIGHT:
+        try:
+            rgba_color = stream.read_color(8)
+        except UnexpectedBlockError:
+            rgba_color = None
+    else:
+        rgba_color = None
+    return si.Line(
+        rgba_color, color, tool, points, thickness_scale, starting_length, move_id
+    )
 
 
 def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
@@ -591,7 +600,14 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
             for _ in range(num_rects)
         ]
 
-    return si.GlyphRange(start, length, text, color, rectangles)
+    if color_id == si.PenColor.HIGHLIGHT:
+        try:
+            rgba_color = stream.read_color(8)
+        except UnexpectedBlockError:
+            rgba_color = None
+    else:
+        rgba_color = None
+    return si.GlyphRange(rgba_color, start, length, text, color, rectangles)
 
 
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):

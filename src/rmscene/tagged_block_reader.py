@@ -101,6 +101,15 @@ class TaggedBlockReader:
         result = self.data.read_uint32()
         return result
 
+    def read_color(self, index: int) -> tp.Tuple[int, ...]:
+        self.data.read_tag(index, TagType.Byte4)
+        color_bytes = self.data.read_bytes(4)
+        # reMarkable uses a BGRA format, convert to RGBA for ease of use
+        return tuple(
+            int(b)
+            for b in (color_bytes[2], color_bytes[1], color_bytes[0], color_bytes[3])
+        )
+
     def read_float(self, index: int) -> float:
         """Read a tagged 4-byte float."""
         self.data.read_tag(index, TagType.Byte4)
@@ -144,6 +153,15 @@ class TaggedBlockReader:
     ) -> tp.Optional[int]:
         """Read a tagged 4-byte unsigned integer, return `default` if not present."""
         return self._read_optional(self.read_int, index, default)
+
+    def read_color(self, index: int) -> tp.Tuple[int, ...]:
+        self.data.read_tag(index, TagType.Byte4)
+        color_bytes = self.data.read_bytes(4)
+        # reMarkable uses a BGRA format, convert to RGBA for ease of use
+        return tuple(
+            int(b)
+            for b in (color_bytes[2], color_bytes[1], color_bytes[0], color_bytes[3])
+        )
 
     def read_float_optional(
         self, index: int, default: tp.Optional[float] = None

@@ -133,6 +133,7 @@ class Point:
 
 @dataclass
 class Line(SceneItem):
+    rgba_color: tp.Optional[tp.Tuple[int, ...]]
     color: PenColor
     tool: Pen
     points: list[Point]
@@ -218,5 +219,6 @@ class GlyphRange(SceneItem):
     start: tp.Optional[int]
     length: int
     text: str
+    rgba_color: tp.Optional[tp.Tuple[int, ...]]
     color: PenColor
     rectangles: list[Rectangle]
