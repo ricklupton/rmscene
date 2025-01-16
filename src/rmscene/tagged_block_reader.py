@@ -103,7 +103,7 @@ class TaggedBlockReader:
 
     def read_color(self, index: int) -> tp.Tuple[int, ...]:
         self.data.read_tag(index, TagType.Byte4)
-        color_bytes = self.data.read_bytes(4)
+        color_bytes = self.data.read_bytes(4)[::-1]
         # reMarkable uses a ARGB format, convert to RGBA for ease of use
         return tuple(
             int(b)
@@ -156,7 +156,7 @@ class TaggedBlockReader:
 
     def read_color(self, index: int) -> tp.Tuple[int, ...]:
         self.data.read_tag(index, TagType.Byte4)
-        color_bytes = self.data.read_bytes(4)
+        color_bytes = self.data.read_bytes(4)[::-1]
         # reMarkable uses a ARGB format, convert to RGBA for ease of use
         return tuple(
             int(b)
