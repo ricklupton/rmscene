@@ -26,6 +26,7 @@ class TagType(enum.IntEnum):
     Length4 = 0xC
     Byte8 = 0x8
     Byte4 = 0x4
+    Byte2 = 0x2
     Byte1 = 0x1
 
 

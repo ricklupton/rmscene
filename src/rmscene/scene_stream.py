@@ -139,8 +139,13 @@ class SceneInfo(Block):
         current_layer = stream.read_lww_id(1)
         background_visible = stream.read_lww_bool(2)
         root_document_visible = stream.read_lww_bool(3)
+        try:
+            page_size = stream.read_first_second(5)
+        except UnexpectedBlockError:
+            page_size = None
         return SceneInfo(
             current_layer=current_layer,
+            page_size=page_size,
             background_visible=background_visible,
             root_document_visible=root_document_visible,
         )
@@ -155,6 +160,7 @@ class SceneInfo(Block):
         current_layer: LwwValue[CrdtId],
         background_visible: LwwValue[bool],
         root_document_visible: LwwValue[bool],
+        page_size: tp.Tuple[int, int],
         *,
         extra_data: bytes = b"",
     ):
@@ -162,6 +168,7 @@ class SceneInfo(Block):
         self.current_layer: LwwValue[CrdtId] = current_layer
         self.background_visible: LwwValue[bool] = background_visible
         self.root_document_visible: LwwValue[bool] = root_document_visible
+        self.page_size: tp.Tuple[int, int] = page_size
 
 
 class AuthorIdsBlock(Block):
@@ -931,6 +938,8 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
         elif isinstance(b, (SceneLineItemBlock, SceneGlyphItemBlock)):
             # Add this entry to children of parent_id
             tree.add_item(b.item, b.parent_id)
+        elif isinstance(b, SceneInfo):
+            tree.scene_info = b
         elif isinstance(b, RootTextBlock):
             if tree.root_text is not None:
                 _logger.error(

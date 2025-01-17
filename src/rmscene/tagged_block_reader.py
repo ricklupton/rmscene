@@ -75,6 +75,19 @@ class TaggedBlockReader:
         self.data.read_header()
 
     ## Read simple values
+    def read_first_second(self, index: int) -> tp.Tuple[int, int]:
+        self.data.read_tag(index, TagType.Length4)
+        first_second_bytes = [self.data.read_uint32() for _ in range(4)]
+        return first_second_bytes[1], first_second_bytes[2]
+
+    def read_color(self, index: int) -> tp.Tuple[int, ...]:
+        self.data.read_tag(index, TagType.Byte4)
+        color_bytes = self.data.read_bytes(4)[::-1]
+        # reMarkable uses a ARGB format, convert to RGBA for ease of use
+        return tuple(
+            int(b)
+            for b in (color_bytes[1], color_bytes[2], color_bytes[3], color_bytes[0])
+        )
 
     def read_id(self, index: int) -> CrdtId:
         """Read a tagged CRDT ID."""
@@ -100,15 +113,6 @@ class TaggedBlockReader:
         # TODO: is this supposed to be signed or unsigned?
         result = self.data.read_uint32()
         return result
-
-    def read_color(self, index: int) -> tp.Tuple[int, ...]:
-        self.data.read_tag(index, TagType.Byte4)
-        color_bytes = self.data.read_bytes(4)[::-1]
-        # reMarkable uses a ARGB format, convert to RGBA for ease of use
-        return tuple(
-            int(b)
-            for b in (color_bytes[1], color_bytes[2], color_bytes[3], color_bytes[0])
-        )
 
     def read_float(self, index: int) -> float:
         """Read a tagged 4-byte float."""
@@ -153,15 +157,6 @@ class TaggedBlockReader:
     ) -> tp.Optional[int]:
         """Read a tagged 4-byte unsigned integer, return `default` if not present."""
         return self._read_optional(self.read_int, index, default)
-
-    def read_color(self, index: int) -> tp.Tuple[int, ...]:
-        self.data.read_tag(index, TagType.Byte4)
-        color_bytes = self.data.read_bytes(4)[::-1]
-        # reMarkable uses a ARGB format, convert to RGBA for ease of use
-        return tuple(
-            int(b)
-            for b in (color_bytes[1], color_bytes[2], color_bytes[3], color_bytes[0])
-        )
 
     def read_float_optional(
         self, index: int, default: tp.Optional[float] = None
