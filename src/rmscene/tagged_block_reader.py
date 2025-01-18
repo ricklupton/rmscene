@@ -26,6 +26,8 @@ _logger = logging.getLogger(__name__)
 
 
 class BlockInfo:
+    "Base class for block/subblock info."
+
     def __init__(self, offset: int, size: int, *, extra_data: bytes = b""):
         self.offset: int = offset
         self.size: int = size
@@ -33,6 +35,8 @@ class BlockInfo:
 
 
 class MainBlockInfo(BlockInfo):
+    "Top-level block info."
+
     def __init__(
         self,
         offset: int,

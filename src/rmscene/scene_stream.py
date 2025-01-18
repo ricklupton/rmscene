@@ -34,6 +34,7 @@ _logger = logging.getLogger(__name__)
 class Block(ABC):
     BLOCK_TYPE: tp.ClassVar
 
+    # Store any unrecognised data we can't understand
     def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
         """Return (min_version, current_version) to use when writing."""
         return (1, 1)
@@ -108,6 +109,8 @@ class Block(ABC):
 
 
 class UnreadableBlock(Block):
+    """Represent a block which could not be read for some reason."""
+
     def get_block_type(self) -> int:
         return self.info.block_type
 
@@ -342,6 +345,7 @@ class PageInfoBlock(Block):
 class SceneTreeBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x01
 
+    # XXX not sure what the difference is
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneTreeBlock:
         "Parse scene tree block"
