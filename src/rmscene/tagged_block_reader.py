@@ -81,7 +81,7 @@ class TaggedBlockReader:
     ## Read simple values
     def read_first_second(self, index: int) -> tp.Tuple[int, int]:
         self.data.read_tag(index, TagType.Length4)
-        first_second_bytes = [self.data.read_uint32() for _ in range(4)]
+        first_second_bytes = [self.data.read_uint32() for _ in range(3)]
         return first_second_bytes[1], first_second_bytes[2]
 
     def read_color(self, index: int) -> tp.Tuple[int, ...]:
