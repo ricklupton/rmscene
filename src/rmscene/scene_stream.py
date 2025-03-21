@@ -140,38 +140,45 @@ class SceneInfo(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
         current_layer = stream.read_lww_id(1)
-        background_visible = stream.read_lww_bool(2)
-        root_document_visible = stream.read_lww_bool(3)
-        try:
-            page_size = stream.read_first_second(5)
-        except UnexpectedBlockError:
-            page_size = None
+        background_visible = (
+            stream.read_lww_bool(2) if stream.bytes_remaining_in_block() > 0 else None
+        )
+        root_document_visible = (
+            stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
+        )
+        paper_size = (
+            stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
+        )
         return SceneInfo(
             current_layer=current_layer,
-            page_size=page_size,
             background_visible=background_visible,
             root_document_visible=root_document_visible,
+            paper_size=paper_size,
         )
 
     def to_stream(self, writer: TaggedBlockWriter):
         writer.write_lww_id(1, self.current_layer)
-        writer.write_lww_bool(2, self.background_visible)
-        writer.write_lww_bool(3, self.root_document_visible)
+        if self.background_visible:
+            writer.write_lww_bool(2, self.background_visible)
+        if self.root_document_visible:
+            writer.write_lww_bool(3, self.root_document_visible)
+        if self.paper_size:
+            writer.write_int_pair(5, self.paper_size)
 
     def __init__(
         self,
         current_layer: LwwValue[CrdtId],
-        background_visible: LwwValue[bool],
-        root_document_visible: LwwValue[bool],
-        page_size: tp.Tuple[int, int],
+        background_visible: tp.Optional[LwwValue[bool]],
+        root_document_visible: tp.Optional[LwwValue[bool]],
+        paper_size: tp.Optional[tuple[int, int]],
         *,
         extra_data: bytes = b"",
     ):
         super().__init__(extra_data=extra_data)
         self.current_layer: LwwValue[CrdtId] = current_layer
-        self.background_visible: LwwValue[bool] = background_visible
-        self.root_document_visible: LwwValue[bool] = root_document_visible
-        self.page_size: tp.Tuple[int, int] = page_size
+        self.background_visible: tp.Optional[LwwValue[bool]] = background_visible
+        self.root_document_visible: tp.Optional[LwwValue[bool]] = root_document_visible
+        self.paper_size: tp.Optional[tuple[int, int]] = paper_size
 
 
 class AuthorIdsBlock(Block):

@@ -79,11 +79,6 @@ class TaggedBlockReader:
         self.data.read_header()
 
     ## Read simple values
-    def read_first_second(self, index: int) -> tp.Tuple[int, int]:
-        self.data.read_tag(index, TagType.Length4)
-        first_second_bytes = [self.data.read_uint32() for _ in range(3)]
-        return first_second_bytes[1], first_second_bytes[2]
-
     def read_color(self, index: int) -> tp.Tuple[int, ...]:
         self.data.read_tag(index, TagType.Byte4)
         color_bytes = self.data.read_bytes(4)[::-1]
@@ -369,3 +364,10 @@ class TaggedBlockReader:
                 fmt = None
 
             return string, fmt
+
+    def read_int_pair(self, index: int) -> tp.Optional[tuple[int, int]]:
+        """Read a sub block containing two uint32"""
+        with self.read_subblock(index):
+            first = self.data.read_uint32()
+            second = self.data.read_uint32()
+            return first, second
