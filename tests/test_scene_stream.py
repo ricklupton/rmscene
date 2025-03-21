@@ -281,11 +281,11 @@ def test_write_blocks():
 
 
 def test_blocks_keep_unknown_data_in_main_block():
-    # The "E1 FF" is represents new, unknown data -- note that this might need
+    # The "E1 FF" represents new, unknown data -- note that this might need
     # to be changed in future if the next id starts to actually be used in a
     # future update!
     data_hex = """
-    21000000 0000010D
+    2E000000 0000010D
     1C 06000000
        1F 0000
        2F 0000
@@ -293,6 +293,8 @@ def test_blocks_keep_unknown_data_in_main_block():
        1F 0000 21 01
     3C 05000000
        1F 0000 21 01
+    5C 08000000
+       7C050000 50070000
     E1 FF
     """
     buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
