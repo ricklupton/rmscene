@@ -26,6 +26,7 @@ class TagType(enum.IntEnum):
     Length4 = 0xC
     Byte8 = 0x8
     Byte4 = 0x4
+    Byte2 = 0x2
     Byte1 = 0x1
 
 
@@ -259,6 +260,7 @@ class DataStream:
 
 
 _T = tp.TypeVar("_T")
+
 
 # This makes sense to be frozen, since the value should not be changed without
 # updating the timestamp.

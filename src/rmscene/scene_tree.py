@@ -11,6 +11,9 @@ from .tagged_block_common import CrdtId
 from .crdt_sequence import CrdtSequenceItem
 from . import scene_items as si
 
+if tp.TYPE_CHECKING:
+    from .scene_stream import SceneInfo
+
 _logger = logging.getLogger(__name__)
 
 
@@ -20,6 +23,7 @@ ROOT_ID = CrdtId(0, 1)
 class SceneTree:
     def __init__(self):
         self.root = si.Group(ROOT_ID)
+        self.scene_info: tp.Optional["SceneInfo"] = None
         self._node_ids = {self.root.node_id: self.root}
         self.root_text: tp.Optional[si.Text] = None
 

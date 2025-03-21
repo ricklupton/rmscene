@@ -174,6 +174,7 @@ def test_basic_tree_structure():
 
 def test_text_and_strokes():
     line1 = si.Line(
+        rgba_color=None,
         color=si.PenColor.RED,
         tool=si.Pen.PENCIL_2,
         points=[],
@@ -181,6 +182,7 @@ def test_text_and_strokes():
         starting_length=0.0,
     )
     line2 = si.Line(
+        rgba_color=None,
         color=si.PenColor.BLACK,
         tool=si.Pen.FINELINER_2,
         points=[],

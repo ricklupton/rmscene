@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass, KW_ONLY
+from dataclasses import dataclass
 import logging
 import typing as tp
 
@@ -25,25 +25,34 @@ from .tagged_block_common import (
 _logger = logging.getLogger(__name__)
 
 
-@dataclass
 class BlockInfo:
     "Base class for block/subblock info."
-    offset: int
-    size: int
 
-    _: KW_ONLY
-    extra_data: bytes = b""
+    def __init__(self, offset: int, size: int, *, extra_data: bytes = b""):
+        self.offset: int = offset
+        self.size: int = size
+        self.extra_data: bytes = extra_data
 
 
-@dataclass
 class MainBlockInfo(BlockInfo):
     "Top-level block info."
-    block_type: int
-    min_version: int
-    current_version: int
+
+    def __init__(
+        self,
+        offset: int,
+        size: int,
+        block_type: int,
+        min_version: int,
+        current_version: int,
+        *,
+        extra_data: bytes = b"",
+    ):
+        super().__init__(offset, size, extra_data=extra_data)
+        self.block_type: int = block_type
+        self.min_version: int = min_version
+        self.current_version: int = current_version
 
 
-@dataclass
 class SubBlockInfo(BlockInfo):
     "Sub-block info."
 
@@ -70,6 +79,14 @@ class TaggedBlockReader:
         self.data.read_header()
 
     ## Read simple values
+    def read_color(self, index: int) -> tp.Tuple[int, ...]:
+        self.data.read_tag(index, TagType.Byte4)
+        color_bytes = self.data.read_bytes(4)[::-1]
+        # reMarkable uses a ARGB format, convert to RGBA for ease of use
+        return tuple(
+            int(b)
+            for b in (color_bytes[1], color_bytes[2], color_bytes[3], color_bytes[0])
+        )
 
     def read_id(self, index: int) -> CrdtId:
         """Read a tagged CRDT ID."""
