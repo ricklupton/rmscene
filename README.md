@@ -10,6 +10,16 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+### v0.7.0
+
+Change in block properties:
+
+- Some SceneInfo values are now optional ([#40](https://github.com/ricklupton/rmscene/issues/40))
+
+New feature:
+
+- Add support for `paper_size` field on some SceneInfo blocks
+
 ### v0.6.1
 
 Fixes:
