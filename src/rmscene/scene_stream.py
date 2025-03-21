@@ -21,7 +21,7 @@ from packaging.version import Version
 from . import scene_items as si
 from .crdt_sequence import CrdtSequence, CrdtSequenceItem
 from .scene_tree import SceneTree
-from .tagged_block_common import CrdtId, LwwValue, TagType, UnexpectedBlockError
+from .tagged_block_common import CrdtId, LwwValue, UnexpectedBlockError
 from .tagged_block_reader import MainBlockInfo, TaggedBlockReader
 from .tagged_block_writer import TaggedBlockWriter
 
@@ -150,14 +150,22 @@ class SceneInfo(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
         current_layer = stream.read_lww_id(1)
-        background_visible = stream.read_lww_bool(2) if stream.bytes_remaining_in_block() > 0 else None
-        root_document_visible = stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
-        paper_size = stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
+        background_visible = (
+            stream.read_lww_bool(2) if stream.bytes_remaining_in_block() > 0 else None
+        )
+        root_document_visible = (
+            stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
+        )
+        paper_size = (
+            stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
+        )
 
-        return SceneInfo(current_layer=current_layer,
-                         background_visible=background_visible,
-                         root_document_visible=root_document_visible,
-                         paper_size=paper_size)
+        return SceneInfo(
+            current_layer=current_layer,
+            background_visible=background_visible,
+            root_document_visible=root_document_visible,
+            paper_size=paper_size,
+        )
 
     def to_stream(self, writer: TaggedBlockWriter):
         writer.write_lww_id(1, self.current_layer)
@@ -448,7 +456,7 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
         r = stream.data.read_uint8()
         a = stream.data.read_uint8()
         rgba = (r, g, b, a)
-        
+
         if unk != b"\x84\x01" or rgba not in si.HARDCODED_COLORMAP:
             _logger.warning(f"Unhandled color {rgba} with prefix {unk}")
             stream.data.data.seek(-6, io.SEEK_CUR)
@@ -461,7 +469,11 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
 def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     _logger.debug("Writing Line version %d", version)
     writer.write_int(1, line.tool)
-    writer.write_int(2, line.color)
+    is_highlight_color = line.color in si.HARDCODED_COLORMAP.values()
+    if is_highlight_color:
+        writer.write_int(2, si.PenColor.HIGHLIGHT)
+    else:
+        writer.write_int(2, line.color)
     writer.write_double(3, line.thickness_scale)
     writer.write_float(4, line.starting_length)
     with writer.write_subblock(5):
@@ -473,9 +485,11 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     writer.write_id(6, timestamp)
     if line.move_id is not None:
         writer.write_id(7, line.move_id)
-    
-    if line.color in si.HARDCODED_COLORMAP.values():
-        rgba = [key for key, value in si.HARDCODED_COLORMAP.items() if value == line.color][0]
+
+    if is_highlight_color:
+        rgba = [
+            key for key, value in si.HARDCODED_COLORMAP.items() if value == line.color
+        ][0]
         writer.data.write_bytes(b"\x84\x01")
         writer.data.write_uint8(rgba[2])
         writer.data.write_uint8(rgba[1])
@@ -788,7 +802,6 @@ class RootTextBlock(Block):
         assert block_id == CrdtId(0, 0)
 
         with stream.read_subblock(2):
-
             # Text items
             with stream.read_subblock(1):
                 with stream.read_subblock(1):
@@ -829,7 +842,6 @@ class RootTextBlock(Block):
         writer.write_id(1, self.block_id)
 
         with writer.write_subblock(2):
-
             # Text items
             text_items = self.value.items.sequence_items()
             with writer.write_subblock(1):
