@@ -144,6 +144,10 @@ class SceneInfo(Block):
     background_visible: tp.Optional[LwwValue[bool]]
     root_document_visible: tp.Optional[LwwValue[bool]]
     paper_size: tp.Optional[tuple[int, int]]
+    viewport_id: tp.Optional[CrdtId] = None
+    viewport_size: tp.Optional[tuple[float, float]] = None
+    canvas_id: tp.Optional[CrdtId] = None
+    canvas_size: tp.Optional[tuple[float, float]] = None
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
@@ -152,10 +156,47 @@ class SceneInfo(Block):
         root_document_visible = stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
         paper_size = stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
 
+        # Parse new fields if present (tags 6, 7, 8)
+        viewport_id = None
+        viewport_size = None
+        canvas_id = None
+        canvas_size = None
+
+        if stream.has_subblock(6):
+            with stream.read_subblock(6):
+                if stream.data.check_tag(1, TagType.ID):
+                    viewport_id = stream.read_id(1)
+                if stream.has_subblock(2):
+                    with stream.read_subblock(2):
+                        # Read and discard 32 bytes of zeros
+                        _zeros = stream.data.read_bytes(32)
+
+        if stream.has_subblock(7):
+            with stream.read_subblock(7):
+                if stream.bytes_remaining_in_block() >= 16:
+                    f1 = stream.data.read_float64()
+                    f2 = stream.data.read_float64()
+                    viewport_size = (f1, f2)
+
+        if stream.has_subblock(8):
+            with stream.read_subblock(8):
+                if stream.data.check_tag(1, TagType.ID):
+                    canvas_id = stream.read_id(1)
+                if stream.has_subblock(2):
+                    with stream.read_subblock(2):
+                        if stream.bytes_remaining_in_block() >= 16:
+                            f1 = stream.data.read_float64()
+                            f2 = stream.data.read_float64()
+                            canvas_size = (f1, f2)
+
         return SceneInfo(current_layer=current_layer,
                          background_visible=background_visible,
                          root_document_visible=root_document_visible,
-                         paper_size=paper_size)
+                         paper_size=paper_size,
+                         viewport_id=viewport_id,
+                         viewport_size=viewport_size,
+                         canvas_id=canvas_id,
+                         canvas_size=canvas_size)
 
     def to_stream(self, writer: TaggedBlockWriter):
         writer.write_lww_id(1, self.current_layer)
@@ -165,6 +206,28 @@ class SceneInfo(Block):
             writer.write_lww_bool(3, self.root_document_visible)
         if self.paper_size:
             writer.write_int_pair(5, self.paper_size)
+        
+        # Write new fields if present
+        if self.viewport_id is not None:
+            with writer.write_subblock(6):
+                writer.write_id(1, self.viewport_id)
+                with writer.write_subblock(2):
+                    # Write 32 bytes of zeros
+                    writer.data.write_bytes(b'\x00' * 32)
+        
+        if self.viewport_size is not None:
+            with writer.write_subblock(7):
+                writer.data.write_float64(self.viewport_size[0])
+                writer.data.write_float64(self.viewport_size[1])
+        
+        if self.canvas_id is not None or self.canvas_size is not None:
+            with writer.write_subblock(8):
+                if self.canvas_id is not None:
+                    writer.write_id(1, self.canvas_id)
+                if self.canvas_size is not None:
+                    with writer.write_subblock(2):
+                        writer.data.write_float64(self.canvas_size[0])
+                        writer.data.write_float64(self.canvas_size[1])
 
 
 @dataclass
@@ -436,6 +499,14 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
             move_id = None
     else:
         move_id = None
+
+    # Read tag 8 (float32) if present (newer format)
+    if stream.bytes_remaining_in_block() > 0:
+        try:
+            if stream.data.check_tag(8, TagType.Byte4):
+                _unknown_float = stream.read_float(8)
+        except UnexpectedBlockError:
+            pass
 
     return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
 
@@ -751,6 +822,8 @@ class RootTextBlock(Block):
 
     block_id: CrdtId
     value: si.Text
+    text_metadata_id: tp.Optional[CrdtId] = None
+    text_metadata_value: tp.Optional[int] = None
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> RootTextBlock:
@@ -788,6 +861,18 @@ class RootTextBlock(Block):
         # "width" from ddvk
         width = stream.read_float(4)
 
+        # Parse new field (tag 5) if present
+        text_metadata_id = None
+        text_metadata_value = None
+        if stream.has_subblock(5):
+            with stream.read_subblock(5):
+                if stream.has_subblock(1):
+                    with stream.read_subblock(1):
+                        if stream.data.check_tag(1, TagType.ID):
+                            text_metadata_id = stream.read_id(1)
+                        if stream.data.check_tag(2, TagType.Byte4):
+                            text_metadata_value = stream.read_int(2)
+
         value = si.Text(
             items=CrdtSequence(text_items),
             styles=text_formats,
@@ -795,7 +880,7 @@ class RootTextBlock(Block):
             pos_y=pos_y,
             width=width,
         )
-        return RootTextBlock(block_id, value)
+        return RootTextBlock(block_id, value, text_metadata_id=text_metadata_id, text_metadata_value=text_metadata_value)
 
     def to_stream(self, writer: TaggedBlockWriter):
         _logger.debug("Writing %s", type(self).__name__)
@@ -826,6 +911,16 @@ class RootTextBlock(Block):
 
         # "width" from ddvk
         writer.write_float(4, self.value.width)
+        
+        # Write new field (tag 5) if present
+        if self.text_metadata_id is not None or self.text_metadata_value is not None:
+            with writer.write_subblock(5):
+                if self.text_metadata_id is not None or self.text_metadata_value is not None:
+                    with writer.write_subblock(1):
+                        if self.text_metadata_id is not None:
+                            writer.write_id(1, self.text_metadata_id)
+                        if self.text_metadata_value is not None:
+                            writer.write_int(2, self.text_metadata_value)
 
 
 ## Functions to read and write streams of blocks
