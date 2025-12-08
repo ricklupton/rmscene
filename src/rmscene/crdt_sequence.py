@@ -1,6 +1,4 @@
-"""Data structure representing CRDT sequence.
-
-"""
+"""Data structure representing CRDT sequence."""
 
 import logging
 import typing as tp

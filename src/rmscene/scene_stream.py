@@ -152,9 +152,15 @@ class SceneInfo(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
         current_layer = stream.read_lww_id(1)
-        background_visible = stream.read_lww_bool(2) if stream.bytes_remaining_in_block() > 0 else None
-        root_document_visible = stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
-        paper_size = stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
+        background_visible = (
+            stream.read_lww_bool(2) if stream.bytes_remaining_in_block() > 0 else None
+        )
+        root_document_visible = (
+            stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
+        )
+        paper_size = (
+            stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
+        )
 
         # Parse new fields if present (tags 6, 7, 8)
         viewport_id = None
@@ -189,14 +195,16 @@ class SceneInfo(Block):
                             f2 = stream.data.read_float64()
                             canvas_size = (f1, f2)
 
-        return SceneInfo(current_layer=current_layer,
-                         background_visible=background_visible,
-                         root_document_visible=root_document_visible,
-                         paper_size=paper_size,
-                         viewport_id=viewport_id,
-                         viewport_size=viewport_size,
-                         canvas_id=canvas_id,
-                         canvas_size=canvas_size)
+        return SceneInfo(
+            current_layer=current_layer,
+            background_visible=background_visible,
+            root_document_visible=root_document_visible,
+            paper_size=paper_size,
+            viewport_id=viewport_id,
+            viewport_size=viewport_size,
+            canvas_id=canvas_id,
+            canvas_size=canvas_size,
+        )
 
     def to_stream(self, writer: TaggedBlockWriter):
         writer.write_lww_id(1, self.current_layer)
@@ -206,20 +214,20 @@ class SceneInfo(Block):
             writer.write_lww_bool(3, self.root_document_visible)
         if self.paper_size:
             writer.write_int_pair(5, self.paper_size)
-        
+
         # Write new fields if present
         if self.viewport_id is not None:
             with writer.write_subblock(6):
                 writer.write_id(1, self.viewport_id)
                 with writer.write_subblock(2):
                     # Write 32 bytes of zeros
-                    writer.data.write_bytes(b'\x00' * 32)
-        
+                    writer.data.write_bytes(b"\x00" * 32)
+
         if self.viewport_size is not None:
             with writer.write_subblock(7):
                 writer.data.write_float64(self.viewport_size[0])
                 writer.data.write_float64(self.viewport_size[1])
-        
+
         if self.canvas_id is not None or self.canvas_size is not None:
             with writer.write_subblock(8):
                 if self.canvas_id is not None:
@@ -880,7 +888,12 @@ class RootTextBlock(Block):
             pos_y=pos_y,
             width=width,
         )
-        return RootTextBlock(block_id, value, text_metadata_id=text_metadata_id, text_metadata_value=text_metadata_value)
+        return RootTextBlock(
+            block_id,
+            value,
+            text_metadata_id=text_metadata_id,
+            text_metadata_value=text_metadata_value,
+        )
 
     def to_stream(self, writer: TaggedBlockWriter):
         _logger.debug("Writing %s", type(self).__name__)
@@ -911,11 +924,14 @@ class RootTextBlock(Block):
 
         # "width" from ddvk
         writer.write_float(4, self.value.width)
-        
+
         # Write new field (tag 5) if present
         if self.text_metadata_id is not None or self.text_metadata_value is not None:
             with writer.write_subblock(5):
-                if self.text_metadata_id is not None or self.text_metadata_value is not None:
+                if (
+                    self.text_metadata_id is not None
+                    or self.text_metadata_value is not None
+                ):
                     with writer.write_subblock(1):
                         if self.text_metadata_id is not None:
                             writer.write_id(1, self.text_metadata_id)

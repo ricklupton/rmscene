@@ -1,6 +1,4 @@
-"""Process text from remarkable scene files.
-
-"""
+"""Process text from remarkable scene files."""
 
 from __future__ import annotations
 

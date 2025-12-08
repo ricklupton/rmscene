@@ -83,7 +83,7 @@ class PenColor(enum.IntEnum):
     GREEN_2 = 10
     CYAN = 11
     MAGENTA = 12
-    
+
     YELLOW_2 = 13
 
 
@@ -214,6 +214,7 @@ class GlyphRange(SceneItem):
 
     `rectangles` represent the locations of the highlight.
     """
+
     start: tp.Optional[int]
     length: int
     text: str

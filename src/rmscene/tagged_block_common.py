@@ -1,6 +1,4 @@
-"""Helpers for reading/writing tagged block files.
-
-"""
+"""Helpers for reading/writing tagged block files."""
 
 from __future__ import annotations
 
@@ -22,6 +20,7 @@ HEADER_V6 = b"reMarkable .lines file, version=6          "
 
 class TagType(enum.IntEnum):
     "Tag type representing the type of following data."
+
     ID = 0xF
     Length4 = 0xC
     Byte8 = 0x8
@@ -36,6 +35,7 @@ class UnexpectedBlockError(Exception):
 @dataclass(eq=True, order=True, frozen=True)
 class CrdtId:
     "An identifier or timestamp."
+
     part1: int
     part2: int
 
@@ -260,10 +260,12 @@ class DataStream:
 
 _T = tp.TypeVar("_T")
 
+
 # This makes sense to be frozen, since the value should not be changed without
 # updating the timestamp.
 @dataclass(eq=True, frozen=True)
 class LwwValue(tp.Generic[_T]):
     "Container for a last-write-wins value."
+
     timestamp: CrdtId
     value: _T

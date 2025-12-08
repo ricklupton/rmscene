@@ -28,6 +28,7 @@ _logger = logging.getLogger(__name__)
 @dataclass
 class BlockInfo:
     "Base class for block/subblock info."
+
     offset: int
     size: int
 
@@ -38,6 +39,7 @@ class BlockInfo:
 @dataclass
 class MainBlockInfo(BlockInfo):
     "Top-level block info."
+
     block_type: int
     min_version: int
     current_version: int

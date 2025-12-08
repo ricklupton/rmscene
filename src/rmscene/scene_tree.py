@@ -1,6 +1,4 @@
-"""Build scene tree structure from block data.
-
-"""
+"""Build scene tree structure from block data."""
 
 from __future__ import annotations
 
