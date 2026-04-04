@@ -437,17 +437,7 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     else:
         move_id = None
 
-    color_rgba = None
-    if stream.bytes_remaining_in_block() >= 6:
-        prefix = stream.data.read_bytes(2)
-        b = stream.data.read_uint8()
-        g = stream.data.read_uint8()
-        r = stream.data.read_uint8()
-        a = stream.data.read_uint8()
-        if prefix == b"\x84\x01":
-            color_rgba = (r, g, b, a)
-        else:
-            _logger.warning("Unknown highlight color prefix %r, ignoring color data", prefix)
+    color_rgba = stream.read_color_optional(8)
 
     return si.Line(color, tool, points, thickness_scale, starting_length, move_id, color_rgba)
 
@@ -468,12 +458,7 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     if line.move_id is not None:
         writer.write_id(7, line.move_id)
     if line.color_rgba is not None:
-        r, g, b, a = line.color_rgba
-        writer.data.write_bytes(b"\x84\x01")
-        writer.data.write_uint8(b)
-        writer.data.write_uint8(g)
-        writer.data.write_uint8(r)
-        writer.data.write_uint8(a)
+        writer.write_color(8, line.color_rgba)
 
 
 @dataclass
@@ -588,17 +573,7 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
             for _ in range(num_rects)
         ]
 
-    color_rgba = None
-    if stream.bytes_remaining_in_block() >= 6:
-        prefix = stream.data.read_bytes(2)
-        b = stream.data.read_uint8()
-        g = stream.data.read_uint8()
-        r = stream.data.read_uint8()
-        a = stream.data.read_uint8()
-        if prefix == b"\xa4\x01":
-            color_rgba = (r, g, b, a)
-        else:
-            _logger.warning("Unknown highlight color prefix %r, ignoring color data", prefix)
+    color_rgba = stream.read_color_optional(10)
 
     return si.GlyphRange(start, length, text, color, rectangles, color_rgba)
 
@@ -617,12 +592,7 @@ def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
             stream.data.write_float64(rect.w)
             stream.data.write_float64(rect.h)
     if item.color_rgba is not None:
-        r, g, b, a = item.color_rgba
-        stream.data.write_bytes(b"\xa4\x01")
-        stream.data.write_uint8(b)
-        stream.data.write_uint8(g)
-        stream.data.write_uint8(r)
-        stream.data.write_uint8(a)
+        stream.write_color(10, item.color_rgba)
 
 
 class SceneTombstoneItemBlock(SceneItemBlock):
