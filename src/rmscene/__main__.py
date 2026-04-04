@@ -1,7 +1,8 @@
 """Experimental cli helpers."""
 
-import sys
 import argparse
+import logging
+import sys
 from . import read_blocks
 
 
@@ -22,4 +23,5 @@ def pprint_file(args) -> None:
 
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
+    logging.basicConfig(level=logging.INFO)
     pprint_file(args)
