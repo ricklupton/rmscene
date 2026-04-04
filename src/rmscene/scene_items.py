@@ -76,8 +76,7 @@ class PenColor(enum.IntEnum):
     GRAY_OVERLAP = 8
 
     # All highlight colors share the same value.
-    # There is also yet unknown extra data in the block
-    # that might contain additional color information.
+    # The actual color is stored in the optional `color_rgba` field of Line.
     HIGHLIGHT = 9
 
     GREEN_2 = 10
@@ -139,6 +138,7 @@ class Line(SceneItem):
     thickness_scale: float
     starting_length: float
     move_id: tp.Optional[CrdtId] = None
+    color_rgba: tp.Optional[tuple[int, int, int, int]] = None
 
 
 ## Text

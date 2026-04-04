@@ -45,6 +45,7 @@ TEST_FILES_AND_VERSIONS = [
     ("Wikipedia_highlighted_p2.rm", "3.1"),
     ("With_SceneInfo_Block.rm", "3.4"),  # XXX version?
     ("Color_and_tool_v3.14.4.rm", "3.14"),
+    ("More_color_highlight_shader_v3.15.4.2.rm", "3.15"),
 ]
 
 
@@ -68,12 +69,16 @@ def test_full_roundtrip(test_file, version):
     assert _hex_lines(input_buf.getvalue()) == _hex_lines(output_buf.getvalue())
 
 
-# FIXME: remove xfail when parsing updated
+# Temporarily add test files here that add new data fields before updating the
+# parsing code properly.
+FULL_PARSING_XFAILS = [
+    "Color_and_tool_v3.14.4.rm",
+]
 
 TEST_FILES_FOR_FULL_PARSING = [
     pytest.param(
         filename,
-        marks=pytest.mark.xfail if filename == "Color_and_tool_v3.14.4.rm" else [],
+        marks=pytest.mark.xfail if filename in FULL_PARSING_XFAILS else [],
     )
     for filename, _ in TEST_FILES_AND_VERSIONS
 ]
@@ -88,6 +93,8 @@ def test_files_fully_parsed(test_file):
     for block in result:
         assert not isinstance(block, UnreadableBlock)
         assert not block.extra_data
+        if isinstance(block, SceneItemBlock):
+            assert not block.extra_value_data
 
 
 def test_normal_ab():
