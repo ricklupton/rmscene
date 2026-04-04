@@ -588,7 +588,19 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
             for _ in range(num_rects)
         ]
 
-    return si.GlyphRange(start, length, text, color, rectangles)
+    color_rgba = None
+    if stream.bytes_remaining_in_block() >= 6:
+        prefix = stream.data.read_bytes(2)
+        b = stream.data.read_uint8()
+        g = stream.data.read_uint8()
+        r = stream.data.read_uint8()
+        a = stream.data.read_uint8()
+        if prefix == b"\xa4\x01":
+            color_rgba = (r, g, b, a)
+        else:
+            _logger.warning("Unknown highlight color prefix %r, ignoring color data", prefix)
+
+    return si.GlyphRange(start, length, text, color, rectangles, color_rgba)
 
 
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
@@ -604,6 +616,13 @@ def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
             stream.data.write_float64(rect.y)
             stream.data.write_float64(rect.w)
             stream.data.write_float64(rect.h)
+    if item.color_rgba is not None:
+        r, g, b, a = item.color_rgba
+        stream.data.write_bytes(b"\xa4\x01")
+        stream.data.write_uint8(b)
+        stream.data.write_uint8(g)
+        stream.data.write_uint8(r)
+        stream.data.write_uint8(a)
 
 
 class SceneTombstoneItemBlock(SceneItemBlock):

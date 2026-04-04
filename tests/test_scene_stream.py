@@ -71,9 +71,7 @@ def test_full_roundtrip(test_file, version):
 
 # Temporarily add test files here that add new data fields before updating the
 # parsing code properly.
-FULL_PARSING_XFAILS = [
-    "Color_and_tool_v3.14.4.rm",
-]
+FULL_PARSING_XFAILS = []
 
 TEST_FILES_FOR_FULL_PARSING = [
     pytest.param(

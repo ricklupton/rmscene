@@ -219,3 +219,4 @@ class GlyphRange(SceneItem):
     text: str
     color: PenColor
     rectangles: list[Rectangle]
+    color_rgba: tp.Optional[tuple[int, int, int, int]] = None
