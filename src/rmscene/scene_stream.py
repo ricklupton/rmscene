@@ -437,7 +437,9 @@ def line_from_stream(stream: TaggedBlockReader, version: int = 2) -> si.Line:
     else:
         move_id = None
 
-    return si.Line(color, tool, points, thickness_scale, starting_length, move_id)
+    color_rgba = stream.read_color_optional(8)
+
+    return si.Line(color, tool, points, thickness_scale, starting_length, move_id, color_rgba)
 
 
 def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
@@ -455,6 +457,8 @@ def line_to_stream(line: si.Line, writer: TaggedBlockWriter, version: int = 2):
     writer.write_id(6, timestamp)
     if line.move_id is not None:
         writer.write_id(7, line.move_id)
+    if line.color_rgba is not None:
+        writer.write_color(8, line.color_rgba)
 
 
 @dataclass
@@ -569,7 +573,9 @@ def glyph_range_from_stream(stream: TaggedBlockReader) -> si.GlyphRange:
             for _ in range(num_rects)
         ]
 
-    return si.GlyphRange(start, length, text, color, rectangles)
+    color_rgba = stream.read_color_optional(10)
+
+    return si.GlyphRange(start, length, text, color, rectangles, color_rgba)
 
 
 def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
@@ -585,6 +591,8 @@ def glyph_range_to_stream(stream: TaggedBlockWriter, item: si.GlyphRange):
             stream.data.write_float64(rect.y)
             stream.data.write_float64(rect.w)
             stream.data.write_float64(rect.h)
+    if item.color_rgba is not None:
+        stream.write_color(10, item.color_rgba)
 
 
 class SceneTombstoneItemBlock(SceneItemBlock):

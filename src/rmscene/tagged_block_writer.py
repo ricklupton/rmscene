@@ -77,6 +77,11 @@ class TaggedBlockWriter:
         self.data.write_tag(index, TagType.Byte8)
         self.data.write_float64(value)
 
+    def write_color(self, index: int, value: tuple[int, int, int, int]):
+        """Write a tagged RGBA color packed as a little-endian uint32 (stored BGRA)."""
+        r, g, b, a = value
+        self.write_int(index, b | (g << 8) | (r << 16) | (a << 24))
+
     ## Blocks
 
     @contextmanager
