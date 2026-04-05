@@ -101,7 +101,14 @@ def toposort_items(items: Iterable[CrdtSequenceItem]) -> Iterable[CrdtId]:
 
     Returns `CrdtId`s in the sorted order.
 
+    This uses Kahn's algorithm for topological sorting. Standard Kahn's
+    algorithm is O(V + E), i.e. linear. We use a heap to maintain
+    deterministic ordering when multiple items become ready simultaneously
+    (matching the previous implementation's use of sorted()). This adds
+    a log factor, making the overall complexity O(V log V + E), which
+    simplifies to O(V log V) since each item has exactly 2 edges.
     """
+    import heapq
 
     item_dict = {}
     for item in items:
@@ -118,31 +125,75 @@ def toposort_items(items: Iterable[CrdtSequenceItem]) -> Iterable[CrdtId]:
         else:
             return side_id
 
-    # build dictionary: key "comes after" values
-    data = defaultdict(set)
+    # Build dependency graph with O(1) lookups
+    # in_degree[item] = number of unprocessed dependencies
+    # dependents[item] = list of items that depend on this item
+    in_degree = defaultdict(int)
+    dependents = defaultdict(list)
+
+    # Track all nodes we need to process
+    all_nodes = set()
+    all_nodes.add("__start")
+    all_nodes.add("__end")
+
     for item in item_dict.values():
+        item_id = item.item_id
         left_id = _side_id(item, "left")
         right_id = _side_id(item, "right")
-        data[item.item_id].add(left_id)
-        data[right_id].add(item.item_id)
 
-    # fill in sources not explicitly included
-    sources_not_in_data = {dep for deps in data.values() for dep in deps} - {
-        k for k in data.keys()
-    }
-    data.update({k: set() for k in sources_not_in_data})
+        all_nodes.add(item_id)
+        all_nodes.add(left_id)
+        all_nodes.add(right_id)
 
-    while True:
-        next_items = {item for item, deps in data.items() if not deps}
-        if next_items == {"__end"}:
+        # item depends on left_id (item comes after left_id)
+        in_degree[item_id] += 1
+        dependents[left_id].append(item_id)
+
+        # right_id depends on item (right_id comes after item)
+        in_degree[right_id] += 1
+        dependents[item_id].append(right_id)
+
+    # Initialize in_degree for nodes with no incoming edges
+    for node in all_nodes:
+        if node not in in_degree:
+            in_degree[node] = 0
+
+    # Use a heap to yield items in deterministic order when multiple items
+    # become ready simultaneously (i.e. concurrent inserts at the same
+    # position). For concurrent items with the same left_id/right_id, the
+    # reMarkable places higher author IDs first.
+    def sort_key(node):
+        if node == "__start":
+            return (0, 0, 0)
+        elif node == "__end":
+            return (2, 0, 0)
+        else:
+            return (1, -node.part1, node.part2)
+
+    # Start with nodes that have no dependencies
+    ready = []
+    for node in all_nodes:
+        if in_degree[node] == 0:
+            heapq.heappush(ready, (sort_key(node), node))
+
+    while ready:
+        _, node = heapq.heappop(ready)
+
+        # Yield if it's an actual item (not __start or __end)
+        if node in item_dict:
+            yield node
+
+        # Stop if we've reached __end
+        if node == "__end":
             break
-        assert next_items
-        yield from sorted(k for k in next_items if k in item_dict)
-        data = {
-            item: (deps - next_items)
-            for item, deps in data.items()
-            if item not in next_items
-        }
 
-    if data != {"__end": set()}:
+        # Process dependents
+        for dependent in dependents[node]:
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                heapq.heappush(ready, (sort_key(dependent), dependent))
+
+    # Check for cycles (items with remaining dependencies)
+    remaining = [n for n in all_nodes if in_degree[n] > 0 and n != "__end"]
+    if remaining:
         raise ValueError("cyclic dependency")

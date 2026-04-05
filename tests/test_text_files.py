@@ -79,6 +79,14 @@ def test_inline_formats():
     ]
 
 
+def test_crdt_concurrent_author_ordering():
+    # Two authors concurrently inserted between 'A' and 'Z'; the higher author
+    # ID (tablet, author 2) should appear before the lower (desktop, author 1),
+    # giving "A12_Z" not "A_12Z".
+    lines = formatted_lines(extract_doc(DATA_PATH / "test-crdt-ordering.rm"))
+    assert lines == [(ParagraphStyle.HEADING, "A12_Z")]
+
+
 def test_simple_text_document():
     test_file = "Normal_AB.rm"
     with open(DATA_PATH / test_file, "rb") as f:
