@@ -367,3 +367,10 @@ def test_text_and_strokes():
     # again (i.e. find out the item id for the anchor, if referenced directly).
     #
     # Currently the item id is held in the CrdtSequenceItem, not in its value.
+
+
+def test_scene_info_paper_size():
+    with open(DATA_PATH / "Color_and_tool_v3.14.4.rm", "rb") as f:
+        tree = read_tree(f)
+    assert tree.scene_info is not None
+    assert tree.scene_info.paper_size == (1620, 2160)

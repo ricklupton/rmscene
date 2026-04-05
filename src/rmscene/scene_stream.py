@@ -912,6 +912,8 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
         elif isinstance(b, (SceneLineItemBlock, SceneGlyphItemBlock)):
             # Add this entry to children of parent_id
             tree.add_item(b.item, b.parent_id)
+        elif isinstance(b, SceneInfo):
+            tree.scene_info = b
         elif isinstance(b, RootTextBlock):
             if tree.root_text is not None:
                 _logger.error(
