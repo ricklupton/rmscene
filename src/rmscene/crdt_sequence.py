@@ -158,17 +158,17 @@ def toposort_items(items: Iterable[CrdtSequenceItem]) -> Iterable[CrdtId]:
         if node not in in_degree:
             in_degree[node] = 0
 
-    # Use a heap to yield items in deterministic order by CrdtId when
-    # multiple items become ready simultaneously. This matches the previous
-    # implementation's use of sorted(). A simple list/set would give O(V)
-    # but non-deterministic output for concurrent items.
+    # Use a heap to yield items in deterministic order when multiple items
+    # become ready simultaneously (i.e. concurrent inserts at the same
+    # position). For concurrent items with the same left_id/right_id, the
+    # reMarkable places higher author IDs first.
     def sort_key(node):
         if node == "__start":
             return (0, 0, 0)
         elif node == "__end":
             return (2, 0, 0)
         else:
-            return (1, node.part1, node.part2)
+            return (1, -node.part1, node.part2)
 
     # Start with nodes that have no dependencies
     ready = []

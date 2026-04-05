@@ -35,15 +35,21 @@ def test_two():
 
 
 def test_overlapping():
-    items = [
-        make_item(1, 0, 0, 0, "A"),
-        make_item(2, 1, 0, 0, "B"),
-        make_item(3, 0, 0, 0, "C"),
-    ]
-    result1 = list(CrdtSequence(items))
+    # Test concurrent-insert: two different authors insert at the same position
+    # (identical left_id and right_id) without knowledge of each other. The
+    # higher author ID should come first, matching observed reMarkable device
+    # behaviour (verified with test-crdt-ordering.rm: "A12_Z" not "A_12Z").
+    A = CrdtSequenceItem(CrdtId(1, 1), CrdtId(0, 0), CrdtId(0, 0), 0, "A")
+    Z = CrdtSequenceItem(CrdtId(1, 2), CrdtId(1, 1), CrdtId(0, 0), 0, "Z")
+    author2 = CrdtSequenceItem(CrdtId(2, 1), CrdtId(1, 1), CrdtId(1, 2), 0, "12")
+    author1 = CrdtSequenceItem(CrdtId(1, 3), CrdtId(1, 1), CrdtId(1, 2), 0, "_")
+    items = [A, Z, author2, author1]
+    seq = CrdtSequence(items)
+    result1 = list(seq)
     result2 = list(CrdtSequence(reversed(items)))
     assert result1 == result2
-    assert result1 == [cid(1), cid(3), cid(2)]
+    assert result1 == [CrdtId(1, 1), CrdtId(2, 1), CrdtId(1, 3), CrdtId(1, 2)]
+    assert "".join(seq.values()) == "A12_Z"
 
 
 def test_overlapping_sorted_by_id():
