@@ -152,6 +152,20 @@ class TaggedBlockReader:
         """Read a tagged 8-byte double, return `default` if not present."""
         return self._read_optional(self.read_double, index, default)
 
+    def read_color_optional(
+        self, index: int
+    ) -> tp.Optional[tuple[int, int, int, int]]:
+        """Read a tagged RGBA color packed as a little-endian uint32 (stored BGRA), return None if not present."""
+        if not self.data.check_tag(index, TagType.Byte4):
+            return None
+        packed = self.read_int(index)
+        return (
+            (packed >> 16) & 0xFF,
+            (packed >> 8) & 0xFF,
+            packed & 0xFF,
+            (packed >> 24) & 0xFF,
+        )
+
     ## Blocks
 
     @contextmanager
