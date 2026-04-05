@@ -10,6 +10,22 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+### v0.8.0
+  
+New features:
+
+- Store highlighter colour in `color_rgba` field on `GlyphRange` ([#50](https://github.com/ricklupton/rmscene/pull/50))
+- Store `SceneInfo` on `SceneTree` for convenient access
+
+Performance improvements:
+
+- Use Kahn's algorithm for CRDT topological sort -- thanks to @andymatuschak ([#49](https://github.com/ricklupton/rmscene/pull/49))
+
+Fixes:
+
+- Fix author sort order for concurrent CRDT inserts
+ 
+
 ### v0.7.0
 
 Change in block properties:
