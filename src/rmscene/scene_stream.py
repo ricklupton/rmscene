@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 import typing as tp
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
@@ -165,6 +166,38 @@ class SceneInfo(Block):
             writer.write_lww_bool(3, self.root_document_visible)
         if self.paper_size:
             writer.write_int_pair(5, self.paper_size)
+
+
+@dataclass
+class SceneAssetBlock(Block):
+    """Asset reference block, used by native notebook image insertion.
+
+    Newer reMarkable software writes a top-level block containing the referenced
+    asset filename, for example a JPG stored next to the page ``.rm`` file.
+    Most fields are still unnamed, so this block preserves the raw payload while
+    exposing the filename for callers that need to locate the asset.
+    """
+
+    BLOCK_TYPE: tp.ClassVar = 0x0E
+    _FILENAME_RE: tp.ClassVar = re.compile(rb"([\w-]+\.(?:jpe?g|png|webp))")
+
+    data: bytes
+    filename: tp.Optional[str] = None
+
+    def version_info(self, _) -> tuple[int, int]:
+        return (3, 3)
+
+    @classmethod
+    def from_stream(cls, stream: TaggedBlockReader) -> SceneAssetBlock:
+        with stream.read_subblock(1) as block_info:
+            data = stream.data.read_bytes(block_info.size)
+        match = cls._FILENAME_RE.search(data)
+        filename = match.group(1).decode() if match else None
+        return SceneAssetBlock(data=data, filename=filename)
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        with writer.write_subblock(1):
+            writer.data.write_bytes(self.data)
 
 
 @dataclass
@@ -486,6 +519,8 @@ class SceneItemBlock(Block):
             subclass = SceneTextItemBlock
         elif block_type == SceneTombstoneItemBlock.BLOCK_TYPE:
             subclass = SceneTombstoneItemBlock
+        elif block_type == ScenePathItemBlock.BLOCK_TYPE:
+            subclass = ScenePathItemBlock
         else:
             raise ValueError(
                 "unknown scene type %d in %s" % (block_type, stream.current_block)
@@ -657,6 +692,29 @@ class SceneLineItemBlock(SceneItemBlock):
 
 
 # XXX missing "PathItemBlock"? with ITEM_TYPE 0x04
+
+
+class ScenePathItemBlock(SceneItemBlock):
+    """Path-like scene item used by newer notebook features.
+
+    These blocks appear alongside native image assets. The item header follows
+    the standard scene-item shape, but the value payload is not decoded yet.
+    Preserve it so read/write round-trips keep the page intact.
+    """
+
+    BLOCK_TYPE: tp.ClassVar = 0x0F
+    ITEM_TYPE: tp.ClassVar = 0x07
+
+    def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
+        return (2, 2)
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader) -> si.Path:
+        data = reader.data.read_bytes(reader.bytes_remaining_in_block())
+        return si.Path(data)
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value: si.Path):
+        writer.data.write_bytes(value.data)
 
 
 class SceneTextItemBlock(SceneItemBlock):
@@ -909,7 +967,7 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
                 )
             item = replace(b.item, value=tree[node_id])
             tree.add_item(item, b.parent_id)
-        elif isinstance(b, (SceneLineItemBlock, SceneGlyphItemBlock)):
+        elif isinstance(b, (SceneLineItemBlock, SceneGlyphItemBlock, ScenePathItemBlock)):
             # Add this entry to children of parent_id
             tree.add_item(b.item, b.parent_id)
         elif isinstance(b, SceneInfo):

@@ -337,6 +337,176 @@ def test_blocks_keep_unknown_data_in_value_subblock():
     assert block.extra_value_data == bytes.fromhex("8f 0101")
 
 
+def test_read_scene_asset_block():
+    data_hex = """
+    62000000 0003030e
+    1c5d000000
+       010c57000000
+          4be9f7ad407a129d3e4dc2316b84c825
+          1c33000000
+             1f029006
+             2c2a000000
+                2801
+                35663830333635642d393732652d343135642d383033302d3666346465653133616339322e6a7067
+             2c0a000000
+                1f0000
+                2c02000000
+                   1100
+    """
+    buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
+
+    block = next(read_blocks(buf))
+
+    assert block == SceneAssetBlock(
+        data=bytes.fromhex(
+            """
+            010c57000000
+               4be9f7ad407a129d3e4dc2316b84c825
+               1c33000000
+                  1f029006
+                  2c2a000000
+                     2801
+                     35663830333635642d393732652d343135642d383033302d3666346465653133616339322e6a7067
+                  2c0a000000
+                     1f0000
+                     2c02000000
+                        1100
+            """
+        ),
+        filename="5f80365d-972e-415d-8030-6f4dee13ac92.jpg",
+    )
+
+
+def test_scene_asset_block_roundtrip():
+    block = SceneAssetBlock(
+        data=bytes.fromhex(
+            """
+            010c57000000
+               4be9f7ad407a129d3e4dc2316b84c825
+               1c33000000
+                  1f029006
+                  2c2a000000
+                     2801
+                     35663830333635642d393732652d343135642d383033302d3666346465653133616339322e6a7067
+                  2c0a000000
+                     1f0000
+                     2c02000000
+                        1100
+            """
+        ),
+        filename="5f80365d-972e-415d-8030-6f4dee13ac92.jpg",
+    )
+
+    buf = BytesIO()
+    write_blocks(buf, [block], options={"version": "3.3"})
+
+    assert bytes.fromhex(
+        """
+        62000000 0003030e
+        1c5d000000
+           010c57000000
+              4be9f7ad407a129d3e4dc2316b84c825
+              1c33000000
+                 1f029006
+                 2c2a000000
+                    2801
+                    35663830333635642d393732652d343135642d383033302d3666346465653133616339322e6a7067
+                 2c0a000000
+                    1f0000
+                    2c02000000
+                       1100
+        """
+    ) in buf.getvalue()
+
+
+def test_read_scene_path_item_block_with_raw_value():
+    data_hex = """
+    a4000000 0002020f
+    1f029605
+    2f01eb06
+    3f02bf05
+    4f0000
+    5400000000
+    6c8b000000
+       07
+       1c19000000
+          1f029206
+          2c10000000
+             4be9f7ad407a129d3e4dc2316b84c825
+          2f018d07
+          3c41000000
+             10002071428094e341000000000000000035684d448094e3410000803f0000000035684d44d97245440000803f0000803f00207142d9724544000000000000803f
+          4c19000000
+             06000000000100000002000000020000000300000000000000
+          5f02b906
+    """
+    buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
+
+    block = next(read_blocks(buf))
+
+    assert isinstance(block, ScenePathItemBlock)
+    assert block.parent_id == CrdtId(2, 662)
+    assert block.item.item_id == CrdtId(1, 875)
+    assert block.item.left_id == CrdtId(2, 703)
+    assert block.item.right_id == CrdtId(0, 0)
+    assert block.item.deleted_length == 0
+    assert isinstance(block.item.value, si.Path)
+    assert len(block.item.value.data) == 138
+
+
+def test_scene_path_item_block_roundtrip():
+    data = bytes.fromhex(
+        """
+        1c19000000
+          1f029206
+          2c10000000
+             4be9f7ad407a129d3e4dc2316b84c825
+          2f018d07
+          3c41000000
+             10002071428094e341000000000000000035684d448094e3410000803f0000000035684d44d97245440000803f0000803f00207142d9724544000000000000803f
+          4c19000000
+             06000000000100000002000000020000000300000000000000
+          5f02b906
+        """
+    )
+    block = ScenePathItemBlock(
+        parent_id=CrdtId(2, 662),
+        item=CrdtSequenceItem(
+            item_id=CrdtId(1, 875),
+            left_id=CrdtId(2, 703),
+            right_id=CrdtId(0, 0),
+            deleted_length=0,
+            value=si.Path(data),
+        ),
+    )
+
+    buf = BytesIO()
+    write_blocks(buf, [block], options={"version": "3.3"})
+
+    assert bytes.fromhex(
+        """
+        a4000000 0002020f
+        1f029605
+        2f01eb06
+        3f02bf05
+        4f0000
+        5400000000
+        6c8b000000
+           07
+           1c19000000
+             1f029206
+             2c10000000
+                4be9f7ad407a129d3e4dc2316b84c825
+             2f018d07
+             3c41000000
+                10002071428094e341000000000000000035684d448094e3410000803f0000000035684d44d97245440000803f0000803f00207142d9724544000000000000803f
+             4c19000000
+                06000000000100000002000000020000000300000000000000
+             5f02b906
+        """
+    ) in buf.getvalue()
+
+
 def test_error_in_block_contained():
     # First block will cause a parsing error at `0xff`. Second block should
     # still be parsed.
