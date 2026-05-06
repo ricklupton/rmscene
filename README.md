@@ -10,6 +10,12 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+New features:
+
+- Read and write image asset blocks and path-like scene item blocks introduced
+  by native notebook image insertion, preserving undecoded payloads for
+  round-trip safety.
+
 ### v0.8.0
   
 New features:

@@ -141,6 +141,17 @@ class Line(SceneItem):
     color_rgba: tp.Optional[tuple[int, int, int, int]] = None
 
 
+@dataclass
+class Path(SceneItem):
+    """Path-like item introduced by newer reMarkable software.
+
+    The exact payload is not fully decoded yet, but preserving it here means
+    files containing these blocks can be read and written without losing data.
+    """
+
+    data: bytes
+
+
 ## Text
 
 
