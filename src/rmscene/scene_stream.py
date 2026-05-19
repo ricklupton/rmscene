@@ -168,6 +168,36 @@ class SceneInfo(Block):
 
 
 @dataclass
+class SceneImageInfoBlock(Block):
+    BLOCK_TYPE: tp.ClassVar = 0x0E
+    images: dict[UUID, si.ImageInfo]
+    def version_info(self, _) -> tuple[int, int]:
+        return (3, 3)
+
+    @classmethod
+    def from_stream(cls, stream: TaggedBlockReader) -> SceneImageInfoBlock:
+        with stream.read_subblock(1) as block_info:
+            images = {}
+            num_images = stream.data.read_varuint()
+            for _ in range(num_images):
+                with stream.read_subblock(0) as image_block_info:
+                    uuid = UUID(bytes_le=stream.data.read_bytes(16))
+                    filename = stream.read_lww_string(1)
+                    flags = stream.read_lww_bytes(2)
+                    images[uuid] = si.ImageInfo(filename=filename, flags=flags)
+
+        return SceneImageInfoBlock(images=images)
+
+    def to_stream(self, writer: TaggedBlockWriter):
+        with writer.write_subblock(1):
+            writer.data.write_varuint(len(self.images))
+            for uuid, image in self.images.items():
+                with writer.write_subblock(0):
+                    writer.data.write_bytes(uuid.bytes_le)
+                    writer.write_lww_string(1, image.filename)
+                    writer.write_lww_bytes(2, image.flags)
+
+@dataclass
 class AuthorIdsBlock(Block):
     BLOCK_TYPE: tp.ClassVar = 0x09
 
@@ -486,6 +516,8 @@ class SceneItemBlock(Block):
             subclass = SceneTextItemBlock
         elif block_type == SceneTombstoneItemBlock.BLOCK_TYPE:
             subclass = SceneTombstoneItemBlock
+        elif block_type == SceneImageItemBlock.BLOCK_TYPE:
+            subclass = SceneImageItemBlock
         else:
             raise ValueError(
                 "unknown scene type %d in %s" % (block_type, stream.current_block)
@@ -658,6 +690,48 @@ class SceneLineItemBlock(SceneItemBlock):
 
 # XXX missing "PathItemBlock"? with ITEM_TYPE 0x04
 
+class SceneImageItemBlock(SceneItemBlock):
+    BLOCK_TYPE: tp.ClassVar = 0x0F
+    ITEM_TYPE: tp.ClassVar = 0x07
+
+    _ints = [0, 1, 2, 2, 3, 0]
+
+    def version_info(self, writer: TaggedBlockWriter) -> tuple[int, int]:
+        return (2, 2)
+
+    @classmethod
+    def value_from_stream(cls, reader: TaggedBlockReader) -> si.Image:
+        assert reader.current_block is not None
+        uuid = reader.read_lww_bytes(1)
+        timestamp = reader.read_id(2)
+
+        with reader.read_subblock(3) as block_info:
+            l = reader.data.read_varuint()
+            assert l == 16
+            vertices = [reader.data.read_float32() for _ in range(16)]
+
+        with reader.read_subblock(4) as block_info:
+            l = reader.data.read_varuint()
+            assert l == len(cls._ints)
+            _ints = [reader.data.read_uint32() for _ in range(len(cls._ints))]
+            assert _ints == cls._ints
+
+        return si.Image(uuid=uuid, vertices=vertices, move_id=timestamp)
+
+    def value_to_stream(self, writer: TaggedBlockWriter, value: si.Image):
+        # XXX make sure this version ends up in block header
+        writer.write_lww_bytes(1, value.uuid)
+        writer.write_id(2, value.move_id)
+
+        with writer.write_subblock(3):
+            writer.data.write_varuint(len(value.vertices))
+            for v in value.vertices:
+                writer.data.write_float32(v)
+
+        with writer.write_subblock(4):
+            writer.data.write_varuint(len(self._ints))
+            for v in self._ints:
+                writer.data.write_uint32(v)
 
 class SceneTextItemBlock(SceneItemBlock):
     BLOCK_TYPE: tp.ClassVar = 0x06
@@ -912,8 +986,16 @@ def build_tree(tree: SceneTree, blocks: Iterable[Block]):
         elif isinstance(b, (SceneLineItemBlock, SceneGlyphItemBlock)):
             # Add this entry to children of parent_id
             tree.add_item(b.item, b.parent_id)
+        elif isinstance(b, SceneImageItemBlock):
+            node = b.item.value
+            if node is None:
+                continue
+            node.filename = tree.image_info.images[UUID(bytes_le=node.uuid.value)].filename.value
+            tree.add_item(b.item, b.parent_id)
         elif isinstance(b, SceneInfo):
             tree.scene_info = b
+        elif isinstance(b, SceneImageInfoBlock):
+            tree.image_info = b
         elif isinstance(b, RootTextBlock):
             if tree.root_text is not None:
                 _logger.error(
