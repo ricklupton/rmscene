@@ -20,6 +20,22 @@ class SceneItem:
     """Base class for items stored in scene tree."""
 
 
+## Image
+
+@dataclass
+class ImageInfo(SceneItem):
+    filename: str
+    flags: bytes
+
+
+@dataclass
+class Image(SceneItem):
+    uuid: LwwValue[bytes]
+    vertices: list[float]
+    move_id: tp.Optional[CrdtId] = None
+    filename: tp.Optional[str] = None
+
+
 ## Group
 
 
