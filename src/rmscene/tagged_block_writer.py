@@ -165,11 +165,22 @@ class TaggedBlockWriter:
             self.write_id(1, value.timestamp)
             self.write_id(2, value.value)
 
+    def write_lww_bytes(self, index: int, value: LwwValue[bytes]):
+        "Write a LWW bytes."
+        with self.write_subblock(index):
+            self.write_id(1, value.timestamp)
+            self.write_bytes(2, value.value)
+
     def write_lww_string(self, index: int, value: LwwValue[str]):
         "Write a LWW string."
         with self.write_subblock(index):
             self.write_id(1, value.timestamp)
             self.write_string(2, value.value)
+
+    def write_bytes(self, index: int, value: bytes):
+        """Write a standard bytes block."""
+        with self.write_subblock(index):
+            self.data.write_bytes(value)
 
     def write_string(self, index: int, value: str):
         """Write a standard string block."""
