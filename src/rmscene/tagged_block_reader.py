@@ -308,12 +308,25 @@ class TaggedBlockReader:
             value = self.read_id(2)
         return LwwValue(timestamp, value)
 
+    def read_lww_bytes(self, index: int) -> LwwValue[bytes]:
+        "Read a LWW string."
+        with self.read_subblock(index):
+            timestamp = self.read_id(1)
+            string = self.read_bytes(2)
+        return LwwValue(timestamp, string)
+
     def read_lww_string(self, index: int) -> LwwValue[str]:
         "Read a LWW string."
         with self.read_subblock(index):
             timestamp = self.read_id(1)
             string = self.read_string(2)
         return LwwValue(timestamp, string)
+
+    def read_bytes(self, index: int) -> bytes:
+        """Read a standard string block."""
+        with self.read_subblock(index) as block_info:
+            b = self.data.read_bytes(block_info.size)
+            return b
 
     def read_string(self, index: int) -> str:
         """Read a standard string block."""
