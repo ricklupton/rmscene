@@ -12,7 +12,7 @@ from .crdt_sequence import CrdtSequenceItem
 from . import scene_items as si
 
 if tp.TYPE_CHECKING:
-    from .scene_stream import SceneInfo
+    from .scene_stream import SceneInfo, SceneImageInfoBlock
 
 _logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ class SceneTree:
         self.root = si.Group(ROOT_ID)
         self._node_ids = {self.root.node_id: self.root}
         self.scene_info: tp.Optional["SceneInfo"] = None
+        self.image_info: tp.Optional["SceneImageInfoBlock"] = None
         self.root_text: tp.Optional[si.Text] = None
 
     def __contains__(self, node_id: CrdtId):
@@ -46,6 +47,27 @@ class SceneTree:
             raise ValueError("Parent id not known: %s" % parent_id)
         parent = self._node_ids[parent_id]
         parent.children.add(item)
+
+    def image_filename(self, image: si.Image) -> tp.Optional[str]:
+        """Resolve the filename of the asset `image` places.
+
+        The placement names an asset by id; the filename is declared
+        separately in the scene's image info block. Returns None when this
+        scene does not say, which covers both a file with no info block and a
+        placement naming an asset that nothing declares.
+        """
+        asset_id = image.asset_id
+        if self.image_info is None:
+            _logger.warning(
+                "Image places asset %s but the scene declares no images",
+                asset_id,
+            )
+            return None
+        info = self.image_info.images.get(asset_id)
+        if info is None:
+            _logger.warning("Image places undeclared asset %s", asset_id)
+            return None
+        return info.filename.value
 
     def walk(self) -> tp.Iterator[si.SceneItem]:
         """Iterate through all leaf items (not groups)."""

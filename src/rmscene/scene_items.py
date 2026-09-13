@@ -4,6 +4,7 @@ import enum
 import logging
 import typing as tp
 from dataclasses import dataclass, field
+from uuid import UUID
 
 from .crdt_sequence import CrdtSequence
 from .tagged_block_common import CrdtId, LwwValue
@@ -18,6 +19,83 @@ _logger = logging.getLogger(__name__)
 @dataclass
 class SceneItem:
     """Base class for items stored in scene tree."""
+
+
+## Image
+
+# Asset ids are written as 16 raw bytes in mixed-endian (bytes_le) order.
+ASSET_ID_BYTES = 16
+
+# Trailing integers on an image placement. Meaning unknown, but constant in
+# every file seen so far. Shared by the reader, which compares against it, and
+# by Image, which defaults to it.
+DEFAULT_IMAGE_INTS = [0, 1, 2, 2, 3, 0]
+
+
+@dataclass
+class ImageInfo:
+    """Declaration of an image asset, naming the file that backs it.
+
+    This is not a SceneItem: it is never placed in the scene tree. It lives in
+    the scene's image info block, and placements refer to it by asset id.
+    """
+
+    filename: LwwValue[str]
+    # Two opaque bytes, b"\x11\x00" in every file seen so far.
+    flags: LwwValue[bytes]
+
+
+@dataclass
+class ImageVertex:
+    """One corner of an image placement.
+
+    `x` and `y` place the corner in scene coordinates. `u` and `v` are the
+    texture coordinates of the source image at that corner, so a quad whose uv
+    pairs are not axis-aligned describes a rotated or flipped placement.
+    """
+
+    x: float
+    y: float
+    u: float
+    v: float
+
+
+@dataclass
+class Image(SceneItem):
+    """An image asset placed in the scene.
+
+    The image is placed as a quad of four corners. `uuid` refers to an asset
+    declared in the scene's image info block.
+
+    `filename` is not stored in the placement itself. It is resolved from the
+    scene's image info block when a SceneTree is built, so it is None on an
+    Image read through `read_blocks` alone. Use `SceneTree.image_filename` to
+    resolve it against a tree.
+    """
+
+    uuid: LwwValue[bytes]
+    vertices: list[ImageVertex]
+    timestamp: CrdtId
+    move_id: tp.Optional[CrdtId] = None
+    filename: tp.Optional[str] = None
+    # Meaning unknown; kept so the block can be written back unchanged.
+    unknown_ints: list[int] = field(
+        default_factory=lambda: list(DEFAULT_IMAGE_INTS)
+    )
+
+    @property
+    def asset_id(self) -> UUID:
+        """The UUID of the asset this places, as declared in ImageInfo."""
+        return UUID(bytes_le=self.uuid.value)
+
+    def bounding_rect(self) -> "Rectangle":
+        """The axis-aligned bounding box of the placement quad."""
+        if not self.vertices:
+            raise ValueError("Image has no vertices to bound")
+        xs = [v.x for v in self.vertices]
+        ys = [v.y for v in self.vertices]
+        x, y = min(xs), min(ys)
+        return Rectangle(x, y, max(xs) - x, max(ys) - y)
 
 
 ## Group
