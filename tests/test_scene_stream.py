@@ -417,3 +417,18 @@ def test_write_id(crdt_id: CrdtId):
     buf = BytesIO()
     s = TaggedBlockWriter(buf)
     s.write_id(3, crdt_id)
+
+
+def test_unreadable_block_keeps_its_versions():
+    # A block type this version does not know is written back with the
+    # versions found in the file, not the default (1, 1).
+    data_hex = """
+    04000000 00020363
+    1f 0219 01
+    """
+    buf = BytesIO(HEADER_V6 + bytes.fromhex(data_hex))
+    blocks = list(read_blocks(buf))
+    assert isinstance(blocks[0], UnreadableBlock)
+    out = BytesIO()
+    write_blocks(out, blocks)
+    assert out.getvalue() == HEADER_V6 + bytes.fromhex(data_hex)

@@ -124,6 +124,11 @@ class UnreadableBlock(Block):
     def get_block_type(self) -> int:
         return self.info.block_type
 
+    def version_info(self, _) -> tuple[int, int]:
+        # Write back the versions found in the file, so that the block is
+        # unchanged even though it was not understood.
+        return (self.info.min_version, self.info.current_version)
+
     @classmethod
     def from_stream(cls, reader: TaggedBlockReader) -> Block:
         raise NotImplementedError()

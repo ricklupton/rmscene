@@ -10,6 +10,10 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+Fixes:
+
+- Write blocks that could not be read back with the versions found in the file, not `(1, 1)`
+
 ### v0.8.0
   
 New features:
