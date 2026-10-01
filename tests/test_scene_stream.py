@@ -417,3 +417,46 @@ def test_write_id(crdt_id: CrdtId):
     buf = BytesIO()
     s = TaggedBlockWriter(buf)
     s.write_id(3, crdt_id)
+
+
+def test_paragraph_style_extra_fields_are_kept():
+    # Recent firmware writes more fields after the style for some headings
+    # ("Heading 2" here: style 3 followed by `21 02 34 03000000`). They are not
+    # decoded yet, but must survive a read/write round trip.
+    extra = bytes.fromhex("21 02 34 03000000")
+    block = RootTextBlock(
+        block_id=CrdtId(0, 0),
+        value=si.Text(
+            items=CrdtSequence(
+                [
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="A\nB",
+                    )
+                ]
+            ),
+            styles={
+                CrdtId(0, 0): LwwValue(CrdtId(1, 20), ParagraphStyle.HEADING),
+                CrdtId(1, 17): LwwValue(CrdtId(1, 21), ParagraphStyle.BOLD),
+            },
+            pos_x=-468.0,
+            pos_y=234.0,
+            width=936.0,
+            style_extra_data={CrdtId(1, 17): extra},
+        ),
+    )
+    buf = BytesIO()
+    block.write(TaggedBlockWriter(buf))
+    data = buf.getvalue()
+    assert "11 03 21 02 34 03 00 00 00" in data.hex(" ")
+    buf.seek(0)
+    block2 = Block.read(TaggedBlockReader(buf))
+    assert block2 == block
+    assert block2.value.styles[CrdtId(1, 17)].value == ParagraphStyle.BOLD
+    assert block2.value.style_extra_data == {CrdtId(1, 17): extra}
+    buf2 = BytesIO()
+    block2.write(TaggedBlockWriter(buf2))
+    assert buf2.getvalue() == data

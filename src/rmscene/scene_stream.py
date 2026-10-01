@@ -711,7 +711,7 @@ def text_item_to_stream(item: CrdtSequenceItem[str | int], writer: TaggedBlockWr
 
 def text_format_from_stream(
     stream: TaggedBlockReader,
-) -> tuple[CrdtId, LwwValue[si.ParagraphStyle]]:
+) -> tuple[CrdtId, LwwValue[si.ParagraphStyle], bytes]:
     # These are character ids, but not with an initial tag like other ids have.
     char_id = stream.data.read_crdt_id()
 
@@ -720,11 +720,10 @@ def text_format_from_stream(
     # think it is referring to it.
     timestamp = stream.read_id(1)
 
-    with stream.read_subblock(2):
-        # XXX not sure what this is format?
-        c = stream.data.read_uint8()
-        assert c == 17
-        format_code = stream.data.read_uint8()
+    with stream.read_subblock(2) as block_info:
+        # Field 1 is the style. Recent firmware may add more fields after it,
+        # not decoded yet: they are kept as they are.
+        format_code = stream.read_byte(1)
         try:
             format_type = si.ParagraphStyle(format_code)
         except ValueError:
@@ -736,21 +735,22 @@ def text_format_from_stream(
             )
             format_type = si.ParagraphStyle.PLAIN  # fallback
 
-    return (char_id, LwwValue(timestamp, format_type))
+    return (char_id, LwwValue(timestamp, format_type), block_info.extra_data)
 
 
 def text_format_to_stream(
-    char_id: CrdtId, value: LwwValue[si.ParagraphStyle], writer: TaggedBlockWriter
+    char_id: CrdtId,
+    value: LwwValue[si.ParagraphStyle],
+    writer: TaggedBlockWriter,
+    extra_data: bytes = b"",
 ):
     format_type = value.value
 
     writer.data.write_crdt_id(char_id)
     writer.write_id(1, value.timestamp)
     with writer.write_subblock(2):
-        # XXX not sure what this is format?
-        c = 17
-        writer.data.write_uint8(c)
-        writer.data.write_uint8(format_type)
+        writer.write_byte(1, format_type)
+        writer.data.write_bytes(extra_data)
 
 
 @dataclass
@@ -782,9 +782,13 @@ class RootTextBlock(Block):
             with stream.read_subblock(2):
                 with stream.read_subblock(1):
                     num_subblocks = stream.data.read_varuint()
-                    text_formats = dict(
-                        text_format_from_stream(stream) for _ in range(num_subblocks)
-                    )
+                    text_formats = {}
+                    style_extra_data = {}
+                    for _ in range(num_subblocks):
+                        key, style, extra = text_format_from_stream(stream)
+                        text_formats[key] = style
+                        if extra:
+                            style_extra_data[key] = extra
 
         # Last section
         with stream.read_subblock(3):
@@ -802,6 +806,7 @@ class RootTextBlock(Block):
             pos_x=pos_x,
             pos_y=pos_y,
             width=width,
+            style_extra_data=style_extra_data,
         )
         return RootTextBlock(block_id, value)
 
@@ -825,7 +830,12 @@ class RootTextBlock(Block):
                 with writer.write_subblock(1):
                     writer.data.write_varuint(len(text_formats))
                     for key, item in text_formats.items():
-                        text_format_to_stream(key, item, writer)
+                        text_format_to_stream(
+                            key,
+                            item,
+                            writer,
+                            self.value.style_extra_data.get(key, b""),
+                        )
 
         # Last section
         with writer.write_subblock(3):

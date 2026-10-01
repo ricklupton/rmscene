@@ -10,6 +10,10 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+Fixes:
+
+- Keep undecoded fields of paragraph style data (written by recent firmware for some headings) in `Text.style_extra_data`, so they survive a read/write round trip
+
 ### v0.8.0
   
 New features:

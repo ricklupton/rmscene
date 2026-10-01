@@ -180,6 +180,11 @@ class Text(SceneItem):
 
     `pos_x`, `pos_y` and `width` are dimensions for the text block.
 
+    `style_extra_data` keeps, for a style key, fields of its style data that are
+    not decoded yet (recent firmware writes some for second-level headings), so
+    they are written back unchanged. When changing a style, remove its entry:
+    the fields belong to the previous value.
+
     """
 
     items: CrdtSequence[str | int]
@@ -187,6 +192,7 @@ class Text(SceneItem):
     pos_x: float
     pos_y: float
     width: float
+    style_extra_data: dict[CrdtId, bytes] = field(default_factory=dict)
 
 
 ## Glyph range
