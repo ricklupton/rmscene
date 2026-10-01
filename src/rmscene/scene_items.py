@@ -158,6 +158,18 @@ class ParagraphStyle(enum.IntEnum):
     BULLET2 = 5
     CHECKBOX = 6
     CHECKBOX_CHECKED = 7
+    NUMBERED = 10
+
+    @classmethod
+    def _missing_(cls, value):
+        # Keep styles added by newer firmware, so that they are written back
+        # unchanged instead of being replaced by PLAIN.
+        if not isinstance(value, int):
+            return None
+        member = int.__new__(cls, value)
+        member._name_ = f"UNKNOWN_{value}"
+        member._value_ = value
+        return member
 
 
 END_MARKER = CrdtId(0, 0)

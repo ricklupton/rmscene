@@ -725,16 +725,15 @@ def text_format_from_stream(
         c = stream.data.read_uint8()
         assert c == 17
         format_code = stream.data.read_uint8()
-        try:
-            format_type = si.ParagraphStyle(format_code)
-        except ValueError:
+        format_type = si.ParagraphStyle(format_code)
+        if format_type.name.startswith("UNKNOWN_"):
+            # Kept as is, and written back unchanged.
             _logger.warning("Unrecognised text format code %d.", format_code)
             _logger.debug(
                 "Unrecognised text format code %d at position %d.",
                 format_code,
                 stream.data.tell(),
             )
-            format_type = si.ParagraphStyle.PLAIN  # fallback
 
     return (char_id, LwwValue(timestamp, format_type))
 

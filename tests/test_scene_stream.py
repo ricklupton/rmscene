@@ -417,3 +417,61 @@ def test_write_id(crdt_id: CrdtId):
     buf = BytesIO()
     s = TaggedBlockWriter(buf)
     s.write_id(3, crdt_id)
+
+
+def _text_block_with_styles(styles):
+    return RootTextBlock(
+        block_id=CrdtId(0, 0),
+        value=si.Text(
+            items=CrdtSequence(
+                [
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="A\nB",
+                    )
+                ]
+            ),
+            styles=styles,
+            pos_x=-468.0,
+            pos_y=234.0,
+            width=936.0,
+        ),
+    )
+
+
+def _roundtrip(block):
+    buf = BytesIO()
+    block.write(TaggedBlockWriter(buf))
+    data = buf.getvalue()
+    buf.seek(0)
+    return data, Block.read(TaggedBlockReader(buf))
+
+
+def test_numbered_paragraph_style():
+    # Numbered lists are written with style code 10 (seen from firmware 3.2x).
+    block = _text_block_with_styles(
+        {
+            CrdtId(0, 0): LwwValue(CrdtId(1, 20), ParagraphStyle.NUMBERED),
+            CrdtId(1, 17): LwwValue(CrdtId(1, 21), ParagraphStyle(10)),
+        }
+    )
+    data, block2 = _roundtrip(block)
+    assert ParagraphStyle(10) is ParagraphStyle.NUMBERED
+    assert "11 0a" in data.hex(" ")
+    assert block2 == block
+
+
+def test_unknown_paragraph_style_is_kept():
+    # A style code this version does not know is written back unchanged,
+    # rather than replaced by PLAIN.
+    block = _text_block_with_styles(
+        {CrdtId(0, 0): LwwValue(CrdtId(1, 20), ParagraphStyle(42))}
+    )
+    data, block2 = _roundtrip(block)
+    style = block2.value.styles[CrdtId(0, 0)].value
+    assert style == 42
+    assert style.name == "UNKNOWN_42"
+    assert _roundtrip(block2)[0] == data
