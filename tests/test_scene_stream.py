@@ -417,3 +417,35 @@ def test_write_id(crdt_id: CrdtId):
     buf = BytesIO()
     s = TaggedBlockWriter(buf)
     s.write_id(3, crdt_id)
+
+
+def test_optional_fields_are_not_read_from_the_next_block():
+    # A line ends its block without the optional colour (field 8). When the
+    # next block is 388 bytes long, its length starts with 84 01, which reads
+    # as the tag of field 8: the line took 6 bytes of the next block as its
+    # colour and failed. Seen on device pages.
+    line = SceneLineItemBlock(
+        parent_id=CrdtId(0, 11),
+        item=CrdtSequenceItem(
+            item_id=CrdtId(1, 20),
+            left_id=CrdtId(0, 0),
+            right_id=CrdtId(0, 0),
+            deleted_length=0,
+            value=si.Line(
+                color=si.PenColor.BLACK,
+                tool=si.Pen.FINELINER_2,
+                points=[si.Point(1.0, 2.0, 0, 0, 12, 0)],
+                thickness_scale=2.0,
+                starting_length=0.0,
+            ),
+        ),
+    )
+    buf = BytesIO()
+    write_blocks(buf, [line])
+    following = (388).to_bytes(4, "little") + bytes.fromhex("00 01 01 ee") + bytes(388)
+    data = buf.getvalue() + following
+    blocks = list(read_blocks(BytesIO(data)))
+    assert blocks[0] == line
+    out = BytesIO()
+    write_blocks(out, blocks)
+    assert out.getvalue() == data

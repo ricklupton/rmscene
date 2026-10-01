@@ -10,6 +10,10 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+Fixes:
+
+- Do not read optional fields past the end of their block: a line followed by a block 388 bytes long took the next block's length as its colour and failed to read
+
 ### v0.8.0
   
 New features:

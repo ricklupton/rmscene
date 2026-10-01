@@ -110,7 +110,14 @@ class TaggedBlockReader:
 
     ## Read simple values -- optional variants
 
+    def _at_block_end(self) -> bool:
+        """Whether the current block has no bytes left. The bytes after it
+        belong to the next block, and can look like any optional field."""
+        return self.current_block is not None and self.bytes_remaining_in_block() <= 0
+
     def _read_optional(self, func, index, default):
+        if self._at_block_end():
+            return default
         try:
             return func(index)
         except (UnexpectedBlockError, EOFError):
@@ -156,7 +163,7 @@ class TaggedBlockReader:
         self, index: int
     ) -> tp.Optional[tuple[int, int, int, int]]:
         """Read a tagged RGBA color packed as a little-endian uint32 (stored BGRA), return None if not present."""
-        if not self.data.check_tag(index, TagType.Byte4):
+        if self._at_block_end() or not self.data.check_tag(index, TagType.Byte4):
             return None
         packed = self.read_int(index)
         return (
