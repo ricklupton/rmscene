@@ -368,3 +368,46 @@ class TaggedBlockReader:
             first = self.data.read_uint32()
             second = self.data.read_uint32()
             return first, second
+
+    def read_double_pair(self, index: int) -> tuple[float, float]:
+        """Read a sub block containing two float64."""
+        with self.read_subblock(index):
+            first = self.data.read_float64()
+            second = self.data.read_float64()
+            return first, second
+
+    def read_lww_double_pair(self, index: int) -> LwwValue[tuple[float, float]]:
+        """Read a LWW pair of doubles."""
+        with self.read_subblock(index):
+            timestamp = self.read_id(1)
+            with self.read_subblock(2):
+                first = self.data.read_float64()
+                second = self.data.read_float64()
+        return LwwValue(timestamp, (first, second))
+
+    def read_lww_double_rect(self, index: int) -> LwwValue[tuple[float, float, float, float]]:
+        """Read a LWW rect of four doubles."""
+        with self.read_subblock(index):
+            timestamp = self.read_id(1)
+            with self.read_subblock(2):
+                x = self.data.read_float64()
+                y = self.data.read_float64()
+                w = self.data.read_float64()
+                h = self.data.read_float64()
+        return LwwValue(timestamp, (x, y, w, h))
+
+    def read_lww_subblock_bool(self, index: int) -> LwwValue[bool]:
+        """Read a LWW bool where the value is wrapped in a subblock."""
+        with self.read_subblock(index):
+            timestamp = self.read_id(1)
+            with self.read_subblock(2):
+                value = self.data.read_bool()
+        return LwwValue(timestamp, value)
+
+    def read_lww_subblock_byte(self, index: int) -> LwwValue[int]:
+        """Read a LWW byte where the value is wrapped in a subblock."""
+        with self.read_subblock(index):
+            timestamp = self.read_id(1)
+            with self.read_subblock(2):
+                value = self.data.read_uint8()
+        return LwwValue(timestamp, value)

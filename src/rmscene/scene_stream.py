@@ -144,6 +144,11 @@ class SceneInfo(Block):
     background_visible: tp.Optional[LwwValue[bool]]
     root_document_visible: tp.Optional[LwwValue[bool]]
     paper_size: tp.Optional[tuple[int, int]]
+    # New fields added in firmware 3.27
+    viewport: tp.Optional[LwwValue[tuple[float, float, float, float]]] = None
+    paper_size_raw: tp.Optional[tuple[float, float]] = None
+    paper_size_lww: tp.Optional[LwwValue[tuple[float, float]]] = None
+    unknown_byte_9: tp.Optional[LwwValue[int]] = None
 
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
@@ -152,10 +157,28 @@ class SceneInfo(Block):
         root_document_visible = stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
         paper_size = stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
 
+        # New fields from firmware 3.27
+        viewport = None
+        paper_size_raw = None
+        paper_size_lww = None
+        unknown_byte_9 = None
+        if stream.bytes_remaining_in_block() > 0 and stream.has_subblock(6):
+            viewport = stream.read_lww_double_rect(6)
+        if stream.bytes_remaining_in_block() > 0 and stream.has_subblock(7):
+            paper_size_raw = stream.read_double_pair(7)
+        if stream.bytes_remaining_in_block() > 0 and stream.has_subblock(8):
+            paper_size_lww = stream.read_lww_double_pair(8)
+        if stream.bytes_remaining_in_block() > 0 and stream.has_subblock(9):
+            unknown_byte_9 = stream.read_lww_subblock_byte(9)
+
         return SceneInfo(current_layer=current_layer,
                          background_visible=background_visible,
                          root_document_visible=root_document_visible,
-                         paper_size=paper_size)
+                         paper_size=paper_size,
+                         viewport=viewport,
+                         paper_size_raw=paper_size_raw,
+                         paper_size_lww=paper_size_lww,
+                         unknown_byte_9=unknown_byte_9)
 
     def to_stream(self, writer: TaggedBlockWriter):
         writer.write_lww_id(1, self.current_layer)
@@ -165,6 +188,14 @@ class SceneInfo(Block):
             writer.write_lww_bool(3, self.root_document_visible)
         if self.paper_size:
             writer.write_int_pair(5, self.paper_size)
+        if self.viewport is not None:
+            writer.write_lww_double_rect(6, self.viewport)
+        if self.paper_size_raw is not None:
+            writer.write_double_pair(7, self.paper_size_raw)
+        if self.paper_size_lww is not None:
+            writer.write_lww_double_pair(8, self.paper_size_lww)
+        if self.unknown_byte_9 is not None:
+            writer.write_lww_subblock_byte(9, self.unknown_byte_9)
 
 
 @dataclass

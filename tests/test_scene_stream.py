@@ -177,6 +177,13 @@ def test_read_glyph_range():
             }
         ),
         MigrationInfoBlock(migration_id=CrdtId(1, 1), is_device=True),
+        SceneInfo(
+            current_layer=LwwValue(CrdtId(0, 1), CrdtId(0, 11)),
+            background_visible=LwwValue(CrdtId(0, 1), True),
+            root_document_visible=LwwValue(CrdtId(0, 1), True),
+            paper_size=(1404, 1872),
+            unknown_byte_9=LwwValue(CrdtId(1, 15), 2),
+        ),
         PageInfoBlock(
             loads_count=3, merges_count=2, text_chars_count=3, text_lines_count=1
         ),
