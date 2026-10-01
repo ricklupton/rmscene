@@ -417,3 +417,27 @@ def test_write_id(crdt_id: CrdtId):
     buf = BytesIO()
     s = TaggedBlockWriter(buf)
     s.write_id(3, crdt_id)
+
+
+def test_scene_info_without_paper_size_round_trips():
+    # Firmware 3.27 can write SceneInfo without paper_size (field 5), going on
+    # with other fields. rmscene itself wrote such blocks but failed to read
+    # them back.
+    newer = bytes.fromhex("ac 00000000")  # an empty field 10, unknown here
+    block = SceneInfo(
+        current_layer=LwwValue(CrdtId(0, 0), CrdtId(0, 0)),
+        background_visible=LwwValue(CrdtId(0, 0), True),
+        root_document_visible=LwwValue(CrdtId(0, 0), True),
+        paper_size=None,
+    )
+    block.extra_data = newer
+    buf = BytesIO()
+    write_blocks(buf, [block])
+    buf.seek(0)
+    read = next(read_blocks(buf))
+    assert isinstance(read, SceneInfo)
+    assert read.paper_size is None
+    assert read.extra_data == newer
+    out = BytesIO()
+    write_blocks(out, [read])
+    assert out.getvalue() == buf.getvalue()

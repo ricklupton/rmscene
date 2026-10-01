@@ -148,9 +148,12 @@ class SceneInfo(Block):
     @classmethod
     def from_stream(cls, stream: TaggedBlockReader) -> SceneInfo:
         current_layer = stream.read_lww_id(1)
-        background_visible = stream.read_lww_bool(2) if stream.bytes_remaining_in_block() > 0 else None
-        root_document_visible = stream.read_lww_bool(3) if stream.bytes_remaining_in_block() > 0 else None
-        paper_size = stream.read_int_pair(5) if stream.bytes_remaining_in_block() > 0 else None
+        # Each later field is optional: read it only when its tag comes next.
+        # Pages from firmware 3.27 can skip `paper_size` and go on with newer
+        # fields (6, 7…), which are then kept as extra data.
+        background_visible = stream.read_lww_bool(2) if stream.has_subblock(2) else None
+        root_document_visible = stream.read_lww_bool(3) if stream.has_subblock(3) else None
+        paper_size = stream.read_int_pair(5) if stream.has_subblock(5) else None
 
         return SceneInfo(current_layer=current_layer,
                          background_visible=background_visible,

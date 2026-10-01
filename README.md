@@ -10,6 +10,10 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+Fixes:
+
+- Read `SceneInfo` fields 2, 3 and 5 only when present, so that blocks without `paper_size` (written by firmware 3.27, and by rmscene itself) can be read
+
 ### v0.8.0
   
 New features:
