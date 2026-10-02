@@ -10,6 +10,16 @@ To convert rm files to other formats, you can use [rmc](https://github.com/rickl
 
 ### Unreleased
 
+New features:
+
+- Add `ParagraphStyle.NUMBERED` (style code 10, used for numbered lists by recent firmware)
+- Add `ParagraphStyle.NUMBERED_NESTED` (style code 11, numbered list items below the first level) and decode the optional fields recent firmware writes after a paragraph style into `Text.style_fields` (`ParagraphStyleFields`, with the list nesting level as `list_level`)
+
+Fixes:
+
+- Keep undecoded fields of paragraph style data (written by recent firmware for some headings) in `Text.style_extra_data`, so they survive a read/write round trip
+- Keep paragraph style codes this version does not know when writing a file back, instead of replacing them with `PLAIN`
+
 ### v0.8.0
   
 New features:

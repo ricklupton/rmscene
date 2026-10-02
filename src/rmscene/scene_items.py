@@ -144,6 +144,34 @@ class Line(SceneItem):
 ## Text
 
 
+@dataclass
+class ParagraphStyleFields:
+    """
+    Optional fields recent firmware writes after a paragraph style.
+
+    Values seen on device pages (firmware 3.2x):
+
+    - list items below the first level: `field_2` is 3 and `field_3` is the
+      nesting level counted from 0, plus 0x20 for numbered items
+      (`BULLET2` with 1 or 2; `NUMBERED_NESTED` with 0x21 or 0x22);
+    - second-level heading: `BOLD` with `field_2` 2 and `field_3` 3 (`BOLD`
+      without fields is the third-level heading).
+
+    Only the list level is interpreted (`list_level`); both fields are kept
+    as read, and written back when not None.
+    """
+
+    field_2: tp.Optional[int] = None
+    field_3: tp.Optional[int] = None
+
+    @property
+    def list_level(self) -> tp.Optional[int]:
+        """Nesting level of a list item, counted from 0, if known."""
+        if self.field_2 != 3 or self.field_3 is None:
+            return None
+        return self.field_3 & ~0x20
+
+
 @enum.unique
 class ParagraphStyle(enum.IntEnum):
     """
@@ -158,6 +186,21 @@ class ParagraphStyle(enum.IntEnum):
     BULLET2 = 5
     CHECKBOX = 6
     CHECKBOX_CHECKED = 7
+    NUMBERED = 10
+    # Numbered list items below the first level (written by firmware 3.2x
+    # with the level in `ParagraphStyleFields.field_3`).
+    NUMBERED_NESTED = 11
+
+    @classmethod
+    def _missing_(cls, value):
+        # Keep styles added by newer firmware, so that they are written back
+        # unchanged instead of being replaced by PLAIN.
+        if not isinstance(value, int):
+            return None
+        member = int.__new__(cls, value)
+        member._name_ = f"UNKNOWN_{value}"
+        member._value_ = value
+        return member
 
 
 END_MARKER = CrdtId(0, 0)
@@ -180,6 +223,12 @@ class Text(SceneItem):
 
     `pos_x`, `pos_y` and `width` are dimensions for the text block.
 
+    `style_fields` holds, for a style key, the optional fields recent firmware
+    writes after the style (`ParagraphStyleFields`: list level, second-level
+    heading). `style_extra_data` keeps any further fields, not decoded yet, so
+    they are written back unchanged. When changing a style, remove its entries
+    in both: the fields belong to the previous value.
+
     """
 
     items: CrdtSequence[str | int]
@@ -187,6 +236,8 @@ class Text(SceneItem):
     pos_x: float
     pos_y: float
     width: float
+    style_extra_data: dict[CrdtId, bytes] = field(default_factory=dict)
+    style_fields: dict[CrdtId, ParagraphStyleFields] = field(default_factory=dict)
 
 
 ## Glyph range

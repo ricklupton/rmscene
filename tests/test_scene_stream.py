@@ -417,3 +417,110 @@ def test_write_id(crdt_id: CrdtId):
     buf = BytesIO()
     s = TaggedBlockWriter(buf)
     s.write_id(3, crdt_id)
+
+
+def test_paragraph_style_fields():
+    # As a firmware 3.2x tablet writes them: a second-level heading (style 3
+    # with fields 2 and 3), then bullets and numbered items below the first
+    # level, the level in field 3 (plus 0x20 for numbered items).
+    stored = [
+        (ParagraphStyle.BOLD, "21 02 34 03000000", (2, 3), None),
+        (ParagraphStyle.BULLET2, "21 03 34 01000000", (3, 1), 1),
+        (ParagraphStyle.BULLET2, "21 03 34 02000000", (3, 2), 2),
+        (ParagraphStyle.NUMBERED_NESTED, "21 03 34 21000000", (3, 0x21), 1),
+        (ParagraphStyle.NUMBERED_NESTED, "21 03 34 22000000", (3, 0x22), 2),
+    ]
+    for style, fields, values, level in stored:
+        key = CrdtId(1, 17)
+        block = _text_block_with_styles(
+            {
+                CrdtId(0, 0): LwwValue(CrdtId(1, 20), ParagraphStyle.PLAIN),
+                key: LwwValue(CrdtId(1, 21), style),
+            }
+        )
+        expected = si.ParagraphStyleFields(*values)
+        block.value.style_fields[key] = expected
+        data, block2 = _roundtrip(block)
+        assert f"11 {style:02x} " + bytes.fromhex(fields).hex(" ") in data.hex(" ")
+        assert block2 == block
+        assert block2.value.style_fields == {key: expected}
+        assert block2.value.style_extra_data == {}
+        assert expected.list_level == level
+
+
+def test_paragraph_style_extra_fields_are_kept():
+    # Fields after the decoded ones (here a made-up field 4) are not decoded
+    # yet, but must survive a read/write round trip.
+    key = CrdtId(1, 17)
+    block = _text_block_with_styles(
+        {
+            CrdtId(0, 0): LwwValue(CrdtId(1, 20), ParagraphStyle.HEADING),
+            key: LwwValue(CrdtId(1, 21), ParagraphStyle.BOLD),
+        }
+    )
+    block.value.style_fields[key] = si.ParagraphStyleFields(2, 3)
+    block.value.style_extra_data[key] = bytes.fromhex("41 07")
+    data, block2 = _roundtrip(block)
+    assert "11 03 21 02 34 03 00 00 00 41 07" in data.hex(" ")
+    assert block2 == block
+    buf2 = BytesIO()
+    block2.write(TaggedBlockWriter(buf2))
+    assert buf2.getvalue() == data
+
+
+def _text_block_with_styles(styles):
+    return RootTextBlock(
+        block_id=CrdtId(0, 0),
+        value=si.Text(
+            items=CrdtSequence(
+                [
+                    CrdtSequenceItem(
+                        item_id=CrdtId(1, 16),
+                        left_id=CrdtId(0, 0),
+                        right_id=CrdtId(0, 0),
+                        deleted_length=0,
+                        value="A\nB",
+                    )
+                ]
+            ),
+            styles=styles,
+            pos_x=-468.0,
+            pos_y=234.0,
+            width=936.0,
+        ),
+    )
+
+
+def _roundtrip(block):
+    buf = BytesIO()
+    block.write(TaggedBlockWriter(buf))
+    data = buf.getvalue()
+    buf.seek(0)
+    return data, Block.read(TaggedBlockReader(buf))
+
+
+def test_numbered_paragraph_style():
+    # Numbered lists are written with style code 10 (seen from firmware 3.2x).
+    block = _text_block_with_styles(
+        {
+            CrdtId(0, 0): LwwValue(CrdtId(1, 20), ParagraphStyle.NUMBERED),
+            CrdtId(1, 17): LwwValue(CrdtId(1, 21), ParagraphStyle(10)),
+        }
+    )
+    data, block2 = _roundtrip(block)
+    assert ParagraphStyle(10) is ParagraphStyle.NUMBERED
+    assert "11 0a" in data.hex(" ")
+    assert block2 == block
+
+
+def test_unknown_paragraph_style_is_kept():
+    # A style code this version does not know is written back unchanged,
+    # rather than replaced by PLAIN.
+    block = _text_block_with_styles(
+        {CrdtId(0, 0): LwwValue(CrdtId(1, 20), ParagraphStyle(42))}
+    )
+    data, block2 = _roundtrip(block)
+    style = block2.value.styles[CrdtId(0, 0)].value
+    assert style == 42
+    assert style.name == "UNKNOWN_42"
+    assert _roundtrip(block2)[0] == data

@@ -711,7 +711,9 @@ def text_item_to_stream(item: CrdtSequenceItem[str | int], writer: TaggedBlockWr
 
 def text_format_from_stream(
     stream: TaggedBlockReader,
-) -> tuple[CrdtId, LwwValue[si.ParagraphStyle]]:
+) -> tuple[
+    CrdtId, LwwValue[si.ParagraphStyle], tp.Optional[si.ParagraphStyleFields], bytes
+]:
     # These are character ids, but not with an initial tag like other ids have.
     char_id = stream.data.read_crdt_id()
 
@@ -720,37 +722,51 @@ def text_format_from_stream(
     # think it is referring to it.
     timestamp = stream.read_id(1)
 
-    with stream.read_subblock(2):
-        # XXX not sure what this is format?
-        c = stream.data.read_uint8()
-        assert c == 17
-        format_code = stream.data.read_uint8()
-        try:
-            format_type = si.ParagraphStyle(format_code)
-        except ValueError:
+    with stream.read_subblock(2) as block_info:
+        # Field 1 is the style. Recent firmware may add more fields after it,
+        # not decoded yet: they are kept as they are.
+        format_code = stream.read_byte(1)
+        format_type = si.ParagraphStyle(format_code)
+        if format_type.name.startswith("UNKNOWN_"):
+            # Kept as is, and written back unchanged.
             _logger.warning("Unrecognised text format code %d.", format_code)
             _logger.debug(
                 "Unrecognised text format code %d at position %d.",
                 format_code,
                 stream.data.tell(),
             )
-            format_type = si.ParagraphStyle.PLAIN  # fallback
+        # Optional fields 2 and 3, then any others, not decoded yet. Only
+        # read within this subblock: what follows is the next style.
+        def remaining():
+            return block_info.offset + block_info.size - stream.data.tell()
 
-    return (char_id, LwwValue(timestamp, format_type))
+        field_2 = stream.read_byte_optional(2) if remaining() > 0 else None
+        field_3 = stream.read_int_optional(3) if remaining() > 0 else None
+        fields = None
+        if field_2 is not None or field_3 is not None:
+            fields = si.ParagraphStyleFields(field_2, field_3)
+
+    return (char_id, LwwValue(timestamp, format_type), fields, block_info.extra_data)
 
 
 def text_format_to_stream(
-    char_id: CrdtId, value: LwwValue[si.ParagraphStyle], writer: TaggedBlockWriter
+    char_id: CrdtId,
+    value: LwwValue[si.ParagraphStyle],
+    writer: TaggedBlockWriter,
+    extra_data: bytes = b"",
+    fields: tp.Optional[si.ParagraphStyleFields] = None,
 ):
     format_type = value.value
 
     writer.data.write_crdt_id(char_id)
     writer.write_id(1, value.timestamp)
     with writer.write_subblock(2):
-        # XXX not sure what this is format?
-        c = 17
-        writer.data.write_uint8(c)
-        writer.data.write_uint8(format_type)
+        writer.write_byte(1, format_type)
+        if fields is not None and fields.field_2 is not None:
+            writer.write_byte(2, fields.field_2)
+        if fields is not None and fields.field_3 is not None:
+            writer.write_int(3, fields.field_3)
+        writer.data.write_bytes(extra_data)
 
 
 @dataclass
@@ -782,9 +798,16 @@ class RootTextBlock(Block):
             with stream.read_subblock(2):
                 with stream.read_subblock(1):
                     num_subblocks = stream.data.read_varuint()
-                    text_formats = dict(
-                        text_format_from_stream(stream) for _ in range(num_subblocks)
-                    )
+                    text_formats = {}
+                    style_extra_data = {}
+                    style_fields = {}
+                    for _ in range(num_subblocks):
+                        key, style, fields, extra = text_format_from_stream(stream)
+                        text_formats[key] = style
+                        if fields is not None:
+                            style_fields[key] = fields
+                        if extra:
+                            style_extra_data[key] = extra
 
         # Last section
         with stream.read_subblock(3):
@@ -802,6 +825,8 @@ class RootTextBlock(Block):
             pos_x=pos_x,
             pos_y=pos_y,
             width=width,
+            style_extra_data=style_extra_data,
+            style_fields=style_fields,
         )
         return RootTextBlock(block_id, value)
 
@@ -825,7 +850,13 @@ class RootTextBlock(Block):
                 with writer.write_subblock(1):
                     writer.data.write_varuint(len(text_formats))
                     for key, item in text_formats.items():
-                        text_format_to_stream(key, item, writer)
+                        text_format_to_stream(
+                            key,
+                            item,
+                            writer,
+                            self.value.style_extra_data.get(key, b""),
+                            self.value.style_fields.get(key),
+                        )
 
         # Last section
         with writer.write_subblock(3):
